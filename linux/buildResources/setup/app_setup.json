@@ -18,6 +18,9 @@
     },
     {
       "path": "%%PANKOSMIADIR%%/core-client-i18n-editor"
+    },
+    {
+      "path": "%%PANKOSMIADIR%%/xenizo-parallel-gospels"
     }
   ]
 }
