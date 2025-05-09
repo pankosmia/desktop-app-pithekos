@@ -4,7 +4,7 @@
     "version": "0.2.3"
   },
   "bin": {
-    "src": "../../../pankosmia-web/target/release/pankosmia_web"
+    "src": "../../local_server/target/debug/local_server"
   },
   "lib": [
     {

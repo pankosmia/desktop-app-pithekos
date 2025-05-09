@@ -1,6 +1,7 @@
 .idea/
 linux/build/
 windows/build/
+local_server/target
 
 # Logs
 logs
