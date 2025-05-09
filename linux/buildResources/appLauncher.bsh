@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+
+export APP_RESOURCES_DIR="./lib/"
+./bin/server.bin

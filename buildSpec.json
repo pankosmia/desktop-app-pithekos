@@ -1,0 +1,32 @@
+{
+  "app": {
+    "name": "liminal",
+    "version": "0.2.3"
+  },
+  "bin": {
+    "src": "../../../pankosmia-web/target/release/pankosmia_web"
+  },
+  "lib": [
+    {
+      "src": "../../../pankosmia-web/app_resources"
+    },
+    {
+      "src": "../../../pankosmia-web/webfonts"
+    },
+    {
+      "src": "../../../pankosmia-web/templates"
+    },
+    {
+      "src": "../buildResources/setup"
+    }
+  ],
+  "libClients": [
+    "../../../core-client-dashboard",
+    "../../../core-client-settings",
+    "../../../core-client-remote-repos",
+    "../../../core-client-content",
+    "../../../core-client-workspace",
+    "../../../xenizo-parallel-gospels",
+    "../../../core-client-i18n-editor"
+  ]
+}

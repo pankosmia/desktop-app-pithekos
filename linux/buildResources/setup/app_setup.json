@@ -1,0 +1,23 @@
+{
+  "clients": [
+    {
+      "path": "%%PANKOSMIADIR%%/core-client-dashboard"
+    },
+    {
+      "path": "%%PANKOSMIADIR%%/core-client-settings",
+      "exclude_from_menu": true
+    },
+    {
+      "path": "%%PANKOSMIADIR%%/core-client-remote-repos"
+    },
+    {
+      "path": "%%PANKOSMIADIR%%/core-client-content"
+    },
+    {
+      "path": "%%PANKOSMIADIR%%/core-client-workspace"
+    },
+    {
+      "path": "%%PANKOSMIADIR%%/core-client-i18n-editor"
+    }
+  ]
+}

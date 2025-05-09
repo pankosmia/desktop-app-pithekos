@@ -1,0 +1,24 @@
+{
+  "name": "pankosmia-app-builder",
+  "version": "0.1.0",
+  "description": "An app builder for Pankosmia. It assembles an executable and resources from other Pankosmia repos",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/pankosmia/desktop-app-liminal.git"
+  },
+  "author": "Mark Howe",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/pankosmia/desktop-app-liminal/issues"
+  },
+  "homepage": "https://github.com/pankosmia/desktop-app-liminal#readme",
+  "dependencies": {
+    "copy-dir": "^1.3.0",
+    "fs-extra": "^11.3.0",
+    "path": "^0.12.7"
+  }
+}
