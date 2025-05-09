@@ -10,7 +10,7 @@ const SPEC_PATH = path.resolve('../../buildSpec.json');
 const LINUX_BUILD_RESOURCES = path.resolve("../buildResources");
 // Delete build dir if it exists
 if (fse.existsSync(BUILD_DIR)) {
-    fse.rmSync(BUILD_DIR, { recursive: true, force: true });
+    fse.rmSync(BUILD_DIR, {recursive: true, force: true});
 }
 // Make build directory
 fse.mkdirSync(BUILD_DIR);
@@ -39,13 +39,23 @@ fse.copySync(
     path.join(BUILD_DIR, "bin", "server.bin")
 );
 // Make lib directory
-fse.mkdirSync(path.join(BUILD_DIR, "lib"));
+const libDirPath = path.join(BUILD_DIR, "lib");
+fse.mkdirSync(libDirPath);
 // Copy lib directories
-for (const libSrc of spec['lib'].map(s => path.resolve(s.src))) {
-    const srcLeaf = libSrc.split("/").reverse()[0];
-    copyDir(
-        libSrc,
-        path.join(BUILD_DIR, "lib", srcLeaf),
+for (
+    const libSpec of spec['lib']
+    .map(
+        s => {
+            return {
+                src: path.resolve(s.src),
+                dest: path.join(libDirPath, s.targetName)
+            }
+        }
+    )
+    ) {
+    copyDir.sync(
+        libSpec.src,
+        path.join(libSpec.dest),
         {}
     );
 }
@@ -68,7 +78,7 @@ for (const libClientSrc of spec['libClients'].map(s => path.resolve(s))) {
         path.join(clientDestParent, "pankosmia_metadata.json")
     );
     // - client build/
-    copyDir(
+    copyDir.sync(
         path.join(libClientSrc, "build"),
         path.join(clientDestParent, "build"),
         {}

@@ -1,4 +1,18 @@
 #!/usr/bin/env bash
 
+URL="http://localhost:8000"
+if ! command "firefox --version" >/dev/null 2>&1
+then
+    firefox "$URL" >/dev/null 2>&1 &
+elif [[ -x $BROWSER ]]
+then
+    "$BROWSER" "$URL" >/dev/null 2>&1 &
+elif path=$(which xdg-open || which gnome-open)
+then
+    "$path" "$URL" >/dev/null 2>&1 &
+fi
+echo "Launch a web browser and enter http://localhost:8000"
+echo "(Best viewed with a Graphite-enabled browser such as Firefox.)"
+echo " "
 export APP_RESOURCES_DIR="./lib/"
 ./bin/server.bin

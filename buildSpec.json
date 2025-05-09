@@ -1,6 +1,6 @@
 {
   "app": {
-    "name": "liminal",
+    "name": "pithekos",
     "version": "0.2.3"
   },
   "bin": {
@@ -8,16 +8,20 @@
   },
   "lib": [
     {
-      "src": "../../../pankosmia-web/app_resources"
+      "src": "../../../resource-core/runtime_resources",
+      "targetName": "app_resources"
     },
     {
-      "src": "../../../pankosmia-web/webfonts"
+      "src": "../../../resource-core/templates",
+      "targetName": "templates"
     },
     {
-      "src": "../../../pankosmia-web/templates"
+      "src": "../../../webfonts-core",
+      "targetName": "webfonts"
     },
     {
-      "src": "../buildResources/setup"
+      "src": "../buildResources/setup",
+      "targetName": "setup"
     }
   ],
   "libClients": [
