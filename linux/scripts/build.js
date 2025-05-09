@@ -59,6 +59,22 @@ for (
         {}
     );
 }
+// Patch i18n
+const builtI18nPath = path.join(BUILD_DIR, "lib", "templates", "i18n.json");
+const i18nJson = fse.readJsonSync(builtI18nPath);
+const i18nPatchPath = path.resolve("../../globalBuildResources/i18nPatch.json");
+const patchJson = fse.readJsonSync(i18nPatchPath);
+for ([level1, level1Values] of Object.entries(patchJson)) {
+    for ([level2, level2Values] of Object.entries(level1Values)) {
+        for ([level3, payload] of Object.entries(level2Values)) {
+            if (!i18nJson[level1] || !i18nJson[level1][level2] || !i18nJson[level1][level2][level3]) {
+                throw new Error(`Trying to patch i18n for '${level1}/${level2}/${level3}' which does not exist in i18n template`);
+            }
+            i18nJson[level1][level2][level3] = payload;
+        }
+    }
+}
+fse.writeJsonSync(builtI18nPath, i18nJson);
 // Make lib/clients
 fse.mkdirSync(path.join(BUILD_DIR, "lib", "clients"));
 // Copy clients:
