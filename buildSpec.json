@@ -32,5 +32,6 @@
     "../../../core-client-workspace",
     "../../../xenizo-parallel-gospels",
     "../../../core-client-i18n-editor"
-  ]
+  ],
+  "favIcon": "../../globalBuildResources/favicon.ico"
 }

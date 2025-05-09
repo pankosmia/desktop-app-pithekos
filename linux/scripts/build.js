@@ -77,7 +77,7 @@ for ([level1, level1Values] of Object.entries(patchJson)) {
 fse.writeJsonSync(builtI18nPath, i18nJson);
 // Make lib/clients
 fse.mkdirSync(path.join(BUILD_DIR, "lib", "clients"));
-// Copy clients:
+// Copy clients and, optionally, favicon:
 for (const libClientSrc of spec['libClients'].map(s => path.resolve(s))) {
     const clientSrcLeaf = libClientSrc.split("/").reverse()[0];
     const clientDestParent = path.join(BUILD_DIR, "lib", "clients", clientSrcLeaf);
@@ -99,4 +99,11 @@ for (const libClientSrc of spec['libClients'].map(s => path.resolve(s))) {
         path.join(clientDestParent, "build"),
         {}
     );
+    // - maybe favicon
+    if (spec.favIcon) {
+        fse.copySync(
+            path.resolve(spec.favIcon),
+            path.join(clientDestParent, "build", "favicon.ico")
+        );
+    }
 }
