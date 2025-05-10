@@ -107,3 +107,10 @@ for (const libClientSrc of spec['libClients'].map(s => path.resolve(s))) {
         );
     }
 }
+// Maybe theme
+if (spec.theme) {
+    fse.copySync(
+        path.resolve(spec.theme),
+        path.join(BUILD_DIR, "lib", "app_resources", "themes", "default.json")
+    );
+}
