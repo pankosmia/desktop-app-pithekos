@@ -1,0 +1,38 @@
+{
+  "app": {
+    "name": "liminal",
+    "version": "0.2.3"
+  },
+  "bin": {
+    "src": "../../local_server/target/debug/local_server"
+  },
+  "lib": [
+    {
+      "src": "../../../resource-core/runtime_resources",
+      "targetName": "app_resources"
+    },
+    {
+      "src": "../../../resource-core/templates",
+      "targetName": "templates"
+    },
+    {
+      "src": "../../../webfonts-core",
+      "targetName": "webfonts"
+    },
+    {
+      "src": "../buildResources/setup",
+      "targetName": "setup"
+    }
+  ],
+  "libClients": [
+    "../../../core-client-dashboard",
+    "../../../core-client-settings",
+    "../../../core-client-remote-repos",
+    "../../../core-client-content",
+    "../../../core-client-workspace",
+    "../../../xenizo-parallel-gospels",
+    "../../../core-client-i18n-editor"
+  ],
+  "favIcon": "../../globalBuildResources/_liminal/favicon.ico",
+  "theme": "../../globalBuildResources/_liminal/theme.json"
+}
