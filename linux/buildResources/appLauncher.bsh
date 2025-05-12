@@ -14,5 +14,9 @@ fi
 echo "Launch a web browser and enter http://localhost:8000"
 echo "(Best viewed with a Graphite-enabled browser such as Firefox.)"
 echo " "
-export APP_RESOURCES_DIR="./lib/"
-./bin/server.bin
+
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+export APP_RESOURCES_DIR="$SCRIPT_DIR/lib/"
+
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+$SCRIPT_DIR/bin/server.bin
