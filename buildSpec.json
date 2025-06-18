@@ -4,7 +4,8 @@
     "version": "0.2.3"
   },
   "bin": {
-    "src": "../../local_server/target/debug/local_server"
+    "src": "../../local_server/target/debug/local_server",
+    "srcXX": "/home/mark/repos/pankosmia/pankosmia-web/target/debug/pankosmia_web"
   },
   "lib": [
     {
