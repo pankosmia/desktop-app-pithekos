@@ -1,5 +1,6 @@
 const path = require('path');
 const fse = require('fs-extra');
+const fs = require('fs');
 const copyDir = require('copy-dir');
 require('@dotenvx/dotenvx').config({path: ['../../app_config.env'], quiet: true});
 
@@ -122,6 +123,7 @@ for (const libClientSrc of spec['libClients'].map(s => path.resolve(s))) {
         );
     }
 }
+
 // Maybe theme
 if (spec.theme) {
     fse.copySync(
@@ -129,3 +131,24 @@ if (spec.theme) {
         path.join(BUILD_DIR, "lib", "app_resources", "themes", "default.json")
     );
 }
+
+const fixWindowsUtf8 = (srcFilePath, destFilePath) => {
+    // Read the file with UTF-8 encoding
+    fs.readFile(srcFilePath, 'utf8', (err, data) => {
+        if (err) {
+            console.error('Error reading file:', err);
+            return;
+        }
+
+        // Replace the unwanted character with the intended character
+        const correctedContent = data.replace(/âˆž/g, '∞'); 
+
+        // Write the corrected content to the specified destination with UTF-8 encoding
+        fs.writeFile(destFilePath, correctedContent, 'utf8', () => {
+        });
+    });
+};
+
+const PAGED_JS = path.resolve(spec['lib'][0]['src'] + '/pdf/paged.polyfill.js');
+fixWindowsUtf8(PAGED_JS, BUILD_DIR + '/lib/' + spec['lib'][0]['targetName'] + '/pdf/paged.polyfill.js')
+

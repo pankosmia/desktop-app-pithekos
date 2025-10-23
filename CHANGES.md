@@ -1,9 +1,19 @@
 # <span id="toc">CHANGELOG</span>
+- [10 Oct 2025](#10-oct-2025)
 - [3 Oct 2025](#3-oct-2025)
 - [21 Aug 2025](#21-aug-2025)
 - [19 Aug 2025](#19-aug-2025)
 - [16 Aug 2025](#16-aug-2025)
 - [14 Jul 2025](#14-jul-2025)
+
+## <span id="10-oct-2025">10 Oct 2025</span>  ... [↩](#toc)</sup></sub>
+- General:
+  - More subtle snackbar colours
+  - Better use of MUI themes
+  - Resolved horizontal Padauk and Awami Nastaliq collisions 
+
+- Editors:
+  - Floating editor tool bar
 
 ## <span id="3-oct-2025">3 Oct 2025</span>  ... [↩](#toc)</sup></sub>
 - General:
