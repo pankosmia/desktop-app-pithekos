@@ -42,6 +42,87 @@ doSync() {
   echo globalBuildResources/theme.json:
   git reset globalBuildResources/theme.json
   git checkout globalBuildResources/theme.json
+  echo branding/building_blocks/for_favicon_ico/favicon_16x16.png:
+  git reset branding/building_blocks/for_favicon_ico/favicon_16x16.png
+  git checkout branding/building_blocks/for_favicon_ico/favicon_16x16.png
+  echo branding/building_blocks/for_favicon_ico/favicon_32x32.png:
+  git reset branding/building_blocks/for_favicon_ico/favicon_32x32.png
+  git checkout branding/building_blocks/for_favicon_ico/favicon_32x32.png
+  echo branding/building_blocks/for_icon_icns/icon_1024x1024.png:
+  git reset branding/building_blocks/for_icon_icns/icon_1024x1024.png
+  git checkout branding/building_blocks/for_icon_icns/icon_1024x1024.png
+  echo branding/building_blocks/for_icon_icns/icon_1024x1024@2x.png:
+  git reset branding/building_blocks/for_icon_icns/icon_1024x1024@2x.png
+  git checkout branding/building_blocks/for_icon_icns/icon_1024x1024@2x.png
+  echo branding/building_blocks/for_icon_icns/icon_128x128.png:
+  git reset branding/building_blocks/for_icon_icns/icon_128x128.png
+  git checkout branding/building_blocks/for_icon_icns/icon_128x128.png
+  echo branding/building_blocks/for_icon_icns/icon_128x128@2x.png:
+  git reset branding/building_blocks/for_icon_icns/icon_128x128@2x.png
+  git checkout branding/building_blocks/for_icon_icns/icon_128x128@2x.png
+  echo branding/building_blocks/for_icon_icns/icon_16x16.png:
+  git reset branding/building_blocks/for_icon_icns/icon_16x16.png
+  git checkout branding/building_blocks/for_icon_icns/icon_16x16.png
+  echo branding/building_blocks/for_icon_icns/icon_16x16@2x.png:
+  git reset branding/building_blocks/for_icon_icns/icon_16x16@2x.png
+  git checkout branding/building_blocks/for_icon_icns/icon_16x16@2x.png
+  echo branding/building_blocks/for_icon_icns/icon_256x256.png:
+  git reset branding/building_blocks/for_icon_icns/icon_256x256.png
+  git checkout branding/building_blocks/for_icon_icns/icon_256x256.png
+  echo branding/building_blocks/for_icon_icns/icon_256x256@2x.png:
+  git reset branding/building_blocks/for_icon_icns/icon_256x256@2x.png
+  git checkout branding/building_blocks/for_icon_icns/icon_256x256@2x.png
+  echo branding/building_blocks/for_icon_icns/icon_32x32.png:
+  git reset branding/building_blocks/for_icon_icns/icon_32x32.png
+  git checkout branding/building_blocks/for_icon_icns/icon_32x32.png
+  echo branding/building_blocks/for_icon_icns/icon_32x32@2x.png:
+  git reset branding/building_blocks/for_icon_icns/icon_32x32@2x.png
+  git checkout branding/building_blocks/for_icon_icns/icon_32x32@2x.png
+  echo branding/building_blocks/for_icon_icns/icon_512x512.png:
+  git reset branding/building_blocks/for_icon_icns/icon_512x512.png
+  git checkout branding/building_blocks/for_icon_icns/icon_512x512.png
+  echo branding/building_blocks/for_icon_icns/icon_512x512@2x.png:
+  git reset branding/building_blocks/for_icon_icns/icon_512x512@2x.png
+  git checkout branding/building_blocks/for_icon_icns/icon_512x512@2x.png
+  echo branding/building_blocks/for_icon_ico/win_icon_16x16.png:
+  git reset branding/building_blocks/for_icon_ico/win_icon_16x16.png
+  git checkout branding/building_blocks/for_icon_ico/win_icon_16x16.png
+  echo branding/building_blocks/for_icon_ico/win_icon_256x256.png:
+  git reset branding/building_blocks/for_icon_ico/win_icon_256x256.png
+  git checkout branding/building_blocks/for_icon_ico/win_icon_256x256.png
+  echo branding/building_blocks/for_icon_ico/win_icon_32x32.png:
+  git reset branding/building_blocks/for_icon_ico/win_icon_32x32.png
+  git checkout branding/building_blocks/for_icon_ico/win_icon_32x32.png
+  echo branding/building_blocks/for_icon_ico/win_icon_48x48.png:
+  git reset branding/building_blocks/for_icon_ico/win_icon_48x48.png
+  git checkout branding/building_blocks/for_icon_ico/win_icon_48x48.png
+  echo branding/source/favicon_1024x1024.png:
+  git reset branding/source/favicon_1024x1024.png
+  git checkout branding/source/favicon_1024x1024.png
+  echo branding/source/mac_icon_1024x1024.png:
+  git reset branding/source/mac_icon_1024x1024.png
+  git checkout branding/source/mac_icon_1024x1024.png
+  echo branding/source/win_icon_1024x1024.png:
+  git reset branding/source/win_icon_1024x1024.png
+  git checkout branding/source/win_icon_1024x1024.png
+  echo branding/source/artwork/favicon_transparent_square_blue-turqoise.psd:
+  git reset branding/source/artwork/favicon_transparent_square_blue-turqoise.psd
+  git checkout branding/source/artwork/favicon_transparent_square_blue-turqoise.psd
+  echo branding/source/artwork/logo_512.png:
+  git reset branding/source/artwork/logo_512.png
+  git checkout branding/source/artwork/logo_512.png
+  echo branding/source/artwork/logo_favicon_inkscape.svg:
+  git reset branding/source/artwork/logo_favicon_inkscape.svg
+  git checkout branding/source/artwork/logo_favicon_inkscape.svg
+  echo branding/source/artwork/logo_inkscape.svg:
+  git reset branding/source/artwork/logo_inkscape.svg
+  git checkout branding/source/artwork/logo_inkscape.svg
+  echo branding/source/artwork/logo_macos.psd:
+  git reset branding/source/artwork/logo_macos.psd
+  git checkout branding/source/artwork/logo_macos.psd
+  echo branding/source/artwork/logo_windows.psd:
+  git reset branding/source/artwork/logo_windows.psd
+  git checkout branding/source/artwork/logo_windows.psd
   echo
   echo  "    *******************************************************************************"
   echo  "    * Files expected to differ have been excluded from the sync.                  *"
