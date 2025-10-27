@@ -49,6 +49,7 @@ function createWindow() {
         const win = new BrowserWindow({
             width: 1024,
             height: 768,
+            title: app.name,
             autoHideMenuBar: true,
             show: false,  // Don't show until ready to maximize
             icon: path.join(__dirname, 'favicon.png'),

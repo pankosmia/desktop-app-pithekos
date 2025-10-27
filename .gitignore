@@ -17,6 +17,9 @@ macos/buildResources/setup/app_setup.json
 linux/buildResources/setup/app_setup.json
 buildSpec.json
 globalBuildResources/i18nPatch.json
+branding/building_blocks_/for_favicon_ico/favicon.ico
+branding/building_blocks_/for_icon_ico/icon.ico
+branding/building_blocks_/for_icon_icns/icon.icns
 
 #macos
 .DS_Store
