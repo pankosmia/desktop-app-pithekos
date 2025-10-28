@@ -1,5 +1,16 @@
 #!/usr/bin/env zsh
 
+# Run from pankosmia/[this-repo's-name]/macos/scripts directory by:  ./clone.zsh
+# Defaults to https; Optional argument to use ssh: ./clone.zsh -s
+
+# Clone via ssh if the -s $1 positional argument is provided, otherwise use https
+cloneMethod="${1:-h}" # -s means ssh; default is https
+if [[ $cloneMethod =~ ^(-s) ]]; then
+  METHOD=git@github.com:
+else
+  METHOD=https://github.com/
+fi
+
 source ../../app_config.env
 
 count=$( wc -l < "../../app_config.env" )
@@ -14,7 +25,7 @@ for ((i=1;i<=count;i++)); do
     asset=$(sed 's/ //g' <<< $asset)
     echo "############################### BEGIN Asset $i: $asset ###############################"
     if [ ! -d "$asset" ]; then
-      git clone https://github.com/pankosmia/$asset.git
+      git clone "$METHOD"pankosmia/$asset.git
     else
       echo "Directory already exists; Not cloned."
     fi
@@ -29,7 +40,7 @@ for ((i=1;i<=count;i++)); do
     client=$(sed 's/ //g' <<< $client)
     echo "############################### BEGIN Client $i: $client ###############################"
     if [ ! -d "$client" ]; then
-      git clone https://github.com/pankosmia/$client.git
+      git clone "$METHOD"pankosmia/$client.git
     else
       echo "Directory already exists; Not cloned."
     fi
