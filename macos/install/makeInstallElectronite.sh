@@ -124,6 +124,15 @@ mv ${APP_BASE_DIR}/Contents/electron/Electron.app ${APP_BASE_DIR}/Contents/elect
 
 chmod 755 ${APP_BASE_DIR}/Contents/electron/Electron/Contents/MacOS/Electron
 
+# update Info.plist file in Electron folder - insert app name
+echo "Updating Electron Info.plist file"
+PLIST_FILE_ELECTRON="${APP_BASE_DIR}/Contents/electron/Electron/Contents/Info.plist"
+sed -i.bak "/CFBundleDisplayName/{n;s/Electron/$APP_NAME/g;}" "$PLIST_FILE_ELECTRON"
+sed -i.bak "/CFBundleName/{n;s/Electron/$APP_NAME/g;}" "$PLIST_FILE_ELECTRON"
+# show updated file contents
+cat "$PLIST_FILE_ELECTRON"
+echo "Done Updating Electron Info.plist file"
+
 if ! [[ $devRun =~ ^(-d) ]]; then
   mkdir -p ${APP_BASE_DIR}/Contents/Resources
   cp ../../globalBuildResources/icon.icns ${APP_BASE_DIR}/Contents/Resources/icon.icns
