@@ -3,6 +3,9 @@
 # Run from pankosmia/[this-repo's-name]/windows/scripts directory in powershell by:  ./viewer.bsh
 # ./build_viewer.bsh must be run once before ./viewer.bsh will work
 
+# Currently turning off sandbox to avoid a permissions issue with Ubuntu 24.04
+# One day we should do this, if necessary, within our code, just for the one viewer
+
 source ../../app_config.env
 
 echo "========================"
@@ -14,4 +17,4 @@ pwd
 
 # Starting electronite viewer loading dev build environment
 export APP_RESOURCES_DIR=../../build/lib/
-../viewer/project/payload/app/electron/electron ../viewer/project/payload/app/electron
+../viewer/project/payload/app/electron/electron --no-sandbox ../viewer/project/payload/app/electron
