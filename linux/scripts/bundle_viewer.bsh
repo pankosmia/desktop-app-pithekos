@@ -1,0 +1,74 @@
+#!/usr/bin/env bash
+
+set -e
+set -u
+
+source ../../app_config.env
+echo "Building Debian package for $APP_NAME $APP_VERSION"
+
+# Set variables
+cd ../../
+REPOPATH=$(pwd)
+
+# Package
+# - lower case
+PACKAGE_NAME=${APP_NAME,,}
+# - Replace spaces with a dash (-)
+PACKAGE_NAME=${PACKAGE_NAME// /-}
+
+FROM_DIR=$REPOPATH
+TO_DIR=/tmp/$PACKAGE_NAME
+INSTALL_DIR=$TO_DIR/opt/$PACKAGE_NAME
+RELEASE_DIR=$REPOPATH/releases/linux
+
+# Collect all components for Liminal and then build it
+# Create build dir if not exist
+if ! [ -d $TO_DIR ]; then
+    mkdir -p $INSTALL_DIR/viewer
+    mkdir -p $TO_DIR/usr/bin
+    mkdir -p $TO_DIR/usr/share/applications/
+    mkdir -p $TO_DIR/DEBIAN
+    chmod -R 755 $TO_DIR
+fi
+
+# Config file
+cp $FROM_DIR/app_config.env $INSTALL_DIR
+chmod 644 $INSTALL_DIR/app_config.env
+
+# Lib
+cp -r $FROM_DIR/linux/build/lib $INSTALL_DIR
+chmod 755 $INSTALL_DIR/lib
+chmod 755 $INSTALL_DIR/lib/app_resources
+
+# Bin
+cp -r $FROM_DIR/linux/build/bin $INSTALL_DIR
+chmod 755 $INSTALL_DIR/bin
+chmod 755 $INSTALL_DIR/bin/server.bin
+
+# Electron app
+cp -r $FROM_DIR/linux/viewer/project/payload/app/electron/* $INSTALL_DIR/viewer/
+chmod 755 $INSTALL_DIR/viewer/
+
+# Icon
+cp $FROM_DIR/globalBuildResources/favicon@2x.png $INSTALL_DIR/$PACKAGE_NAME.png
+
+# Copy launcher, replacing placeholders with actual values
+cp $FROM_DIR/linux/buildResources/launcher.sh $TO_DIR/usr/bin/$PACKAGE_NAME
+sed -i "s|{PACKAGE_NAME}|$PACKAGE_NAME|g" $TO_DIR/usr/bin/$PACKAGE_NAME
+chmod +x $TO_DIR/usr/bin/$PACKAGE_NAME
+
+# Copy desktop file, placeholders -> actual values
+cp $FROM_DIR/linux/buildResources/launcher.desktop $TO_DIR/usr/share/applications/$PACKAGE_NAME.desktop
+sed -i "s|{APP_NAME}|$APP_NAME|g; s|{APP_VERSION}|$APP_VERSION|g; s|{PACKAGE_NAME}|$PACKAGE_NAME|g" $TO_DIR/usr/share/applications/$PACKAGE_NAME.desktop
+
+# Debian package description, placeholders -> actual values
+cp $FROM_DIR/linux/buildResources/control $TO_DIR/DEBIAN
+INSTALLED_SIZE=`du -c $TO_DIR | grep total | cut -f1`
+sed -i "s|{PACKAGE_VERSION}|$APP_VERSION|g; s|{PACKAGE_NAME}|$PACKAGE_NAME|g; s|{INSTALLED_SIZE}|$INSTALLED_SIZE|g" $TO_DIR/DEBIAN/control
+
+# Finally, build the package and write it to the Release directory
+cd /tmp
+dpkg-deb --root-owner-group --build $PACKAGE_NAME $RELEASE_DIR/$PACKAGE_NAME-linux-standalone-intel64-$APP_VERSION.deb
+
+# Get back into the scripts dir
+cd $REPOPATH/linux/scripts

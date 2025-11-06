@@ -11,12 +11,16 @@ on:
       tgz-name:
         description: "Name of the generated TGZ file"
         value: ${{ jobs.build.outputs.tgz-name }}
+      deb-name:
+        description: "Name of the generated .deb file"
+        value: ${{ jobs.build.outputs.deb-name }}
 
 jobs:
   build:
     runs-on: ${{ inputs.runner }}
     outputs:
       tgz-name: ${{ steps.get-tgz-name.outputs.tgz-name }}
+      deb-name: ${{ steps.get-deb-name.outputs.deb-name }}
     
     # Set process.env.CI to false to prevent treating warnings as errors
     env:
@@ -62,6 +66,7 @@ jobs:
           chmod +x ./linux/scripts/build_clients.bsh
           chmod +x ./linux/scripts/build_server.bsh
           chmod +x ./linux/scripts/bundle_tgz.bsh
+          chmod +x ./linux/scripts/bundle_viewer.bsh
 
       - name: Run app_setup.bsh
         working-directory: ./linux/scripts
@@ -83,6 +88,14 @@ jobs:
         working-directory: ./linux/scripts
         run: ./bundle_tgz.bsh -s -g
 
+      - name: Build Electronite viewer
+        working-directory: ./linux/scripts
+        run: ./build_viewer.bsh
+
+      - name: Create .deb installer
+        working-directory: ./linux/scripts
+        run: ./bundle_viewer.bsh
+
       - name: Get tgz for terminal names
         id: get-tgz-name
         run: |
@@ -94,10 +107,29 @@ jobs:
           echo "TGZ_NAME=$TGZ_NAME" >> $GITHUB_ENV
           cd ../..
 
+      - name: Get deb for terminal names
+        id: get-deb-name
+        run: |
+          echo "deb for terminal name:"
+          ls -als ./releases/linux/*.deb
+          cd ./releases/linux
+          DEB_NAME=$(ls *.deb | head -n 1)
+          echo "deb-name=$DEB_NAME" >> $GITHUB_OUTPUT
+          echo "DEB_NAME=$DEB_NAME" >> $GITHUB_ENV
+          cd ../..
+
       - name: Upload tgz for terminal artifacts
         uses: actions/upload-artifact@v4
         with:
           name: ${{ env.TGZ_NAME }}
           path: ./releases/linux/${{ env.TGZ_NAME }}
+          if-no-files-found: error
+          retention-days: 90
+
+      - name: Upload deb for terminal artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.DEB_NAME }}
+          path: ./releases/linux/${{ env.DEB_NAME }}
           if-no-files-found: error
           retention-days: 90

@@ -1,0 +1,9 @@
+[Desktop Entry]
+Encoding=UTF-8
+Name={APP_NAME}
+Version={APP_VERSION}
+Type=Application
+Terminal=false
+Exec=/usr/bin/{PACKAGE_NAME}
+Icon=/opt/{PACKAGE_NAME}/{PACKAGE_NAME}.png
+Comment=Bible Translation, the CCBT way
