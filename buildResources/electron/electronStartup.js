@@ -118,6 +118,8 @@ function createWindow() {
         const win = new BrowserWindow({
             width: 1024,
             height: 768,
+            minWidth: 900,
+            minHeight: 600,
             title: app.name,
             autoHideMenuBar: true,
             show: false,  // Don't show until ready to maximize
