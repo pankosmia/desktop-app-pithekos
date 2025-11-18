@@ -98,7 +98,12 @@ for ((i=1;i<=count;i++)); do
     fi
   fi
 done
-echo "  ]">> $clients
+echo "  ],">> $clients
+echo "  \"app\": {">> $clients
+echo "    \"name\": \"$APP_NAME\",">> $clients
+echo "    \"version\": \"$APP_VERSION\",">> $clients
+echo "    \"short_name\": \"$APP_SHORT_NAME\"">> $clients
+echo "  }">> $clients
 echo "}">> $clients
 
 echo "  ],">> $spec

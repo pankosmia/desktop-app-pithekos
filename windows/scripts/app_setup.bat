@@ -97,7 +97,12 @@ for /l %%a in (1,1,%count%) do (
     )
   )
 )
-echo   ]>> %clients%
+echo   ],>> %clients%
+echo   "app": {>> %clients%
+echo     "name": "%APP_NAME:'=%",>> %clients%
+echo     "version": "%APP_VERSION%",>> %clients%
+echo     "short_name": "%APP_SHORT_NAME%">> %clients%
+echo   }>> %clients%
 echo }>> %clients%
 
 echo   ],>> %spec%
