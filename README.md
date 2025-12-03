@@ -114,7 +114,7 @@ Config files must match clients and assets utilized. Scripts that write them are
 
 | Linux | Windows | MacOS |
 |-------|---------|-------|
-| <pre>buildSpec.json<br />/globalBuildResources/i18nPatch.json<br />/linux/buildResources/setup/app_setup.json</pre> | <pre>buildSpec.json<br />/globalBuildResources/i18nPatch.json<br />\windows\buildResources\setup\app_setup.json</pre> | <pre>buildSpec.json<br />/globalBuildResources/i18nPatch.json<br />/macos/buildResources/setup/app_setup.json</pre> 
+| <pre>buildSpec.json<br />/globalBuildResources/i18nPatch.json<br />/globalBuildResources/product.json<br />/linux/buildResources/setup/app_setup.json</pre> | <pre>buildSpec.json<br />\globalBuildResources\i18nPatch.json<br />\globalBuildResources\product.json<br />\windows\buildResources\setup\app_setup.json</pre> | <pre>buildSpec.json<br />/globalBuildResources/i18nPatch.json<br />/globalBuildResources/product.json<br />/macos/buildResources/setup/app_setup.json</pre> 
 
 Review `app_config.env` and adjust as needed, then run one of the setup scripts that follow.  Re-run the app_setup script anytime `app_config.env` is changed.
 
@@ -122,7 +122,7 @@ Review `app_config.env` and adjust as needed, then run one of the setup scripts 
 Run from the provided location:
 | Description | Linux | Windows | MacOS |
 |-------------|-------|---------|-------|
-| Uses app_config.env to generate/rebuild/replace app_setup.json, buildSpec.json, and i18nPatch.json| `/linux/scripts/app_setup.bsh` | `\windows\scripts\app_setup.bat` | `/macos/scripts/app_setup.zsh` |
+| Uses app_config.env to generate/rebuild/replace app_setup.json, buildSpec.json, product.json, and i18nPatch.json| `/linux/scripts/app_setup.bsh` | `\windows\scripts\app_setup.bat` | `/macos/scripts/app_setup.zsh` |
 
 ##### Setup scripts:
 Run from the provided location:

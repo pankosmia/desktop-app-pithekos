@@ -9,6 +9,7 @@ echo      *   - \macos\buildResources\setup\app_setup.json   *
 echo      *   - \linux\buildResources\setup\app_setup.json   *
 echo      *   - \buildSpec.json                              *
 echo      *   - \globalBuildResources\i18nPatch.json         *
+echo      *   - \globalBuildResources\app.json               *
 echo      ****************************************************
 echo.
 
@@ -19,6 +20,7 @@ setlocal ENABLEDELAYEDEXPANSION
 set clients=..\buildResources\setup\app_setup.json
 set spec=..\..\buildSpec.json
 set name=..\..\globalBuildResources\i18nPatch.json
+set product=..\..\globalBuildResources\product.json
 
 echo {> %name%
 echo   "branding": {>> %name%
@@ -97,22 +99,72 @@ for /l %%a in (1,1,%count%) do (
     )
   )
 )
-echo   ],>> %clients%
-echo   "app": {>> %clients%
-echo     "name": "%APP_NAME:'=%",>> %clients%
-echo     "version": "%APP_VERSION%",>> %clients%
-echo     "short_name": "%APP_SHORT_NAME%">> %clients%
-echo   }>> %clients%
+echo   ]>> %clients%
 echo }>> %clients%
+
+rem Get locale-independent datetime from WMI
+for /f "tokens=2 delims==." %%I in ('wmic os get LocalDateTime /value') do set ldt=%%I
+
+set yyyy=%ldt:~0,4%
+set mm=%ldt:~4,2%
+set dd=%ldt:~6,2%
+set hh=%ldt:~8,2%
+set min=%ldt:~10,2%
+set ss=%ldt:~12,2%
+
+rem Convert month number to short name
+if "%mm%"=="01" set mname=Jan
+if "%mm%"=="02" set mname=Feb
+if "%mm%"=="03" set mname=Mar
+if "%mm%"=="04" set mname=Apr
+if "%mm%"=="05" set mname=May
+if "%mm%"=="06" set mname=Jun
+if "%mm%"=="07" set mname=Jul
+if "%mm%"=="08" set mname=Aug
+if "%mm%"=="09" set mname=Sep
+if "%mm%"=="10" set mname=Oct
+if "%mm%"=="11" set mname=Nov
+if "%mm%"=="12" set mname=Dec
+
+rem Get timezone offset (HHMM) from registry and format as ±HH:MM
+for /f "tokens=2*" %%A in ('reg query "HKLM\SYSTEM\CurrentControlSet\Control\TimeZoneInformation" /v Bias 2^>nul') do set Bias=%%B
+for /f "tokens=2*" %%A in ('reg query "HKLM\SYSTEM\CurrentControlSet\Control\TimeZoneInformation" /v DaylightBias 2^>nul') do set DaylightBias=%%B
+
+rem Use Bias + DaylightBias when daylight saving is active; try to detect by StandardName vs DaylightName times
+rem Bias = minutes west of UTC (positive means UTC-)
+if not defined Bias set Bias=0
+set /a tzMinutes=Bias
+
+rem Determine sign and absolute minutes, then convert to hours:minutes
+if %tzMinutes% GEQ 0 (
+  set "sign=-"
+) else (
+  set "sign=+"
+  set /a tzMinutes=-tzMinutes
+)
+set /a tzH=tzMinutes/60
+set /a tzM=tzMinutes%%60
+if %tzH% LSS 10 set "tzH=0%tzH%"
+if %tzM% LSS 10 set "tzM=0%tzM%"
+set tz=%sign%%tzH%:%tzM%
+
+echo {>%product%
+echo   "name": "%APP_NAME:'=%",>> %product%
+echo   "short_name": "%APP_SHORT_NAME%",>> %product%
+echo   "version": "%APP_VERSION%",>> %product%
+echo   "datetime": "%dd% %mname% %yyyy% %hh%:%min%:%ss% UTC%tz%">> %product%
+echo }>> %product%
 
 echo   ],>> %spec%
 echo   "favIcon": "../../globalBuildResources/favicon.ico",>> %spec%
-echo   "theme": "../../globalBuildResources/theme.json">> %spec%
+echo   "theme": "../../globalBuildResources/theme.json",>> %spec%
+echo   "product": "../../globalBuildResources/product.json">> %spec%
 echo }>> %spec%
 
 echo.
 echo \buildSpec.json generated/rebuilt/replaced
 echo \globalBuildResources\i18nPatch.json generated/rebuilt/replaced
+echo \globalBuildResources\product.json generated/rebuilt/replaced
 echo \windows\buildResources\setup\app_setup.json generated/rebuilt/replaced
 echo.
 echo Copying \windows\buildResources\setup\app_setup.json to \linux\buildResources\setup\

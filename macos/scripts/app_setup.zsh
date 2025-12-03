@@ -9,6 +9,7 @@ echo "     *   - /macos/buildResources/setup/app_setup.json   *"
 echo "     *   - /linux/buildResources/setup/app_setup.json   *"
 echo "     *   - /buildSpec.json                              *"
 echo "     *   - /globalBuildResources/i18nPatch.json         *"
+echo "     *   - /globalBuildResources/product.json           *"
 echo "     ****************************************************"
 echo
 
@@ -17,6 +18,7 @@ source ../../app_config.env
 clients="../buildResources/setup/app_setup.json"
 spec="../../buildSpec.json"
 name="../../globalBuildResources/i18nPatch.json"
+product="../../globalBuildResources/product.json"
 
 echo "{"> $name
 echo "  \"branding\": {">> $name
@@ -98,22 +100,26 @@ for ((i=1;i<=count;i++)); do
     fi
   fi
 done
-echo "  ],">> $clients
-echo "  \"app\": {">> $clients
-echo "    \"name\": \"$APP_NAME\",">> $clients
-echo "    \"version\": \"$APP_VERSION\",">> $clients
-echo "    \"short_name\": \"$APP_SHORT_NAME\"">> $clients
-echo "  }">> $clients
+echo "  ]">> $clients
 echo "}">> $clients
+
+echo "{"> $product
+echo "  \"name\": \"$APP_NAME\",">> $product
+echo "  \"short_name\": \"$APP_SHORT_NAME\",">> $product
+echo "  \"version\": \"$APP_VERSION\",">> $product
+echo "  \"datetime\": \"$(date '+%d %b %Y %H:%M:%S UTC%:z')\"">> $product
+echo "}">> $product
 
 echo "  ],">> $spec
 echo "  \"favIcon\": \"../../globalBuildResources/favicon.ico\",">> $spec
-echo "  \"theme\": \"../../globalBuildResources/theme.json\"">> $spec
+echo "  \"theme\": \"../../globalBuildResources/theme.json\",">> $spec
+echo "  \"product\": \"../../globalBuildResources/product.json\"">> $spec
 echo "}">> $spec
 
 echo
 echo "/buildSpec.json generated/rebuilt/replaced"
 echo "/globalBuildResources/i18nPatch.json generated/rebuilt/replaced"
+echo "/globalBuildResources/product.json generated/rebuilt/replaced"
 echo "/macos/buildResources/setup/app_setup.json generated/rebuilt/replaced"
 echo
 echo "Copying /macos/buildResources/setup/app_setup.json to /windows/buildResources/setup/"
