@@ -28,6 +28,106 @@ app.name = '${APP_NAME}';
 const port = '19119';
 let canClose = true;
 
+function InitializeMenu() {
+  const isMac = process.platform === 'darwin';
+  const template = [
+    {
+      label: 'Edit',
+      submenu: [
+        {role: 'undo'},
+        {role: 'redo'},
+        {type: 'separator'},
+        {role: 'cut'},
+        {role: 'copy'},
+        {role: 'paste'},
+        {role: 'pasteAndMatchStyle'},
+        // {role: 'delete'},
+        {role: 'selectAll'}
+      ]
+    },
+    {
+      label: 'View',
+      submenu: [
+        {
+          label: 'Default Zoom',
+          accelerator: isMac ? 'Cmd+0' : 'Ctrl+0',
+          click: (_menuItem, browserWindow) => {
+            const win = browserWindow || BrowserWindow.getFocusedWindow();
+            if (!win) return;
+            win.webContents.setZoomLevel(0);
+          }
+        },
+        {role: 'zoomin'},
+        {role: 'zoomout'},
+        // {type: 'separator'}
+        // {role: 'togglefullscreen'}
+      ]
+    },
+    {
+      label: 'Window',
+      submenu: [
+        {
+          label: 'Reload',
+          accelerator: isMac ? 'Cmd+R' : 'Ctrl+R',
+          click: (menuItem, bw) => { if (bw) bw.webContents.reload(); }
+        },
+        {
+          label: 'Force Reload',
+          accelerator: isMac ? 'Shift+Cmd+R' : 'Ctrl+Shift+R',
+          click: (menuItem, bw) => { if (bw) bw.webContents.reloadIgnoringCache(); }
+        },
+        {
+          label: 'Toggle Developer Tools',
+          accelerator: isMac ? 'Alt+Cmd+I' : 'Ctrl+Shift+I',
+          click: (menuItem, bw) => { if (bw) bw.webContents.toggleDevTools(); }
+        }
+        // {role: 'minimize'},
+        // {role: 'zoom'},
+        // {type: 'separator'},
+        // {role: 'front'},
+        // {role: 'window'}
+      ]
+    }
+  ];
+
+  if (isMac) {
+    template.unshift(  {
+      label: app.name, // <--- This name will NOT show up in the macOS app menu, will need to update the Info.plist in the Electron folder
+      submenu: [
+        {role: 'hide'},
+        {role: 'hideothers'},
+        {role: 'unhide'},
+        {type: 'separator'},
+        {role: 'quit'}
+      ]
+    });
+  }
+    // Removed:
+    /**
+          {role: 'about'},
+          {type: 'separator'},
+          {role: 'services'},
+          {type: 'separator'},
+    */
+
+    try {
+      const initialMenu = Menu.getApplicationMenu();
+      // console.log('initialMenu', initialMenu);
+
+      // build menu
+      // const menu = isMac ? Menu.buildFromTemplate(template) : [];
+      const menu = Menu.buildFromTemplate(template);
+      Menu.setApplicationMenu(menu);
+      //console.log('Menu set successfully');
+
+      const currentMenu = Menu.getApplicationMenu();
+      // console.log('Current application menu:', currentMenu ? 'Set successfully' : 'Not set');
+      // console.log('currentMenu', currentMenu);
+    } catch (error) {
+      console.error('Failed to set application menu:', error);
+    }
+}
+
 /**
  * wraps timer in a Promise to make an async function that continues after a specific number of milliseconds.
  * @param {number} ms
@@ -45,24 +145,32 @@ function handleSetCanClose(event, newCanClose) {
 
 function createWindow() {
     delay(500).then(() => {
-        console.log('createWindow() - dev viewer');
+        // console.log('createWindow() - dev viewer');
         const win = new BrowserWindow({
             width: 1024,
             height: 768,
             minWidth: 900,
             minHeight: 600,
-            title: app.name,
-            autoHideMenuBar: true,
+            autoHideMenuBar: false,
             show: false,  // Don't show until ready to maximize
             icon: path.join(__dirname, 'favicon.png'),
             webPreferences: {
-                preload: path.join(__dirname, 'preload.js')
+                preload: path.join(__dirname, 'preload.js'),
+                nodeIntegration: false, //default is also false. True leads to console error.
+                contextIsolation: true, //default is also true. What is the impact of changing this to false?
+                enableRemoteModule: false, //default is also false. What is the impact of changing this to true?
+                sandbox: false, // default is also false
               }
         });
 
         win.once('ready-to-show', () => {
             win.maximize();
             win.show();
+            setTimeout(() => {
+                InitializeMenu();
+                win.show();
+                win.maximize();
+              }, 300);
         });
 
         // Show a dialog to the user to confirm the close
@@ -107,72 +215,9 @@ function createWindow() {
 }
 
 app.whenReady().then(() => {
-  // Set a custom menu with desired app name
   ipcMain.on('setCanClose', handleSetCanClose);
-  const isMac = process.platform === 'darwin';
-  if (isMac) {
-    const template = [
-      {
-        label: app.name, // <--- This name will show in the macOS app menu
-        submenu: [
-          {role: 'hide'},
-          {role: 'hideothers'},
-          {role: 'unhide'},
-          {type: 'separator'},
-          {role: 'quit'}
-        ]
-      },
-      {
-        label: 'Edit',
-        submenu: [
-          {role: 'undo'},
-          {role: 'redo'},
-          {type: 'separator'},
-          {role: 'cut'},
-          {role: 'copy'},
-          {role: 'paste'},
-          {role: 'pasteAndMatchStyle'},
-          {role: 'delete'},
-          {role: 'selectAll'}
-        ]
-      },
-      {
-        label: 'View',
-        submenu: [
-          {role: 'reload'},
-          {role: 'forcereload'},
-          {role: 'toggledevtools'},
-          {type: 'separator'},
-          {role: 'resetzoom'},
-          {role: 'zoomin'},
-          {role: 'zoomout'},
-          {type: 'separator'},
-          {role: 'togglefullscreen'}
-        ]
-      },
-      {
-        label: 'Window',
-        submenu: [
-          {role: 'minimize'},
-          {role: 'zoom'},
-          {type: 'separator'},
-          {role: 'front'},
-          {role: 'window'}
-        ]
-      }
-    ];
-    // Removed from the first menu section above for now:
-      /**
-            {role: 'about'},
-            {type: 'separator'},
-            {role: 'services'},
-            {type: 'separator'},
-      */
-    const menu = Menu.buildFromTemplate(template);
-    Menu.setApplicationMenu(menu);
-  }
 
-  setTimeout(createWindow, 0); // Wait 0 seconds for server to start (dev viewer)
+  setTimeout(createWindow, 0); // Do not wait for server to start (dev viewer)
 });
 
 app.on('window-all-closed', () => {
