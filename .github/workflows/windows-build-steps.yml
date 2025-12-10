@@ -106,10 +106,10 @@ jobs:
         working-directory: .\windows\scripts
         run: .\build_clients.bat
 
-      # Build server and assemble build environment
-      - name: Run build_server.bat
+      # Build server and assemble build environment without asking if the server is off
+      - name: Run build_server.bat -s
         working-directory: .\windows\scripts
-        run: .\build_server.bat
+        run: .\build_server.bat -s
 
       # Bundle zip without asking if the server is off and indicate GHA
       - name: Run bundle_zip.ps1 -ServerOff "Y" -IsGHA "Y"

@@ -117,9 +117,9 @@ jobs:
         working-directory: ./macos/scripts
         run: ./build_clients.zsh
 
-      - name: Build server and assemble build environment
+      - name: Build server and assemble build environment without asking if the server is off
         working-directory: ./macos/scripts
-        run: ./build_server.zsh
+        run: ./build_server.zsh -s
 
       - name: Bundle zip without asking if the server is off and indicate GHA
         working-directory: ./macos/scripts
