@@ -5,38 +5,61 @@ set -u
 
 echo
 
-# Build without cleaning if the -c positional argument is provided in either #1 or #2
 # Do not ask if the server is off if the -s positional argument is provided in either #1 or #2
+# Debug server if the -d positional argument is provided in either #1 or #2
 while [[ "$#" -gt 0 ]]
   do case $1 in
-      -c) buildWithoutClean="$1"  # -c means "yes"
-      ;;
       -s) askIfOff="$1" # -s means "no"
+      ;;
+      -d) debugServer="$1" # -d = "yes"
   esac
   shift
 done
-
-# Assign default value if -c is not present
-if [ -z ${buildWithoutClean+x} ]; then # buildWithoutClean is unset"
-  buildWithoutClean=-no
-fi
 
 # Assign default value if -s is not present
 if [ -z ${askIfOff+x} ]; then # serverOff is unset
   askIfOff=-yes
 fi
 
-# Do not clean if the -c positional argument is provided
-if ! [[ $buildWithoutClean =~ ^(-c) ]]; then
-  # Do not ask if the server is off if the -s positional argument is provided
-  if [[ $askIfOff =~ ^(-s) ]]; then
-    ./clean.zsh -s
-  else
-    ./clean.zsh
-  fi
+# Assign default value if -s is not present
+if [ -z ${debugServer+x} ]; then # debugServer is unset
+  debugServer=-no
+  buildCommand=(cargo build --release)
+  search=local_server/target/debug
+  replace=local_server/target/release
+  serverType=release
+elif [[ $debugServer =~ ^(-d) ]]; then
+  buildCommand=(cargo build)
+  search=local_server/target/release
+  replace=local_server/target/debug
+  serverType=debug
 fi
 
-if [ ! -f ../../buildSpec.json ] || [ ! -f ../../globalBuildResources/i18nPatch.json ] || [ ! -f ../buildResources/setup/app_setup.json ]; then
+# Do not ask if the server is off if the -s $1 or $2 positional argument is provided
+if ! [[ $askIfOff =~ ^(-s) ]]; then
+  while true; do
+    read "choice?Is the server off? [Y/n]: "
+    case $choice in
+      "y" | "Y" | "" ) echo
+        echo "Continuing..."
+        break
+        ;;
+      [nN] ) echo
+        echo "     Exiting..."
+        echo
+        echo "If the server is on, turn it off (e.g., Ctrl-C in terminal window or exit app), then re-run this script."
+        echo
+        exit
+        ;;
+      * ) echo
+        echo "     \"$choice\" is not a valid response. Please type y or 'Enter' to continue or 'n' to quit."
+        echo
+        ;;
+    esac
+  done
+fi
+
+if [ ! -f ../../buildSpec.json ] || [ ! -f ../../globalBuildResources/i18nPatch.json ] || [ ! -f ../../globalBuildResources/product.json ] || [ ! -f ../buildResources/setup/app_setup.json ]; then
   ./app_setup.zsh
   echo
   echo "  +-----------------------------------------------------------------------------+"
@@ -45,11 +68,21 @@ if [ ! -f ../../buildSpec.json ] || [ ! -f ../../globalBuildResources/i18nPatch.
   echo 
 fi
 
-if [ ! -f ../../local_server/target/release/local_server ]; then
-    echo "Building local server"
-    cd ../../local_server
-    OPENSSL_STATIC=yes cargo build --release
-    cd ../macos/scripts
+# Ensure buildSpec.json has the location for the indicated server build type
+configFile=../../buildSpec.json
+tmpFile=../../buildSpec.bak
+cp $configFile $tmpFile
+sed -i '' "s|$search|$replace|g" "$configFile"
+
+echo "Building local $serverType server at /$replace ..."
+cd ../../local_server
+OPENSSL_STATIC=yes "${buildCommand[@]}"
+cd ../macos/scripts
+
+if [ -d ../build ]; then
+  echo "Removing last build environment..."
+  echo
+  rm -rf ../build
 fi
 
 if [ ! -d ../build ]; then

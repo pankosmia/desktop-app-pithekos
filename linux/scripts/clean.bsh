@@ -34,7 +34,7 @@ if [ -d ../build ]; then
   rm -rf ../build
 fi
 
-if [ -f ../../local_server/target/release/local_server ]; then
+if [ -f ../../local_server/target/release/local_server ] || [ -f ../../local_server/target/debug/local_server ]; then
     echo "Cleaning local server"
     cd ../../local_server
     cargo clean

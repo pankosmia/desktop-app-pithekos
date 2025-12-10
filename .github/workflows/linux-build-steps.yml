@@ -80,9 +80,9 @@ jobs:
         working-directory: ./linux/scripts
         run: ./build_clients.bsh
 
-      - name: Build server without clean and assemble build environment
+      - name: Build server and assemble build environment
         working-directory: ./linux/scripts
-        run: ./build_server.bsh -c
+        run: ./build_server.bsh
 
       - name: Bundle tgz without asking if the server is off and indicate GHA
         working-directory: ./linux/scripts

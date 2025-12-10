@@ -38,9 +38,9 @@ fi
 
 if [ ! -f ../../local_server/target/release/local_server ]; then
   echo
-  echo "   ***************************************************************"
-  echo "   * IMPORTANT: Build the local server, then re-run this script! *"
-  echo "   ***************************************************************"
+  echo "   *****************************************************************************************"
+  echo "   * IMPORTANT: Build the local server (without the -d argument), then re-run this script! *"
+  echo "   *****************************************************************************************"
   echo
   exit
 fi

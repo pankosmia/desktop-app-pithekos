@@ -32,11 +32,16 @@ if exist ..\build (
   rmdir ..\build /s /q
 )
 
-if exist ..\..\local_server\target\release\local_server.exe (
-    echo Cleaning local server
-    cd ..\..\local_server
-    cargo clean
-    cd ..\windows\scripts
+set cleanServer=false
+
+if exist ..\..\local_server\target\release\local_server.exe set cleanServer=true
+if exist ..\..\local_server\target\debug\local_server.exe set cleanServer=true
+
+if "%cleanServer%"=="true" (
+  echo Cleaning local server
+  cd ..\..\local_server
+  cargo clean
+  cd ..\windows\scripts
 )
 
 echo.

@@ -31,9 +31,9 @@ if ($answer -eq 'Y' -Or $answer -eq '') {
 
   If (-Not (Test-Path ..\..\local_server\target\release\local_server.exe)) {
     echo "`n"
-    echo "   ***************************************************************"
-    echo "   * IMPORTANT: Build the local server, then re-run this script! *"
-    echo "   ***************************************************************"
+    echo "   *****************************************************************************************"
+    echo "   * IMPORTANT: Build the local server (without the -d argument), then re-run this script! *"
+    echo "   *****************************************************************************************"
     echo "`n"
     exit
   }

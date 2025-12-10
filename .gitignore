@@ -16,6 +16,7 @@ windows/buildResources/setup/app_setup.json
 macos/buildResources/setup/app_setup.json
 linux/buildResources/setup/app_setup.json
 buildSpec.json
+buildSpec.bak
 globalBuildResources/i18nPatch.json
 globalBuildResources/product.json
 branding/building_blocks_/for_favicon_ico/favicon.ico
