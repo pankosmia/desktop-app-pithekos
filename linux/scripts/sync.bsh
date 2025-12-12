@@ -161,11 +161,9 @@ fi
 cd ../../
 
 remote=$(git remote 2>&1)
-counta=$(wc -l <<< "${remote}")
 remotearray=(${remote[@]})
 
 config=$(git config --local --list 2>&1)
-countb=$(wc -l <<< "${config}")
 configarray=(${config[@]})
  
 # Don't proceed if the origin is not set.
@@ -180,7 +178,7 @@ fi
 
 origintest=good_if_not_changed
 upstreamtest=different_if_not_changed
-for ((i=1;i<=countb;i++)); do
+for i in "${!configarray[@]}"; do
   # Don't proceed if the origin is the intended upstream.
   if [ "${configarray[${i}]}" == "remote.origin.url=https://github.com/pankosmia/desktop-app-template.git" ]; then
     origintest=stop_because_is_set_to_desired_upstream

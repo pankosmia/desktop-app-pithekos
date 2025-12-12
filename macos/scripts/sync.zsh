@@ -1,7 +1,7 @@
 #!/usr/bin/env zsh
 
 set -e
-set -u
+set -u # Zsh will want 1-based arrays, not 0-based.
 
 doSync() {
   git fetch upstream
@@ -160,29 +160,29 @@ fi
 
 cd ../../
 
-remote=$(git remote 2>&1)
-counta=$(wc -l <<< "${remote}")
-remotearray=(${remote[@]})
+remote="$(git remote 2>/dev/null || true)"
+remotearray=("${(@f)remote}")  # split on newlines into 1-based array (Not 0 based!)
 
-config=$(git config --local --list 2>&1)
-countb=$(wc -l <<< "${config}")
-configarray=(${config[@]})
- 
+config="$(git config --local --list 2>/dev/null || true)"
+configarray=("${(@f)config}")  # split on newlines into 1-based array (Not 0 based!)
+countb=${#configarray[@]}
+
 # Don't proceed if the origin is not set.
-if [ -z "${remotearray[0]}" ]; then
+if [ -z "${remotearray[1]:-}" ]; then
   echo "origin is not set"
   echo "add origin, then re-run this script"
   cd windows/scripts/
   exit;
 else
-  echo "${remotearray[0]} is set"
+  echo "${remotearray[1]} is set"
 fi
 
 origintest=good_if_not_changed
 upstreamtest=different_if_not_changed
-for ((i=1;i<=countb;i++)); do
+
+for (( i=1; i<=countb; i++ )); do
   # Don't proceed if the origin is the intended upstream.
-  if [ "${configarray[${i}]}" == "remote.origin.url=https://github.com/pankosmia/desktop-app-template.git" ]; then
+  if [[ "${configarray[$i]}" == "remote.origin.url=https://github.com/pankosmia/desktop-app-template.git" ]]; then
     origintest=stop_because_is_set_to_desired_upstream
     echo
     echo "origin is set to https://github.com/pankosmia/desktop-app-template.git"
@@ -197,7 +197,7 @@ for ((i=1;i<=countb;i++)); do
   # Proceed if the origin is set.
   if [ "$origintest"=="good_if_not_changed" ]; then
       # Proceed if the upstream is already set as expected.
-    if [ "${configarray[${i}]}" == "remote.upstream.url=https://github.com/pankosmia/desktop-app-template.git" ]; then
+    if [[ "${configarray[$i]}" == "remote.upstream.url=https://github.com/pankosmia/desktop-app-template.git" ]]; then
       upstreamtest=as_expected
       echo "upstream is confirmed as set to https://github.com/pankosmia/desktop-app-template.git"
       up=$i
@@ -211,7 +211,7 @@ done
 # Proceed if the origin is set.
 if [ "$origintest"="good_if_not_changed" ]; then
   # Set the upstream and proceed if it is not yet set.
-  if [ -z "${remotearray[1]}" ]; then
+  if [ -z "${remotearray[2]:-}" ]; then # 1-based array!!!!
     git remote add upstream https://github.com/pankosmia/desktop-app-template.git
     set upstreamtest=set
     echo upstream has been set to https://github.com/pankosmia/desktop-app-template.git
@@ -220,10 +220,11 @@ if [ "$origintest"="good_if_not_changed" ]; then
     exit;
   fi
 fi
+
 # Don't proceed if the upstream is set elsewhere.
-if [ "$upstreamtest" == "different_if_not_changed" ]; then
+if [[ "$upstreamtest" == "different_if_not_changed" ]]; then
   echo
-  echo "The upstream is set to: ${configarray[${up}]}"
+  echo "The upstream is set to: ${configarray[$up]}"
   echo "However, this script is written for an upstream that is set to https://github.com/pankosmia/desktop-app-template.git"
   echo
   goto :end
