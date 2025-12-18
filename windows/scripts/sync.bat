@@ -123,6 +123,9 @@ git checkout globalBuildResources\icon.icns
 echo globalBuildResources\icon.ico:
 git reset globalBuildResources\icon.ico
 git checkout globalBuildResources\icon.ico
+echo globalBuildResources\linux_icon.png:
+git reset globalBuildResources\linux_icon.png
+git checkout globalBuildResources\linux_icon.png
 echo globalBuildResources\favicon.png:
 git reset globalBuildResources\favicon.png
 git checkout globalBuildResources\favicon.png

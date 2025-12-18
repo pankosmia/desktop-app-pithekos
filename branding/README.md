@@ -7,13 +7,12 @@ Logos etc for Panskosmia-related projects
 1. [Source Images](#source)
 2. [Generate via script from source images](#generate)  
 2.1. [favicon.ico / favicon*.png - corner/tab of Viewer/Browser](#generate-favicon)  
-2.2. [icon*.png's for icon.icns - MacOS Desktop (Applications, Launchpad, and Dock icon)](#generate-icon-icns)  
-2.3. [icon.ico - Windows and Linux Desktop and Start Menu](#generate-icon-ico)  
+2.2. [icon*.png's for icon.icns - MacOS desktop (Applications, Launchpad, and Dock icon)](#generate-icon-icns)  
+2.3. [icon.ico and linux_icon.png - Windows desktop and start menu and Linux (Ubuntu) application menu](#generate-icon-ico-png)  
 3. [Additional Detail](#additional)  
 3.1. [Which image files are used in this repo's build process?](#used)  
 3.2. [favicon*.png - Electronite Browser Window icon (Windows and Linux)](#electron)  
 3.3. [icon.icns - Alternate approaches - MacOS Desktop](#alternate-icns)  
-3.4. [icon.ico (Windows and Linux desktop and start menu icon)](#icon-ico)  
 4. [Endnotes](#endnotes)  
 
 ————————————————————————————
@@ -44,10 +43,10 @@ The following script generates favicon.ico for the Web Browser tab icon and favi
    - Note that re-running these script over-writes files it just created (or any other files of the same names).
 
 Review the following after running this script:
-- In the `building blocks/for_favicon_ico` subdirectory of `branding`, look over both images for things like anti-aliasing issues. They may tend need some pixel-level touch-up with respect to anti-aliasing, or other adjustments.
+- In the `building blocks/for_favicon_ico` subdirectory of `branding`, look at both images at 100% resolutions to confirm they are as desired. Adjust or change each manually as needed.
   - To recreate favicon.ico from custom files, in a terminal from the `building blocks/for_favicon_ico` subdirectory of `branding` run:
     - `magick -verbose favicon_16x16.png favicon_32x32.png favicon.ico`
-  - If you make any changes, then replace the `favicon.ico` in the `globalBuildResources` directory with your improved version.
+  - If you make any changes and run the script on the line immediately above, then also replace the `favicon.ico` in the `globalBuildResources` directory with your improved version.
 - If `favicon_16x16.png` was improved, then copy it over `globalBuildResources/favicon.png` (used by Electron).
 - If `favicon_32x32.png` was improved, then copy it over `globalBuildResources/favicon@2x.png` (used by Electron).
 
@@ -86,11 +85,13 @@ Create icon.icns with iconutil on MacOS as follows:
 3. In a terminal enter: `cd Desktop`
 4. Then enter: `iconutil -c icns icon.iconset`
 5. Use the icon.icns file created on your MacOS Desktop. Place it in the `globalBuildResources` of this repo.
-<span id="generate-icon-ico">&nbsp;</span>
-### icon.ico - Windows and Linux Desktop and Start Menu <sub><sup>... [↩](#toc)</sup></sub>
+<span id="generate-icon-ico-png">&nbsp;</span>
+### icon.ico and linux_icon.png - Windows desktop and start menu and Linux (Ubuntu) application menu <sub><sup>... [↩](#toc)</sup></sub>
 Windows desktop and start menu icons leverage multiple sizes for optimal display. Consider 16x16, 32x32, 48x48, and 256x256 pixels. This will support high-DPI displays and desktop shortcuts.
 
-The following script generates icon.ico, placing it in the `globalBuildResources` directory, and puts the building blocks it used to build icon.ico in the `building blocks\for_icon_ico` subdirectory of `branding`.
+The Linux (Ubuntu) application menu is currently set to use a 256x256 pixel image. Manually change linux_icon.png in globalBuildResources if a different resolution is preferred. Multiple png resolutions or svg are not supported by workflow scripts as currently provided.
+
+The following script generates icon.ico, placing it in the `globalBuildResources` directory, and puts the building blocks it used to build icon.ico in the `building blocks\for_icon_ico` subdirectory of `branding`.  It also places a copy of `building_blocks/for_icon_ico/win_icon_256x256.png` in `globalBuildResources/linux_icon.png`.
 
 1. Create win_icon_1024x1024.png and place it in the new subdirectory.
 2. In the terminal enter the following from the `branding` directory:
@@ -99,10 +100,10 @@ The following script generates icon.ico, placing it in the `globalBuildResources
    - Note that re-running these script over-writes files it just created (or any other files of the same names).
 
 Review the following after running this script:
-- In the `building blocks/for_icon_ico` subdirectory of `branding`, look over `win_icon_16x16.png` and `win_icon_32x32.png` for things like anti-aliasing issues. They may tend need some pixel-level touch-up with respect to anti-aliasing, or other adjustments.
+- In the `building_blocks/for_icon_ico` subdirectory of `branding`, look over `win_icon_16x16.png` and `win_icon_32x32.png` for things like anti-aliasing issues. Look at them at 100% resolutions to confirm they are as desired. Adjust or change each manually as needed.
   - To recreate icon.ico from custom files, in a terminal from the `building blocks/for_icon_ico` subdirectory of `branding` run:
     - `magick -verbose win_icon_16x16.png win_icon_32x32.png win_icon_48x48.png win_icon_256x256.png icon.ico`
-  - If you make any changes, then replace the `icon.ico` in the `globalBuildResources` directory with your improved version.
+  - If you make any changes and run the script in the line immediately above, then also replace the `icon.ico` in the `globalBuildResources` directory with your improved version.
 
 ---
 ---
@@ -123,7 +124,8 @@ That would be the following images, located in `globalBuildResources`:
 <tr><td>favicon@1.25.png</td></tr>
 <tr><td>favicon@1.5x.png</td></tr>
 <tr><td>favicon@2x.png</td></tr>
-<tr><td>icon.ico</td><td>Windows and Linux desktop and start menu</td></tr>
+<tr><td>icon.ico</td><td>Windows desktop and start menu</td></tr>
+<tr><td>linux_icon.png</td><td>Linux (Ubuntu) applications menu</td></tr>
 <tr><td>icon.icns</td><td>MacOS Applications, Launchpad, and Dock</td></tr>
 </table>
 </blockquote>
@@ -143,7 +145,6 @@ The Electronite Browser Window support displays with different DPI densities at 
 The support section of [the icns wikipedia article](https://en.wikipedia.org/wiki/Apple_Icon_Image_format#Support) cites several options for creating an icns file. However, avoid Icon Composer. It is unable to create high-resolution icns files used on retina displays.
 
 ImageMagick does not yet support the icns file format at the time this is being written. Check in on its [latest list of supported format](https://imagemagick.org/script/formats.php#supported) to see if that has changed.
-<span id="icon-ico">&nbsp;</span>
 
 ---
 ---

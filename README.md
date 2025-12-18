@@ -26,7 +26,7 @@ npm install
 
 3. `cd [os]/scripts`
 4. Edit app_config.env, entering the App Name, version number, Apps Short Name for working directory, assets, and clients.
-5. Change /globalBuildResources/theme.json directly to customize your app. And for logos, see the [Branding README](/branding/README.md) for scripts for customizing /globalBuildResources/*.ico, /globalBuildResources/*.png, and /globalBuildResources/icon.icns, along with info on how each is used.
+5. Change /globalBuildResources/theme.json directly to customize your app. And for logos, see the [Branding README](branding/README.md) for scripts for customizing /globalBuildResources/*.ico, /globalBuildResources/*.png, and /globalBuildResources/icon.icns, along with info on how each is used.
 6. Run<sup id="a1">[[1]](#f1)</sup> the `clone` script to clone all repos listed in `app_config.env` (assets and clients)
 7. Run<sup id="a1">[[1]](#f1)</sup> the `app_setup` script to generate the config files to match `app_config.env`. Re-run<sup id="a1">[[1]](#f1)</sup> the `app_setup` script anytime `app_config.env` is modified.
 8. Run<sup id="a1">[[1]](#f1)</sup> the `build_clients` script to build all clients. Be patient. This will take a while.
