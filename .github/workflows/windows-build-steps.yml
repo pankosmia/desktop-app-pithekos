@@ -7,6 +7,9 @@ on:
         description: 'The GitHub runner to use (e.g., windows-2022, windows-2025)'
         required: true
         type: string
+      server_type:
+        required: true
+        type: string
     outputs:
       zip-name:
         description: "Name of the generated ZIP file"
@@ -29,8 +32,13 @@ jobs:
     # Set process.env.CI to false to prevent treating warnings as errors
     env:
       CI: false
+      SERVER_TYPE: ${{ inputs.server_type }}
 
     steps:
+      # Show server type
+      - name: Show SERVER TYPE
+        run: echo "SERVER_TYPE = $SERVER_TYPE"
+
       # Turn off re-runs
       - name: No re-runs please
         run: |
@@ -106,9 +114,16 @@ jobs:
         working-directory: .\windows\scripts
         run: .\build_clients.bat
 
-      # Build server and assemble build environment without asking if the server is off
-      - name: Run build_server.bat -s
+      # Build DEBUG server and assemble build environment without asking if the server is off
+      - name: Run DEBUG build_server.bat -s -d
         working-directory: .\windows\scripts
+        if: env.SERVER_TYPE == 'debug'
+        run: .\build_server.bat -s -d
+
+      # Build RELEASE server and assemble build environment without asking if the server is off
+      - name: Run RELEASE build_server.bat -s
+        working-directory: .\windows\scripts
+        if: env.SERVER_TYPE == 'release'
         run: .\build_server.bat -s
 
       # Bundle zip without asking if the server is off and indicate GHA

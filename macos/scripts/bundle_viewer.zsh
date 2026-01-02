@@ -36,15 +36,6 @@ if ! [[ $askIfOff =~ ^(-s) ]]; then
   done
 fi
 
-if [ ! -f ../../local_server/target/release/local_server ]; then
-  echo
-  echo "   *****************************************************************************************"
-  echo "   * IMPORTANT: Build the local server (without the -d argument), then re-run this script! *"
-  echo "   *****************************************************************************************"
-  echo
-  exit
-fi
-
 TEMP_DIR=../temp
 if [ -d $TEMP_DIR ]; then
     echo "Deleting previous build..."

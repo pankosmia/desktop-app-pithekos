@@ -29,15 +29,6 @@ if ($answer -eq 'Y' -Or $answer -eq '') {
     Set-Variable -Name $name -Value $value
   }
 
-  If (-Not (Test-Path ..\..\local_server\target\release\local_server.exe)) {
-    echo "`n"
-    echo "   *****************************************************************************************"
-    echo "   * IMPORTANT: Build the local server (without the -d argument), then re-run this script! *"
-    echo "   *****************************************************************************************"
-    echo "`n"
-    exit
-  }
-
   $TEMP_DIR = "..\temp"
     if (Test-Path $TEMP_DIR) {
         Write-Host "Deleting previous build..."

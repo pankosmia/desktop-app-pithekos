@@ -31,15 +31,6 @@ if ($answer -eq 'Y' -Or $answer -eq '') {
   # Use lower case app name in filename and replace spaces with dashes (-) and remove single apostrophes (')
   $env:FILE_APP_NAME = $APP_NAME.ToLower().Replace(" ","-").Replace("'","")
 
-  If (-Not (Test-Path ..\..\local_server\target\release\local_server.exe)) {
-    echo "`n"
-    echo "   *****************************************************************************************"
-    echo "   * IMPORTANT: Build the local server (without the -d argument), then re-run this script! *"
-    echo "   *****************************************************************************************"
-    echo "`n"
-    exit
-  }
-
   cd ..\..\
   # echo "checkout main"
   # git checkout main | Out-Null

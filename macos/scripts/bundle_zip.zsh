@@ -55,14 +55,6 @@ fi
 
 # In GHA, each step has either already run or is otherwise unnecessary.
 if ! [[ $isGHA =~ ^(-g) ]]; then
-  if [ ! -f ../../local_server/target/release/local_server ]; then
-    echo
-    echo "   *****************************************************************************************"
-    echo "   * IMPORTANT: Build the local server (without the -d argument), then re-run this script! *"
-    echo "   *****************************************************************************************"
-    echo
-    exit
-  fi
   cd ../../
   if [ $(ls releases/macos/*.zip 2>/dev/null | wc -l) -gt 0 ]; then
     echo "A previous macos .zip release exists. Removing..."

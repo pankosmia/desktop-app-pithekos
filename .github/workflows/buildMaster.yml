@@ -1,17 +1,38 @@
 name: Master Build
 # builds windows, linux and Mac
 
+permissions:
+  actions: write
+  contents: read
+
 on:
   workflow_dispatch:
+    inputs:
+      server_type:
+        description: 'Server type'
+        required: true
+        type: choice
+        options:
+          - release
+          - debug
+        default: release
     
-    
+# set run name from input so the run appears with that name (no API call needed)
+run-name: Master Build - ${{ inputs.server_type }} server
+
 jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "Server type is ${{ inputs.server_type }}"
+
   build-macos-intel:
     name: Build on macOS Intel64 (x64)
     uses: ./.github/workflows/macos-build-steps.yml
     with:
       runner: macos-15-intel
       delay_seconds: 1
+      server_type: ${{ github.event.inputs.server_type }}
 
   build-macos-arm:
     name: Build on macOS ARM64 (Apple Silicon)
@@ -19,18 +40,21 @@ jobs:
     with:
       runner: macos-14
       delay_seconds: 600
+      server_type: ${{ github.event.inputs.server_type }}
   
   build-windows:
     name: Build on Windows x64
     uses: ./.github/workflows/windows-build-steps.yml
     with:
       runner: windows-2025
+      server_type: ${{ github.event.inputs.server_type }}
       
   build-linux:
     name: Build on Linux x64
     uses: ./.github/workflows/linux-build-steps.yml
     with:
       runner: ubuntu-22.04
+      server_type: ${{ github.event.inputs.server_type }}
       
   finalize:
     needs: [build-macos-intel, build-macos-arm, build-windows, build-linux]

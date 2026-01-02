@@ -7,6 +7,9 @@ on:
         description: 'The GitHub runner to use (e.g., ubuntu-20.04, ubuntu-22.04)'
         required: true
         type: string
+      server_type:
+        required: true
+        type: string
     outputs:
       tgz-name:
         description: "Name of the generated TGZ file"
@@ -21,12 +24,17 @@ jobs:
     outputs:
       tgz-name: ${{ steps.get-tgz-name.outputs.tgz-name }}
       deb-name: ${{ steps.get-deb-name.outputs.deb-name }}
-    
+      
     # Set process.env.CI to false to prevent treating warnings as errors
     env:
       CI: false
+      SERVER_TYPE: ${{ inputs.server_type }}
 
     steps:
+      # Show server type
+      - name: Show SERVER TYPE
+        run: echo "SERVER_TYPE = $SERVER_TYPE"
+
       # Turn off re-runs
       - name: No re-runs please
         run: |
@@ -80,8 +88,14 @@ jobs:
         working-directory: ./linux/scripts
         run: ./build_clients.bsh
 
-      - name: Build server and assemble build environment without asking if the server is off
+      - name: Build DEBUG server and assemble build environment without asking if the server is off
         working-directory: ./linux/scripts
+        if: env.SERVER_TYPE == 'debug'
+        run: ./build_server.bsh -s -d
+
+      - name: Build RELEASE server and assemble build environment without asking if the server is off
+        working-directory: ./linux/scripts
+        if: env.SERVER_TYPE == 'release'
         run: ./build_server.bsh -s
 
       - name: Bundle tgz without asking if the server is off and indicate GHA

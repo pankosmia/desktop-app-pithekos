@@ -8,6 +8,9 @@ on:
         description: 'The GitHub runner to use (e.g., macos-13, macos-14)'
         required: true
         type: string
+      server_type:
+        required: true
+        type: string
       delay_seconds:
         description: 'Number of seconds to delay before starting the build'
         required: false
@@ -40,8 +43,13 @@ jobs:
     # Set process.env.CI to false to prevent treating warnings as errors
     env:
       CI: false
+      SERVER_TYPE: ${{ inputs.server_type }}
 
     steps:
+      # Show server type
+      - name: Show SERVER TYPE
+        run: echo "SERVER_TYPE = $SERVER_TYPE"
+
       # Turn off re-runs
       - name: No re-runs please
         run: |
@@ -117,8 +125,14 @@ jobs:
         working-directory: ./macos/scripts
         run: ./build_clients.zsh
 
-      - name: Build server and assemble build environment without asking if the server is off
+      - name: Build DEBUG server and assemble build environment without asking if the server is off
         working-directory: ./macos/scripts
+        if: env.SERVER_TYPE == 'debug'
+        run: ./build_server.zsh -s -d
+
+      - name: Build RELEASE server and assemble build environment without asking if the server is off
+        working-directory: ./macos/scripts
+        if: env.SERVER_TYPE == 'release'
         run: ./build_server.zsh -s
 
       - name: Bundle zip without asking if the server is off and indicate GHA
