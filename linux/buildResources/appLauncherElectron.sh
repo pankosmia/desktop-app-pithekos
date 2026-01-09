@@ -32,6 +32,9 @@ fi
 
 echo "bin folder found at $BASE"
 
+# set available port environment variable (exported as $ROCKET_PORT )
+source ./find_free_port.sh
+
 # start electron
 cd "$BASE"
 export APP_RESOURCES_DIR=./lib/

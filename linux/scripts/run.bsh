@@ -96,8 +96,9 @@ tmpFile=../../buildSpec.bak
 cp $configFile $tmpFile
 sed -i "s|$search|$replace|g" "$configFile"
 
-# set port environment variables
-export ROCKET_PORT=19119
+# set available port environment variable (exported as $ROCKET_PORT )
+source ../buildResources/find_free_port.sh
+echo "$ROCKET_PORT"
 
 if [ -d ../build ]; then
   echo "Removing last build environment..."

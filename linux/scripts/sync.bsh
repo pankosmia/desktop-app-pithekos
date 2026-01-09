@@ -170,7 +170,7 @@ config=$(git config --local --list 2>&1)
 configarray=(${config[@]})
  
 # Don't proceed if the origin is not set.
-if [ -z "${remotearray[0]}" ]; then
+if [ -z "${remotearray[0]:-}" ]; then
   echo "origin is not set"
   echo "add origin, then re-run this script"
   cd windows/scripts/
@@ -212,7 +212,7 @@ done
 # Proceed if the origin is set.
 if [ "$origintest"="good_if_not_changed" ]; then
   # Set the upstream and proceed if it is not yet set.
-  if [ -z "${remotearray[1]}" ]; then
+  if [ -z "${remotearray[1]:-}" ]; then
     git remote add upstream https://github.com/pankosmia/desktop-app-template.git
     set upstreamtest=set
     echo upstream has been set to https://github.com/pankosmia/desktop-app-template.git

@@ -9,13 +9,13 @@
  *
  * @description
  * The script manages the lifecycle of the Electron frontend. (This is the dev viewer version; The backend server process is handled separately.)
- * It creates the main application viewer window on port 19119,
+ * It creates the main application viewer window on the first available port starting at 19119,
  * For macOS, it creates a custom application menu with standard operations.
  *
  * @requirements
  * - Electron.js
  * - A compatible backend server binary (server.bin for macOS/Linux or server.exe for Windows)
- * - Port 19119 must be available for the backend server
+ * - The first available port starting at 19119 must be available for the backend server
  * - For macOS/Linux: lsof command must be available for port checking
  * - Environment variable APP_NAME must be set for proper application naming
  */
@@ -23,9 +23,48 @@
 const { app, BrowserWindow, Menu, shell, ipcMain, ipcRenderer, contextBridge, dialog } = require('electron');
 const { spawn, execSync } = require('child_process');
 const path = require('path');
+const net = require('net');
+
+const env = {
+  ...process.env,
+  APP_RESOURCES_DIR: process.env.APP_RESOURCES_DIR === undefined ? './lib/' : process.env.APP_RESOURCES_DIR,
+};
+
+function findFreePort(start = 19119, end = 65535) {
+  return new Promise((resolve, reject) => {
+    let port = start;
+    function tryPort() {
+      if (port > end) return reject(new Error('free port not found'));
+      const server = net.createServer();
+      server.once('error', () => { port++; tryPort(); });
+      server.once('listening', () => {
+        server.close(() => resolve(port));
+      });
+      server.listen(port, '127.0.0.1');
+    }
+    tryPort();
+  });
+}
+
+// Use existing env var or find one
+async function getPort() {
+  if (env.ROCKET_PORT && env.ROCKET_PORT.trim() !== '') {
+    return Number(env.ROCKET_PORT);
+  }
+  return await findFreePort(19119);
+}
+
+getPort()
+  .then(port => {
+    console.log('Using port ', port);
+    if (env.ROCKET_PORT === undefined) env.ROCKET_PORT = port;
+  })
+  .catch(err => {
+    console.error('Failed to obtain port:', err);
+    app.quit?.();
+  });
 
 app.name = '${APP_NAME}';
-const port = '19119';
 let canClose = true;
 
 function InitializeMenu() {
@@ -144,6 +183,9 @@ function handleSetCanClose(event, newCanClose) {
 }
 
 function createWindow() {
+
+  console.log('resourcesDir is ' + env.APP_RESOURCES_DIR);
+
     delay(500).then(() => {
         // console.log('createWindow() - dev viewer');
         const win = new BrowserWindow({
@@ -209,7 +251,7 @@ function createWindow() {
             }
         });
 
-        win.loadURL(`http://127.0.0.1:${port}`);
+        win.loadURL(`http://127.0.0.1:${env.ROCKET_PORT}`);
     })
 
 }

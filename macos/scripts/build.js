@@ -45,6 +45,12 @@ fse.writeFileSync(
     path.join(BUILD_DIR, "post_install_script.sh"),
     postInstallSh
 );
+// Copy port checker
+const FIND_FREE_PORT = "find_free_port.sh";
+fse.copySync(
+    path.join(MACOS_BUILD_RESOURCES, FIND_FREE_PORT),
+    path.join(BUILD_DIR, FIND_FREE_PORT)
+);
 // Copy and customize README
 const readMe = fse.readFileSync(path.join(MACOS_BUILD_RESOURCES, "README.txt"))
     .toString()

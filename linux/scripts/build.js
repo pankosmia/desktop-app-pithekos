@@ -26,6 +26,12 @@ fse.copySync(
     path.join(LINUX_BUILD_RESOURCES, "appLauncher.bsh"),
     path.join(BUILD_DIR, FILE_APP_NAME)
 );
+// Copy port checker
+const FIND_FREE_PORT = "find_free_port.sh";
+fse.copySync(
+    path.join(LINUX_BUILD_RESOURCES, FIND_FREE_PORT),
+    path.join(BUILD_DIR, FIND_FREE_PORT)
+);
 // Copy and customize README
 const readMe = fse.readFileSync(path.join(LINUX_BUILD_RESOURCES, "README.txt"))
     .toString()

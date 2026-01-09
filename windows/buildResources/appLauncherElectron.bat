@@ -26,6 +26,9 @@ if exist "%SCRIPT_DIR%\..\bin\server.exe" (
 
 echo bin folder found at %BASE%
 
+REM set available port environment variable (returned as %ROCKET_PORT% )
+call .\find_free_port.bat
+
 REM Start electron as background process
 cd /d "%BASE%"
 set "APP_RESOURCES_DIR=.\lib\"

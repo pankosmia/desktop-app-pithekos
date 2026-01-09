@@ -95,7 +95,6 @@ if defined %runSetup (
 )
 
 REM Ensure buildSpec.json has the location for the indicated server build type
-@echo off
 setlocal enabledelayedexpansion
 
 set "configFile=..\..\buildSpec.json"
@@ -115,8 +114,9 @@ copy %configFile% %tmpFile%
 
 endlocal
 
-REM set port environment variables
-set ROCKET_PORT=19119
+REM set available port environment variable (returned as %ROCKET_PORT% )
+call ..\buildResources\find_free_port.bat
+echo "%ROCKET_PORT%"
 
 if exist ..\build (
   echo "Removing last build environment"
