@@ -146,6 +146,14 @@ if (spec.product) {
     );
 }
 
+// client_config
+if (spec.client_config) {
+    fse.copySync(
+        path.resolve(spec.client_config),
+        path.join(BUILD_DIR, "lib", "app_resources", "product", "client_config.json")
+    );
+}
+
 const fixWindowsUtf8 = (srcFilePath, destFilePath) => {
     // Read the file with UTF-8 encoding
     fs.readFile(srcFilePath, 'utf8', (err, data) => {

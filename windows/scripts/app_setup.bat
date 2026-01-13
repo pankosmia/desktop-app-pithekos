@@ -9,7 +9,8 @@ echo      *   - \macos\buildResources\setup\app_setup.json   *
 echo      *   - \linux\buildResources\setup\app_setup.json   *
 echo      *   - \buildSpec.json                              *
 echo      *   - \globalBuildResources\i18nPatch.json         *
-echo      *   - \globalBuildResources\app.json               *
+echo      *   - \globalBuildResources\product.json           *
+echo      *   - \globalBuildResources\client_config.json     *
 echo      ****************************************************
 echo.
 
@@ -158,13 +159,15 @@ echo }>> %product%
 echo   ],>> %spec%
 echo   "favIcon": "../../globalBuildResources/favicon.ico",>> %spec%
 echo   "theme": "../../globalBuildResources/theme.json",>> %spec%
-echo   "product": "../../globalBuildResources/product.json">> %spec%
+echo   "product": "../../globalBuildResources/product.json",>> %spec%
+echo   "client_config": "../../globalBuildResources/client_config.json">> %spec%
 echo }>> %spec%
 
 echo.
 echo \buildSpec.json generated/rebuilt/replaced
 echo \globalBuildResources\i18nPatch.json generated/rebuilt/replaced
 echo \globalBuildResources\product.json generated/rebuilt/replaced
+echo \globalBuildResources\client_config.json generated/rebuilt/replaced
 echo \windows\buildResources\setup\app_setup.json generated/rebuilt/replaced
 echo.
 echo Copying \windows\buildResources\setup\app_setup.json to \linux\buildResources\setup\

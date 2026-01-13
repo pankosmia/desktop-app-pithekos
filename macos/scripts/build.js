@@ -153,3 +153,10 @@ if (spec.product) {
         path.join(BUILD_DIR, "lib", "app_resources", "product", "product.json")
     );
 }
+// client_config
+if (spec.client_config) {
+    fse.copySync(
+        path.resolve(spec.client_config),
+        path.join(BUILD_DIR, "lib", "app_resources", "product", "client_config.json")
+    );
+}
