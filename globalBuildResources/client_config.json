@@ -11,5 +11,18 @@
         }
       ]
     }
+  ],
+  "_global": [
+     {
+      "id": "internetConfig",
+      "i18n": "Config Internet",
+      "fields": [
+        {
+          "id": "internetConnectionAccess",
+          "i18n": "internet acces",
+          "value": false
+        }
+      ]
+    }
   ]
 }
