@@ -12,14 +12,32 @@
       ]
     }
   ],
-  "_global": [
+  "core-contenthandler_text_translation": [
+    {
+      "id": "config",
+      "i18n": "Config Menu",
+      "fields": [
+        {
+          "id": "protestantBooksOnlyCheckbox",
+          "i18n": "Protestant Books Only Checkbox",
+          "value": true
+        },
+        {
+          "id": "protestantBooksOnlyDefaultChecked",
+          "i18n": "Protestant Books Only Default Checked",
+          "value": true
+        }
+      ]
+    }
+  ],
+    "_global":[
      {
       "id": "internetConfig",
       "i18n": "Config Internet",
       "fields": [
         {
           "id": "internetConnectionAccess",
-          "i18n": "internet acces",
+          "i18n": "Internet Access",
           "value": false
         }
       ]

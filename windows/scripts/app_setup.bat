@@ -103,8 +103,8 @@ for /l %%a in (1,1,%count%) do (
 echo   ]>> %clients%
 echo }>> %clients%
 
-rem Get locale-independent datetime from WMI
-for /f "tokens=2 delims==." %%I in ('wmic os get LocalDateTime /value') do set ldt=%%I
+rem get LocalDateTime from PowerShell (WMIC is deprecated thus not not available on windows-2025 runner)
+for /f "delims=" %%I in ('powershell -NoProfile -Command "(Get-Date).ToString('yyyyMMddHHmmss')"') do set "ldt=%%I"
 
 set yyyy=%ldt:~0,4%
 set mm=%ldt:~4,2%
