@@ -38,7 +38,7 @@
         {
           "id": "internetConnectionAccess",
           "i18n": "Internet Access",
-          "value": false
+          "value": true
         }
       ]
     }
