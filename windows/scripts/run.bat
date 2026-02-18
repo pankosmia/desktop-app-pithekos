@@ -116,17 +116,17 @@ endlocal
 
 REM set available port environment variable (returned as %ROCKET_PORT% )
 call ..\buildResources\find_free_port.bat
-echo "%ROCKET_PORT%"
+echo Serving on port %ROCKET_PORT%...
 
 if exist ..\build (
-  echo "Removing last build environment"
+  echo Removing last build environment...
   rmdir ..\build /s /q
 )
 if not exist ..\build (
-  echo "Assembling build environment"
+  echo Assembling build environment...
   node build.js
 )
-echo "Running with local server in %serverType% mode..."
+echo Running with local server in %serverType% mode...
 cd ..\build
 SET APP_RESOURCES_DIR=.\lib\
 start "" ".\bin\server.exe"

@@ -102,18 +102,9 @@ if "%upstreamtest%"=="different_if_not_changed" (
 :sync
 git fetch upstream
 git merge --no-log --no-ff --no-commit upstream/main
-echo README.md:
-git reset README.md
-git checkout README.md
-echo package.json:
-git reset package.json
-git checkout package.json
 echo package-lock.json:
 git reset package-lock.json
 git checkout package-lock.json
-echo app_config.env:
-git reset app_config.env
-git checkout app_config.env
 echo globalBuildResources\favicon.ico:
 git reset globalBuildResources\favicon.ico
 git checkout globalBuildResources\favicon.ico

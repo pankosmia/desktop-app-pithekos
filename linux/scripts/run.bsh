@@ -98,7 +98,8 @@ sed -i "s|$search|$replace|g" "$configFile"
 
 # set available port environment variable (exported as $ROCKET_PORT )
 source ../buildResources/find_free_port.sh
-echo "$ROCKET_PORT"
+echo "Serving on port $ROCKET_PORT..."
+echo
 
 if [ -d ../build ]; then
   echo "Removing last build environment..."
