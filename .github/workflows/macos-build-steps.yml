@@ -93,7 +93,7 @@ jobs:
 
       # Install the repository
       - name: Install this repo
-        run: npm install
+        run: npm ci
 
       # Set APP_NAME from app_config.env, and use it to define FILE_APP_NAME
       - name: Extract APP_NAME from app_config.env

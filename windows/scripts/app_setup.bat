@@ -10,7 +10,6 @@ echo      *   - \linux\buildResources\setup\app_setup.json   *
 echo      *   - \buildSpec.json                              *
 echo      *   - \globalBuildResources\i18nPatch.json         *
 echo      *   - \globalBuildResources\product.json           *
-echo      *   - \globalBuildResources\client_config.json     *
 echo      ****************************************************
 echo.
 
@@ -18,10 +17,10 @@ for /F "tokens=1,2 delims==" %%a in (..\..\app_config.env) do set %%a=%%b
 
 setlocal ENABLEDELAYEDEXPANSION
 
-set clients=..\buildResources\setup\app_setup.json
-set spec=..\..\buildSpec.json
-set name=..\..\globalBuildResources\i18nPatch.json
-set product=..\..\globalBuildResources\product.json
+set "clients=..\buildResources\setup\app_setup.json"
+set "spec=..\..\buildSpec.json"
+set "name=..\..\globalBuildResources\i18nPatch.json"
+set "product=..\..\globalBuildResources\product.json"
 
 echo {> %name%
 echo   "branding": {>> %name%
@@ -44,7 +43,7 @@ echo     "src": "../../local_server/target/release/local_server">> %spec%
 echo   },>> %spec%
 
 echo   "lib": [>> %spec%
-set count=0
+set "count=0"
 for /f "tokens=*" %%a in (..\..\app_config.env) do (
   set /a count+= 1
 )
@@ -79,7 +78,7 @@ echo {> %clients%
 echo   "clients": [>> %clients%
 
 REM Get total number of clients
-set clientcount=0
+set "clientcount=0"
 for /l %%a in (1,1,%count%) do (
   if "!CLIENT%%a!" NEQ "" (
     set /a clientcount+= 1
@@ -133,7 +132,7 @@ for /f "tokens=2*" %%A in ('reg query "HKLM\SYSTEM\CurrentControlSet\Control\Tim
 
 rem Use Bias + DaylightBias when daylight saving is active; try to detect by StandardName vs DaylightName times
 rem Bias = minutes west of UTC (positive means UTC-)
-if not defined Bias set Bias=0
+if not defined Bias set "Bias=0"
 set /a tzMinutes=Bias
 
 rem Determine sign and absolute minutes, then convert to hours:minutes
@@ -167,7 +166,6 @@ echo.
 echo \buildSpec.json generated/rebuilt/replaced
 echo \globalBuildResources\i18nPatch.json generated/rebuilt/replaced
 echo \globalBuildResources\product.json generated/rebuilt/replaced
-echo \globalBuildResources\client_config.json generated/rebuilt/replaced
 echo \windows\buildResources\setup\app_setup.json generated/rebuilt/replaced
 echo.
 echo Copying \windows\buildResources\setup\app_setup.json to \linux\buildResources\setup\

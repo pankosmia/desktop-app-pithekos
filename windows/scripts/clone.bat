@@ -5,16 +5,16 @@ REM Defaults to https; Optional argument to use ssh: .\clone.bat -s
 echo.
 
 IF "%~1"=="-s" (
-  set METHOD=git@github.com:
+  set "METHOD=git@github.com:"
 ) ELSE (
-  set METHOD=https://github.com/
+  set "METHOD=https://github.com/"
 )
 
 for /F "tokens=1,2 delims==" %%a in (..\..\app_config.env) do set %%a=%%b
 
 setlocal ENABLEDELAYEDEXPANSION
 
-set count=0
+set "count=0"
 for /f "tokens=*" %%a in (..\..\app_config.env) do (
   set /a count+= 1
 )

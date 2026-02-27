@@ -64,8 +64,8 @@ if ! [[ $isGHA =~ ^(-g) ]]; then
   # git checkout main &> /dev/null
   # echo "pull"
   # git pull
-  # echo "npm install"
-  # npm install
+  # echo "npm ci"
+  # npm ci
   cd macos/scripts
   echo
   echo "Running app_setup to ensure version number consistency between buildSpec.json and this build bundle:"

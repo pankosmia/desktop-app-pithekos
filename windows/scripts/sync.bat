@@ -9,7 +9,7 @@ echo.
 IF "%~1"=="-p" (
   goto :yes
 ) ELSE (
-  set /P c=Is the latest already pulled? [Y/n]: 
+  set /P "c=Is the latest already pulled? [Y/n]: "
 )
 if /I "%c%" EQU "" goto :yes
 if /I "%c%" EQU "Y" goto :yes
@@ -30,13 +30,13 @@ exit
 
 cd ..\..\
 SETLOCAL ENABLEDELAYEDEXPANSION
-SET counta=1
+SET "counta=1"
 FOR /F "tokens=* USEBACKQ" %%F IN (`git remote`) DO (
   SET vara!counta!=%%F
   SET /a counta=!counta!+1
 )
 
-SET countb=1
+SET "countb=1"
   FOR /F "tokens=* USEBACKQ" %%F IN (`git config --local --list`) DO (
     SET varb!countb!=%%F
     SET /a countb=!countb!+1
@@ -51,12 +51,12 @@ if not defined vara1 (
 ) else (
   echo %vara1% is set
 )
-set origintest=good_if_not_changed
-set upstreamtest=different_if_not_changed
+set "origintest=good_if_not_changed"
+set "upstreamtest=different_if_not_changed"
 for /l %%b in (1,1,%countb%) do (
   REM Don't proceed if the origin is the intended upstream.
   IF "!varb%%b!"=="remote.origin.url=https://github.com/pankosmia/desktop-app-template.git" (
-    set origintest=stop_because_is_set_to_desired_upstream
+    set "origintest=stop_because_is_set_to_desired_upstream"
     echo.
     echo origin is set to https://github.com/pankosmia/desktop-app-template.git
     echo This script is not meant to be run on this repo as it expects that that to be the upstream, not the origin.
@@ -70,7 +70,7 @@ for /l %%b in (1,1,%countb%) do (
   IF "%origintest%"=="good_if_not_changed" (
       REM Proceed if the upstream is already set as expected.
     IF "!varb%%b!"=="remote.upstream.url=https://github.com/pankosmia/desktop-app-template.git" (
-      set upstreamtest=as_expected
+      set "upstreamtest=as_expected"
       echo upstream is confirmed as set to https://github.com/pankosmia/desktop-app-template.git
       set up=%%b
       call :sync
@@ -84,7 +84,7 @@ if "%origintest%"=="good_if_not_changed" (
   REM Set the upstream and proceed if it is not yet set.
   if not defined vara2 (
     git remote add upstream https://github.com/pankosmia/desktop-app-template.git
-    set upstreamtest=set
+    set "upstreamtest=set"
     echo upstream has been set to https://github.com/pankosmia/desktop-app-template.git
     call :sync
     goto :end

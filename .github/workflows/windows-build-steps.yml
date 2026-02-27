@@ -97,7 +97,7 @@ jobs:
   
       # Install the repository
       - name: Install this repo
-        run: npm install
+        run: npm ci
 
       # Setup
       - name: Run app_setup.bat

@@ -36,8 +36,8 @@ if ($answer -eq 'Y' -Or $answer -eq '') {
   # git checkout main | Out-Null
   # echo "pull"
   # git pull
-  # echo "npm install"
-  # npm install
+  # echo "npm ci"
+  # npm ci
   echo "`n"
   echo "Running app_setup to ensure version number consistency between buildSpec.json and this build bundle:"
   cd windows\scripts

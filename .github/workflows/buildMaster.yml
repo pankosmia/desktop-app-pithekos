@@ -8,6 +8,17 @@ permissions:
 on:
   workflow_dispatch:
     inputs:
+      os:
+        description: 'OS'
+        required: true
+        type: choice
+        options:
+          - all
+          - windows
+          - linux
+          - macos
+        default: all
+
       server_type:
         description: 'Server type'
         required: true
@@ -16,46 +27,52 @@ on:
           - release
           - debug
         default: release
-    
+
 # set run name from input so the run appears with that name (no API call needed)
-run-name: Master Build - ${{ inputs.server_type }} server
+run-name: Master Build - ${{ inputs.os }} - ${{ inputs.server_type }} server
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - run: echo "Server type is ${{ inputs.server_type }}"
+      - run: |
+          echo "OS is ${{ inputs.os }}"
+          echo "Server type is ${{ inputs.server_type }}"
 
   build-macos-intel:
     name: Build on macOS Intel64 (x64)
+    if: ${{ inputs.os == 'all' || inputs.os == 'macos' }}
     uses: ./.github/workflows/macos-build-steps.yml
     with:
       runner: macos-15-intel
       delay_seconds: 1
-      server_type: ${{ github.event.inputs.server_type }}
+      server_type: ${{ inputs.server_type }}
 
   build-macos-arm:
     name: Build on macOS ARM64 (Apple Silicon)
+    if: ${{ inputs.os == 'all' || inputs.os == 'macos' }}
     uses: ./.github/workflows/macos-build-steps.yml
     with:
       runner: macos-14
       delay_seconds: 600
-      server_type: ${{ github.event.inputs.server_type }}
-  
+      server_type: ${{ inputs.server_type }}
+
   build-windows:
     name: Build on Windows x64
+    if: ${{ inputs.os == 'all' || inputs.os == 'windows' }}
     uses: ./.github/workflows/windows-build-steps.yml
     with:
       runner: windows-2025
-      server_type: ${{ github.event.inputs.server_type }}
-      
+      server_type: ${{ inputs.server_type }}
+
   build-linux:
     name: Build on Linux x64
+    if: ${{ inputs.os == 'all' || inputs.os == 'linux' }}
     uses: ./.github/workflows/linux-build-steps.yml
     with:
       runner: ubuntu-22.04
-      server_type: ${{ github.event.inputs.server_type }}
-      
+      server_type: ${{ inputs.server_type }}
+
   finalize:
     needs: [build-macos-intel, build-macos-arm, build-windows, build-linux]
     runs-on: ubuntu-latest
@@ -72,18 +89,27 @@ jobs:
             echo "NOT a re-run"
           fi
 
-      # Check build status
+      # Check build status (allow skipped when OS not selected)
       - name: Check build status
         run: |
-          if [[ "${{ needs.build-macos-intel.result }}" != "success" || 
-                "${{ needs.build-macos-arm.result }}" != "success" || 
-                "${{ needs.build-windows.result }}" != "success" || 
-                "${{ needs.build-linux.result }}" != "success" ]]; then
-            echo "One or more builds failed"
-            exit 1
-          else
-            echo "All builds completed successfully"
-          fi
+          check () {
+            job="$1"
+            result="$2"
+
+            case "$result" in
+              success) echo "$job: success" ;;
+              skipped) echo "$job: skipped" ;;
+              failure|cancelled|timed_out) echo "$job: failed ($result)"; exit 1 ;;
+              *) echo "$job: failed (unknown result: $result)"; exit 1 ;;
+            esac
+          }
+
+          check "macos-intel"  "${{ needs.build-macos-intel.result }}"
+          check "macos-arm"    "${{ needs.build-macos-arm.result }}"
+          check "windows"      "${{ needs.build-windows.result }}"
+          check "linux"        "${{ needs.build-linux.result }}"
+
+          echo "Selected builds completed successfully"
 
 # TODO
 #  create-universal-binary:

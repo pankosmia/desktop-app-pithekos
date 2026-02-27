@@ -1,57 +1,149 @@
 #!/usr/bin/env bash
 
+# Run from: pankosmia/<repo-name>/linux/scripts
+# Usage:
+#   ./build_clients.bsh
+# Delete past logs without asking:
+#   ./build_clients.bsh -d
+
 source ../../app_config.env
 
-count=$( wc -l < "../../app_config.env" )
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+
+# --- parse args (only -d) ---
+deleteLogs="-no"
+while [ $# -gt 0 ]; do
+  if [ "$1" = "-d" ]; then
+    deleteLogs="-d"
+  fi
+  shift
+done
+
+# --- delete past logs (prompt unless -d) ---
+if ls "${SCRIPT_DIR}"/build_clients_*.log >/dev/null 2>&1; then
+  echo
+  if [ "$deleteLogs" = "-d" ]; then
+    rm -f "${SCRIPT_DIR}"/build_clients_*.log
+  else
+    while true; do
+      read -r -p "Delete past logs? [Y/n]: " c
+      if [ -z "$c" ] || [ "$c" = "Y" ] || [ "$c" = "y" ]; then
+        rm -f "${SCRIPT_DIR}"/build_clients_*.log
+        break
+      elif [ "$c" = "N" ] || [ "$c" = "n" ]; then
+        break
+      else
+        echo "\"$c\" is not a valid response. Type y or 'Enter' to delete past logs or 'n' to keep them."
+      fi
+    done
+  fi
+fi
+
+# --- logging + failure tracking ---
+LOG="${SCRIPT_DIR}/build_clients_$(date +%Y%m%d_%H%M%S).log"
+echo "===== Build started $(date) =====" > "$LOG"
+
+FAILCOUNT=0
+FAILS=()
+
+log() {
+  echo "$*"
+  echo "$*" >> "$LOG"
+}
+
+run() {
+  "$@" 2>&1 | tee -a "$LOG"
+  return "${PIPESTATUS[0]}"
+}
+
+markfail() {
+  FAILCOUNT=$((FAILCOUNT + 1))
+  FAILS+=("[$1] $2 :: $3")
+}
+
+# --- original counting approach ---
+count=$(wc -l < "../../app_config.env")
 
 cd ../../
 RepoDirName=$(basename "$(pwd)")
 cd ../
+
 for ((i=1;i<=count;i++)); do
   eval asset='$'ASSET$i
   if [ ! -z "$asset" ]; then
-    # Remove any spaces, e.g. trailing ones
-    asset=$(sed 's/ //g' <<< $asset)
-    echo "############################### BEGIN Asset $i: $asset ###############################"
+    asset=$(sed 's/ //g' <<< "$asset")
+    log "############################### BEGIN Asset $i: $asset ###############################"
     if [ ! -d "$asset" ]; then
-      echo
-      echo "****************************************************"
-      echo "$asset does not exist; Run .\clone.bat"
-      echo "****************************************************"
-      echo
+      log
+      log "****************************************************"
+      log "$asset does not exist; Run ./clone.bsh"
+      log "****************************************************"
+      log
     else
-      cd $asset
-      git checkout main
-      git pull
-      echo "################################ END Asset $i: $asset ################################"
-      echo
+      cd "$asset"
+      log "> git checkout main..."
+      if ! run git checkout main; then markfail "ASSET" "$asset" "git checkout main"; fi
+
+      log "> git pull..."
+      if ! run git pull; then markfail "ASSET" "$asset" "git pull"; fi
+
+      log "################################ END Asset $i: $asset ################################"
+      log
       cd ..
     fi
   fi
 done
+
 for ((i=1;i<=count;i++)); do
   eval client='$'CLIENT$i
   if [ ! -z "$client" ]; then
-    # Remove any spaces, e.g. trailing ones
-    client=$(sed 's/ //g' <<< $client)
-    echo "############################### BEGIN Client $i: $client ###############################"
+    client=$(sed 's/ //g' <<< "$client")
+    log "############################### BEGIN Client $i: $client ###############################"
     if [ ! -d "$client" ]; then
-      echo
-      echo "***************************************************************************************"
-      echo "$client does not exist; Run .\clone.bat then rerun .\build_clients_main.bat"
-      echo "***************************************************************************************"
-      echo
+      log
+      log "***************************************************************************************"
+      log "$client does not exist; Run ./clone.bsh then rerun this script"
+      log "***************************************************************************************"
+      log
     else
-      cd $client
-      git checkout main
-      git pull
-      npm install
-      npm run build
-      echo "################################ END Client $i: $client ################################"
-      echo
-      cd ..  
+      cd "$client"
+      log "> git checkout main..."
+      if ! run git checkout main; then markfail "CLIENT" "$client" "git checkout main"; fi
+
+      log "> git pull..."
+      if ! run git pull; then markfail "CLIENT" "$client" "git pull"; fi
+
+      log "> npm ci..."
+      if ! run npm ci; then markfail "CLIENT" "$client" "npm ci"; fi
+
+      log "> npm run build..."
+      if ! run npm run build; then markfail "CLIENT" "$client" "npm run build"; fi
+
+      log "################################ END Client $i: $client ################################"
+      log
+      cd ..
     fi
   fi
 done
 
-cd $RepoDirName/linux/scripts
+cd "$RepoDirName/linux/scripts"
+
+# --- concise summary ---
+echo
+echo "================================= SUMMARY ================================="
+if [ "$FAILCOUNT" -eq 0 ]; then
+  echo "All builds succeeded."
+else
+  echo "Failed steps: $FAILCOUNT"
+  for f in "${FAILS[@]}"; do
+    echo "$f"
+  done
+fi
+echo
+echo "Full log: \"$LOG\""
+echo "==========================================================================="
+
+if [ "$FAILCOUNT" -gt 0 ]; then
+  exit 1
+fi
+exit 0

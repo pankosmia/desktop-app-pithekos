@@ -8,7 +8,7 @@ echo.
 IF "%~1"=="-s" (
   goto :server_off
 ) ELSE (
-  set /P c=Is the server off? [Y/n]: 
+  set /P "c=Is the server off? [Y/n]: "
 )
 if /I "%c%" EQU "" goto :server_off
 if /I "%c%" EQU "Y" goto :server_off
@@ -32,10 +32,10 @@ if exist ..\build (
   rmdir ..\build /s /q
 )
 
-set cleanServer=false
+set "cleanServer=false"
 
-if exist ..\..\local_server\target\release\local_server.exe set cleanServer=true
-if exist ..\..\local_server\target\debug\local_server.exe set cleanServer=true
+if exist ..\..\local_server\target\release\local_server.exe set "cleanServer=true"
+if exist ..\..\local_server\target\debug\local_server.exe set "cleanServer=true"
 
 if "%cleanServer%"=="true" (
   echo Cleaning local server

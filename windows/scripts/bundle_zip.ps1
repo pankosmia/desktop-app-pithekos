@@ -4,7 +4,7 @@
 # with the optional arguments of: `.\bundle_zip.ps1 -ServerOff "Y"` or: `.\bundle_zip.ps1 -ServerOff "y"`
 # and: `.\bundle_zip.ps1 -IsGHA "Y"` or: `.\bundle_zip.ps1 -IsGHA "y"`
 
-# This script is also used with gh action runner with the -ServerOff switch set to yes and -IsGHA set to yes. All three of `app_setup.bat` and `npm install` and 'node build.js` have already run in earlier steps in windows-build-steps.yml
+# This script is also used with gh action runner with the -ServerOff switch set to yes and -IsGHA set to yes. All three of `app_setup.bat` and `npm ci` and 'node build.js` have already run in earlier steps in windows-build-steps.yml
 
 param(
     [string]$ServerOff,
@@ -38,8 +38,8 @@ if ($answer -eq 'Y' -Or $answer -eq '') {
     # git checkout main | Out-Null
     # echo "pull"
     # git pull
-    # echo "npm install"
-    # npm install
+    # echo "npm ci"
+    # npm ci
     echo "`n"
     echo "Running app_setup to ensure version number consistency between buildSpec.json and this build bundle:"
     cd windows\scripts
