@@ -82,11 +82,13 @@ APP_BASE_DIR="../$pkgDir/project/payload/APP_NAME.app" # temp app foldername wit
 
 mkdir -p ${APP_BASE_DIR}/Contents/MacOS
 
+# Rocket config
+cp ../../Rocket.toml ${APP_BASE_DIR}/Rocket.toml
+
 # electron startup
 LAUNCHER_NAME="start-${FILE_APP_NAME}.sh"
 cp ../buildResources/appLauncherElectron.sh ${APP_BASE_DIR}/Contents/MacOS/${LAUNCHER_NAME}
 sed -i.bak "s/\${APP_NAME}/$APP_NAME/g" ${APP_BASE_DIR}/Contents/MacOS/${LAUNCHER_NAME}
-
 
 # find_free_port.sh, used by electron startup
 cp ../buildResources/find_free_port.sh ${APP_BASE_DIR}/Contents/MacOS/find_free_port.sh

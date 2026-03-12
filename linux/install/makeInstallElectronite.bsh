@@ -82,6 +82,9 @@ APP_BASE_DIR="../$pkgDir/project/payload/app"
 
 mkdir -p ${APP_BASE_DIR}
 
+# Rocket config
+cp ../../Rocket.toml ${APP_BASE_DIR}/Rocket.toml
+
 # electron startup
 LAUNCHER_NAME="start-${FILE_APP_NAME}.sh"
 cp ../buildResources/appLauncherElectron.sh ${APP_BASE_DIR}/${LAUNCHER_NAME}

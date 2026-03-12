@@ -51,6 +51,9 @@ chmod 755 $INSTALL_DIR/viewer/
 cp -r $FROM_DIR/linux/viewer/project/payload/app/find_free_port.sh $INSTALL_DIR/
 chmod 755 $INSTALL_DIR/find_free_port.sh
 
+# Rocket config
+cp -r $FROM_DIR/linux/viewer/project/payload/app/Rocket.toml $INSTALL_DIR/
+
 # Icon
 cp $FROM_DIR/globalBuildResources/linux_icon.png $INSTALL_DIR/$PACKAGE_NAME.png
 

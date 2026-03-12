@@ -91,12 +91,14 @@ try {
 
     New-Item -ItemType Directory -Force -Path $payloadPath | Out-Null
 
-    # Copy appLauncherElectron.bat and find_free_port.bat
+    # Copy Rocket.toml, appLauncherElectron.bat, and find_free_port.bat
+    $rocketConfig = "..\..\Rocket.toml"
     $startupSrc = "..\buildResources\appLauncherElectron.bat"
     $portCheckerSrc = "..\buildResources\find_free_port.bat"
     $startupDest = "$payloadPath"
     if (Test-Path $startupSrc) {
         New-Item -ItemType Directory -Force -Path $startupDest | Out-Null
+        Copy-Item -Path $rocketConfig -Destination "$startupDest\Rocket.toml" -Force
         Copy-Item -Path $startupSrc -Destination "$startupDest\appLauncherElectron.bat" -Force
         Copy-Item -Path $portCheckerSrc -Destination "$startupDest\find_free_port.bat" -Force
     }

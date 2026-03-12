@@ -10,6 +10,7 @@ if (BUILD_DIR.split("/").length < 5) {
 }
 const SPEC_PATH = path.resolve('../../buildSpec.json');
 const LINUX_BUILD_RESOURCES = path.resolve("../buildResources");
+const REPO_ROOT = path.resolve("../../");
 // Delete build dir if it exists
 if (fse.existsSync(BUILD_DIR)) {
     fse.rmSync(BUILD_DIR, {recursive: true, force: true});
@@ -21,6 +22,11 @@ const spec = fse.readJsonSync(path.resolve(SPEC_PATH));
 const APP_NAME = spec['app']['name']
 const FILE_APP_NAME = spec['app']['name'].toLowerCase().replace(/ /g, "-");
 const APP_VERSION = process.env.APP_VERSION;
+// Copy Rocket config
+fse.copySync(
+    path.join(REPO_ROOT, "Rocket.toml"),
+    path.join(BUILD_DIR, "Rocket.toml")
+);
 // Copy and rename launcher script
 fse.copySync(
     path.join(LINUX_BUILD_RESOURCES, "appLauncher.bsh"),
