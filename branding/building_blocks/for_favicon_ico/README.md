@@ -1,5 +1,7 @@
-# branding - favicon.ico (Browser) / favicon*.png (Electronite)
-Logos etc for Panskosmia-related projects
+# branding - favicon.ico (Browser)
+Logo implementation for Panskosmia-related projects
+
+This (favicon.ico) is a developer-concern only as long as product releases use the electron viewer.
 
 - Once the favicon script is run in a terminal from the branding directory, this folder (`for_favicon_ico`) will contain building blocks for favicon.ico.
 
@@ -12,17 +14,18 @@ With respect to uploading these files to a public github repo, delete them after
 If this project is a fork from desktop-app-template, then this folder will initially contain building block images from that project. They will be replaced by images applicable to your project once scripts in `branding` are run with your images in `source`. If you do not want these files in your repo, then delete them once everything you need is in `globalBuildResources`.
 
 ### favicon.ico / favicon*.png
-- Look over both images for things like anti-aliasing issues. They may tend need some pixel-level touch-up with respect to anti-aliasing, or other adjustments.
-  - To recreate favicon.ico from custom files, in a terminal from the `building blocks\for_favicon_ico` subdirectory of `branding` run this[ImageMagick](https://imagemagick.org/)<sup id="a1">[[1]](#f1)</sup> command:
-    - `magick -verbose favicon_16x16.png favicon_32x32.png favicon.ico`
-  - If you make any changes, then replace the `favicon.ico` in the `globalBuildResources` directory with your improved version.
-- If `favicon_16x16.png` was improved, then in copy it over `globalBuildResources/favicon.png` (used by Electronite).
-- If `favicon_32x32.png` was improved, then copy it over `globalBuildResources/favicon@2x.png` (used by Electronite).  
+- Look over the rendering quality of both images at 100% resolutions. They may require customization. See [Design Tips](#design-tips).
+  - To recreate favicon.ico from custom files, in a terminal from the `building blocks/for_favicon_ico` subdirectory of `branding` run:
+    - `magick -verbose favicon_16x16.png favicon_32x32.png favicon.ico` Replace "magick" with "convert" on older linux installs.
+  - If you make any changes and run the script on the line immediately above, then also replace the `favicon.ico` in the `globalBuildResources` directory with your improved version.
+- If `favicon_16x16.png` was improved, then copy it over `globalBuildResources/favicon.png` (used by Electron).
+- If `favicon_32x32.png` was improved, then copy it over `globalBuildResources/favicon@2x.png` (used by Electron).
+- If any changes are made to one or both of the last two files mentioned above, then see [favicon*.png - Electronite Browser Window icon (Windows and Linux)](#electron) for the names a file-sizes of other globalBuildResources/favicon*.png to review for potential similar customizations at 20px, 24px and 28px.
 <br />
 ---
 ---
 ## Additional Detail
-
+<span id="electron">&nbsp;</span>
 ### favicon*.png - Electronite Browser Window icon (Windows and Linux) <sub><sup>... [↩](#toc)</sup></sub>
 The Electronite Browser Window support displays with different DPI densities at the same through a special naming convention. The first of the following is named in the start up file, and Electron switches it out with other variations where applicable.
 
@@ -31,7 +34,8 @@ The Electronite Browser Window support displays with different DPI densities at 
 | 1. | favicon.png | 16x16 | 100% |
 | 2. | favicon<!-- -->@1.25x.png | 20x20 | 125% |
 | 3. | favicon<!-- -->@1.5x.png | 24x24 | 150% |
-| 4. | favicon<!-- -->@2x.png | 32x32 | 200% |
+| 4. | favicon<!-- -->@1.75x.png	| 28x28 |	175% |
+| 5. | favicon<!-- -->@2x.png | 32x32 | 200% |
 <span id="endnotes">&nbsp;</span>
 ## Endnotes <sub><sup>... [↩](#toc)</sup></sub>
-[<b id="f1">1</b>] ... ImageMagick tip: See `magick -help` ... [↩](#a1)  
+[<b id="f1">1</b>] ... ImageMagick tip: See `magick -help`, or `convert -help` on older linux installs. ... [↩](#a1) 

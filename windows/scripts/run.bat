@@ -129,4 +129,4 @@ if not exist ..\build (
 echo Running with local server in %serverType% mode...
 cd ..\build
 SET "APP_RESOURCES_DIR=.\lib\"
-start "" ".\bin\server.exe"
+start "" cmd /k ".\bin\server.exe"

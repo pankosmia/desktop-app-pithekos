@@ -1,5 +1,5 @@
-# branding - icon.ico - Windows and Linux Desktop
-Logos etc for Panskosmia-related projects
+# branding - icon.ico and linux_icon.png - Windows desktop and start menu and Linux (Ubuntu) application menu
+Logo implementation for Panskosmia-related projects
 
 - Once the winicon script is run in a terminal from the branding directory, this folder (`for_icon_ico`) will contain building blocks for icon.ico.
 
@@ -14,15 +14,18 @@ If this project is a fork from desktop-app-template, then this folder will initi
 ### icon.ico
 Windows desktop and start menu icons leverage multiple sizes for optimal display. Consider 16x16, 32x32, 48x48, and 256x256 pixels. This will support high-DPI displays and desktop shortcuts.
 
+The Linux (Ubuntu) application menu is currently set to use a 256x256 pixel image. Manually change linux_icon.png in globalBuildResources if a different resolution is preferred. Multiple png resolutions or svg are not supported by workflow scripts as currently provided.
+
 Review the following:
-- In the `building blocks/for_icon_ico` subdirectory of `branding`, look over `win_icon_16x16.png` and `win_icon_32x32.png` for things like anti-aliasing issues. They may tend need some pixel-level touch-up with respect to anti-aliasing, or other adjustments.
-  - To recreate icon.ico from custom files, in a terminal from the `building blocks/for_icon_ico` subdirectory of `branding` run this [ImageMagick](https://imagemagick.org/)<sup id="a1">[[1]](#f1)</sup> command:
-    - `magick -verbose win_icon_16x16.png win_icon_32x32.png win_icon_48x48.png win_icon_256x256.png icon.ico`
-  - If you make any changes, then replace the `icon.ico` in the `globalBuildResources` directory with your improved version.  
+- In the `building_blocks/for_icon_ico` subdirectory of `branding`, look over the rendering quality of `win_icon_16x16.png` and `win_icon_32x32.png` at 100% resolution. They may require customization. See [Design Tips](#design-tips).
+  - To recreate icon.ico from custom files, in a terminal from the `building blocks/for_icon_ico` subdirectory of `branding` run:
+    - `magick -verbose win_icon_16x16.png win_icon_32x32.png win_icon_48x48.png win_icon_256x256.png icon.ico` 
+  - If you make any changes and run the script in the line immediately above, then also replace the `icon.ico` in the `globalBuildResources` directory with your improved version.
+  - Replace "magick" with "convert" on older linux installs.
 <br />
 ---
 ---
 
 <span id="endnotes">&nbsp;</span>
 ## Endnotes <sub><sup>... [↩](#toc)</sup></sub>
-[<b id="f1">1</b>] ... ImageMagick tip: See `magick -help` ... [↩](#a1)  
+[<b id="f1">1</b>] ... ImageMagick tip: See `magick -help`, or `convert -help` on older linux installs. ... [↩](#a1) 

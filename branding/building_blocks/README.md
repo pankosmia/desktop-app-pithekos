@@ -1,5 +1,5 @@
 # branding
-Logos etc for Panskosmia-related projects
+Logo implementation for Panskosmia-related projects
 
 ## This folder (`building blocks`)
 This folder is a container housing subdirectorees for building block images created and used by scripts in it's parent directory (`branding`).

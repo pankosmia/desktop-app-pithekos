@@ -1,5 +1,5 @@
-# branding - icon.icns - MacOS Desktop (Applications, Launchpad, and Dock icon)
-Logos etc for Panskosmia-related projects
+# branding - icon.icns - MacOS Desktop (Applications, Launchpad prior to Tahoe, and Dock icon)
+Logo implementation for Panskosmia-related projects
 
 - Once the macicon script is run in a terminal from the branding directory, this folder (`for_icon_icns`) will contain building blocks for icon.icns.
 
@@ -12,15 +12,14 @@ With respect to uploading these files to a public github repo, delete them after
 If this project is a fork from desktop-app-template, then this folder will initially contain building block images from that project. They will be replaced by images applicable to your project once scripts in `branding` are run with your images in `source`. If you do not want these files in your repo, then delete them once everything you need is in `globalBuildResources`.
 
 ## icon.icns
-Review the following:
-- In the `building blocks/for_icon_icns` subdirectory of `branding`, look over `icon_16x16.png` and `icon_32x32.png` for things like anti-aliasing issues. They may tend need some pixel-level touch-up with respect to anti-aliasing, or other adjustments.
-  - If changes are made to `icon_16x16.png` or `icon_32x32.png` then adjust the upscaled version as well so that it matches. Do this by running the applicable of the following [ImageMagick](https://imagemagick.org/)<sup id="a1">[[1]](#f1)</sup> commands in a terminal from the `building blocks/for_icon_icns` subdirectory of `branding`:
-    - `magick icon_16x16.png -resize 200%% icon_16x16@2x.png`  
-    - `magick icon_32x32.png -resize 200%% icon_32x32@2x.png`
+Review the following after running this script:
+- In the `building blocks/for_icon_icns` subdirectory of `branding`, look over the rendering quality of `icon_16x16.png` and `icon_32x32.png` at 100% resolution. They may require customization. See [Design Tips](#design-tips).
+  - If changes are made to `icon_16x16.png` then adjust the corresponding icon_16x16@2x.png so its design matches `icon_16x16.png` at 32px square.
+  - If changes are made to `icon_32x32.png` then adjust the corresponding icon_32x32@2x.png so its design matches `icon_32x32.png` at 64px square.
 
 Create icon.icns with iconutil on MacOS as follows:
 
-1. __On MacOS__, create a folder _on your desktop_ and put the following in it. These will be all of the files generated in this folder by the icon script. Do not include this README.md file.
+1. __On MacOS__, create a folder _on your desktop_ and put the following in it:
    - icon_16x16.png
    - icon_16x16<!-- -->@2x.png<sup id="a2">[[2]](#f2)</sup>
    - icon_32x32.png
@@ -31,12 +30,10 @@ Create icon.icns with iconutil on MacOS as follows:
    - icon_256x256<!-- -->@2x.png<sup id="a5">[[5]](#f5)</sup>
    - icon_512x512.png
    - icon_512x512<!-- -->@2x.png<sup id="a6">[[6]](#f6)</sup>
-   - icon_1024x1024.png
-   - icon_1024x1024<!-- -->@2x.png<sup id="a7">[[7]](#f7)</sup>
 2. Rename the folder to: icon.iconset
 3. In a terminal enter: `cd Desktop`
 4. Then enter: `iconutil -c icns icon.iconset`
-5. Use the icon.icns file created on your MacOS Desktop. Place it in the `globalBuildResources` of this repo.  
+5. Use the icon.icns file created on your MacOS Desktop. Place it in the `globalBuildResources` of this repo. 
 <span id="additional">&nbsp;</span>
 ## Additional Detail
 
@@ -49,10 +46,9 @@ ImageMagick does not support the icns file format at the time this is being writ
 ---
 
 ## Endnotes <sub><sup>... [↩](#toc)</sup></sub>
-[<b id="f1">1</b>] ... ImageMagick tip: See `magick -help` ... [↩](#a1)  
-[<b id="f2">2</b>] ... This is a scaled-up version, different from icon_32x32.png, e.g., `magick icon_16x16.png -resize 200% icon_16x16@2x.png` ... [↩](#a2)  
-[<b id="f3">3</b>] ... `magick icon_32x32.png -resize 200% icon_32x32@2x.png` ... [↩](#a3)  
-[<b id="f4">4</b>] ... This is a scaled-up version, different from icon_256x256.png, e.g., `magick icon_128x128.png -resize 200% icon_128x128@2x.png`  ... [↩](#a4)  
-[<b id="f5">5</b>] ... This is a scaled-up version, different from icon_512x512.png, e.g., `magick icon_256x256.png -resize 200% icon_256x256@2x.png` ... [↩](#a5)  
-[<b id="f6">6</b>] ... This is a scaled-up version, different from icon_1024x1024.png, e.g., `magick icon_512x512.png -resize 200% icon_512x512@2x.png` ... [↩](#a6)  
-[<b id="f7">7</b>] ... `magick icon_1024x1024.png -resize 200% icon_1024x1024@2x.png` ... [↩](#a7)  
+[<b id="f1">1</b>] ... ImageMagick tip: See `magick -help`, or `convert -help` on older linux installs. ... [↩](#a1)  
+[<b id="f2">2</b>] ... If an icon_16x16.png with a different design from icon_32x32.png is in use, then icon_16x16@2x.png should match the 16px square design at 32px square.  Otherwise icon_16x16@2x.png and icon_32x32.png will be the same with different filenames. Both are needed. ... [↩](#a2)  
+[<b id="f3">3</b>] ... If an icon_32x32.png with a different design from the source mac_icon.svg/mac_icon.png, then icon_32x32@2x.png should match the 32px square design at 64px square. ... [↩](#a3)  
+[<b id="f4">4</b>] ... If an icon_128x128.png with a different design from icon_256x256.png is in use, then icon_128x128@2x.png should match the 128px square design at 256px square.  Otherwise icon_128x128@2x.png and icon_256x256.png will be the same with different filenames. Both are needed.  ... [↩](#a4)  
+[<b id="f5">5</b>] ... If an icon_256x256.png with a different design from icon_512x512.png is in use, then icon_256x256@2x.png should match the 256px square design at 512px square.  Otherwise icon_256x256@2x.png and icon_512x512.png will be the same with different filenames. Both are needed. ... [↩](#a5)  
+[<b id="f6">6</b>] ... If an icon_512x512.png with a different design from the source mac_icon.svg/mac_icon.png, then icon_512x512@2x.png should match the 512px square design at 1024px square. ... [↩](#a6)  

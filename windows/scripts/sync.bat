@@ -126,6 +126,9 @@ git checkout globalBuildResources\favicon@1.25x.png
 echo globalBuildResources\favicon@1.5x.png:
 git reset globalBuildResources\favicon@1.5x.png
 git checkout globalBuildResources\favicon@1.5x.png
+echo globalBuildResources\favicon@1.75x.png:
+git reset globalBuildResources\favicon@1.75x.png
+git checkout globalBuildResources\favicon@1.75x.png
 echo globalBuildResources\favicon@2x.png:
 git reset globalBuildResources\favicon@2x.png
 git checkout globalBuildResources\favicon@2x.png
@@ -138,12 +141,6 @@ git checkout branding\building_blocks\for_favicon_ico\favicon_16x16.png
 echo branding\building_blocks\for_favicon_ico\favicon_32x32.png:
 git reset branding\building_blocks\for_favicon_ico\favicon_32x32.png
 git checkout branding\building_blocks\for_favicon_ico\favicon_32x32.png
-echo branding\building_blocks\for_icon_icns\icon_1024x1024.png:
-git reset branding\building_blocks\for_icon_icns\icon_1024x1024.png
-git checkout branding\building_blocks\for_icon_icns\icon_1024x1024.png
-echo branding\building_blocks\for_icon_icns\icon_1024x1024@2x.png:
-git reset branding\building_blocks\for_icon_icns\icon_1024x1024@2x.png
-git checkout branding\building_blocks\for_icon_icns\icon_1024x1024@2x.png
 echo branding\building_blocks\for_icon_icns\icon_128x128.png:
 git reset branding\building_blocks\for_icon_icns\icon_128x128.png
 git checkout branding\building_blocks\for_icon_icns\icon_128x128.png
@@ -186,15 +183,24 @@ git checkout branding\building_blocks\for_icon_ico\win_icon_32x32.png
 echo branding\building_blocks\for_icon_ico\win_icon_48x48.png:
 git reset branding\building_blocks\for_icon_ico\win_icon_48x48.png
 git checkout branding\building_blocks\for_icon_ico\win_icon_48x48.png
-echo branding\source\favicon_1024x1024.png:
-git reset branding\source\favicon_1024x1024.png
-git checkout branding\source\favicon_1024x1024.png
-echo branding\source\mac_icon_1024x1024.png:
-git reset branding\source\mac_icon_1024x1024.png
-git checkout branding\source\mac_icon_1024x1024.png
-echo branding\source\win_icon_1024x1024.png:
-git reset branding\source\win_icon_1024x1024.png
-git checkout branding\source\win_icon_1024x1024.png
+echo branding\source\favicon.png:
+git reset branding\source\favicon.png
+git checkout branding\source\favicon.png
+echo branding\source\mac_icon.png:
+git reset branding\source\mac_icon.png
+git checkout branding\source\mac_icon.png
+echo branding\source\win_icon.png:
+git reset branding\source\win_icon.png
+git checkout branding\source\win_icon.png
+echo branding\source\favicon.svg:
+git reset branding\source\favicon.svg
+git checkout branding\source\favicon.svg
+echo branding\source\mac_icon.svg:
+git reset branding\source\mac_icon.svg
+git checkout branding\source\mac_icon.svg
+echo branding\source\win_icon.svg:
+git reset branding\source\win_icon.svg
+git checkout branding\source\win_icon.svg
 echo branding\source\artwork\favicon_transparent_square_blue-turqoise.psd:
 git reset branding\source\artwork\favicon_transparent_square_blue-turqoise.psd
 git checkout branding\source\artwork\favicon_transparent_square_blue-turqoise.psd
