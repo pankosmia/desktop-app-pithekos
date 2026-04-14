@@ -7,6 +7,9 @@ on:
         description: 'The GitHub runner to use (e.g., ubuntu-20.04, ubuntu-22.04)'
         required: true
         type: string
+      branches:
+        required: true
+        type: string
       server_type:
         required: true
         type: string
@@ -28,9 +31,14 @@ jobs:
     # Set process.env.CI to false to prevent treating warnings as errors
     env:
       CI: false
+      BRANCHES: ${{ inputs.branches }}
       SERVER_TYPE: ${{ inputs.server_type }}
 
     steps:
+      # Show branches
+      - name: Show BRANCHES
+        run: echo "BRANCHES = $BRANCHES"
+
       # Show server type
       - name: Show SERVER TYPE
         run: echo "SERVER_TYPE = $SERVER_TYPE"
@@ -84,9 +92,9 @@ jobs:
         working-directory: ./linux/scripts
         run: ./clone.bsh
 
-      - name: Build clients
+      - name: Build ${{ inputs.branches }} clients
         working-directory: ./linux/scripts
-        run: ./build_clients.bsh
+        run: ./build_clients.bsh "$BRANCHES"
 
       - name: Build DEBUG server and assemble build environment without asking if the server is off
         working-directory: ./linux/scripts

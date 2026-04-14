@@ -2,22 +2,33 @@
 
 # Run from: pankosmia/<repo-name>/linux/scripts
 # Usage:
-#   ./build_clients.zsh
-# Delete past logs without asking:
-#   ./build_clients.zsh -d
+#   ./build_clients.zsh [branch] [-d]
+# Examples:
+#   ./build_clients.zsh              # defaults to "main"
+#   ./build_clients.zsh dev          # tries dev → qa → main
+#   ./build_clients.zsh qa -d        # tries qa → main, deletes past logs
+#   ./build_clients.zsh -d dev       # same as above, flags and branch in any order
 
 source ../../app_config.env
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 
-# --- parse args (only -d) ---
+# --- parse args (-d flag and optional branch) ---
 deleteLogs="-no"
+BRANCH=""
 while [ $# -gt 0 ]; do
   if [ "$1" = "-d" ]; then
     deleteLogs="-d"
+  elif [ -z "$BRANCH" ]; then
+    BRANCH="$1"
   fi
   shift
 done
+
+# Default branch to main if not provided
+if [ -z "$BRANCH" ]; then
+  BRANCH="main"
+fi
 
 # --- delete past logs (prompt unless -d) ---
 if ls "${SCRIPT_DIR}"/build_clients_*.log >/dev/null 2>&1; then
@@ -61,6 +72,45 @@ markfail() {
   FAILS+=("[$1] $2 :: $3")
 }
 
+# --- checkout with fallback logic ---
+checkout_branch() {
+  local cb_type="$1"
+  local cb_repo="$2"
+  local branch_lower="${BRANCH:l}"   # zsh lowercase
+
+  log "> git checkout $BRANCH..."
+  if run git checkout "$BRANCH"; then
+    return
+  fi
+
+  # Branch didn't exist — apply fallback logic
+  if [ "$branch_lower" = "dev" ]; then
+    log "> Branch \"dev\" not found, trying \"qa\"..."
+    if run git checkout qa; then
+      return
+    fi
+    log "> Branch \"qa\" not found, falling back to \"main\"..."
+    if ! run git checkout main; then
+      markfail "$cb_type" "$cb_repo" "git checkout main (fallback from dev)"
+    fi
+    return
+  fi
+
+  if [ "$branch_lower" = "qa" ]; then
+    log "> Branch \"qa\" not found, falling back to \"main\"..."
+    if ! run git checkout main; then
+      markfail "$cb_type" "$cb_repo" "git checkout main (fallback from qa)"
+    fi
+    return
+  fi
+
+  # Any other branch — fall back to main
+  log "> Branch \"$BRANCH\" not found, falling back to \"main\"..."
+  if ! run git checkout main; then
+    markfail "$cb_type" "$cb_repo" "git checkout main (fallback from $BRANCH)"
+  fi
+}
+
 # --- original counting approach ---
 count=$(wc -l < "../../app_config.env")
 
@@ -81,8 +131,7 @@ for ((i=1;i<=count;i++)); do
       log
     else
       cd "$asset"
-      log "> git checkout main..."
-      if ! run git checkout main; then markfail "ASSET" "$asset" "git checkout main"; fi
+      checkout_branch "ASSET" "$asset"
 
       log "> git pull..."
       if ! run git pull; then markfail "ASSET" "$asset" "git pull"; fi
@@ -107,8 +156,7 @@ for ((i=1;i<=count;i++)); do
       log
     else
       cd "$client"
-      log "> git checkout main..."
-      if ! run git checkout main; then markfail "CLIENT" "$client" "git checkout main"; fi
+      checkout_branch "CLIENT" "$client"
 
       log "> git pull..."
       if ! run git pull; then markfail "CLIENT" "$client" "git pull"; fi

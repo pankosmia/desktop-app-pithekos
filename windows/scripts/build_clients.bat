@@ -1,19 +1,32 @@
 @echo off
-REM Run from pankosmia\[this-repo's-name]\windows\scripts directory in PowerShell or cmd by:  .\build_clients.bat
+REM Run from pankosmia\[this-repo's-name]\windows\scripts directory in PowerShell with `.\build_clients.bat`, or in cmd with `build_clients.bat`.
 
 REM The -d positional argument means to delete past logs without asking
+REM The first non-flag positional argument is the branch name (default: main)
 set "deleteLogs="
+set "BRANCH="
 
 :loop
 if "%~1"=="" goto :continue
-if /I "%~1"=="-d" set "deleteLogs=-d"
+if /I "%~1"=="-d" (
+  set "deleteLogs=-d"
+  shift
+  goto :loop
+)
+REM First non-flag argument is the branch
+if not defined BRANCH (
+  set "BRANCH=%~1"
+  shift
+  goto :loop
+)
 shift
 goto :loop
 
 :continue
 
-REM Assign default value if -d is not present
+REM Assign default values
 if not defined deleteLogs set "deleteLogs=-no"
+if not defined BRANCH set "BRANCH=main"
 
 if exist "build_clients_*.log" (
   echo.
@@ -84,9 +97,7 @@ for /l %%a in (1,1,%count%) do (
       call :log
     ) else (
       cd !ASSET%%a!
-      call :log ^> git checkout main...
-      call :run git checkout main
-      if errorlevel 1 call :markfail "ASSET" "!ASSET%%a!" "git checkout main"
+      call :checkout_branch "ASSET" "!ASSET%%a!"
 
       call :log ^> git pull...
       call :run git pull
@@ -112,9 +123,7 @@ for /l %%a in (1,1,%count%) do (
       call :log
     ) else (
       cd !CLIENT%%a!
-      call :log ^> git checkout main...
-      call :run git checkout main
-      if errorlevel 1 call :markfail "CLIENT" "!CLIENT%%a!" "git checkout main"
+      call :checkout_branch "CLIENT" "!CLIENT%%a!"
 
       call :log ^> git pull...
       call :run git pull
@@ -159,6 +168,44 @@ if %FAILCOUNT% GTR 0 set "EXITCODE=1"
 
 endlocal
 exit /b %EXITCODE%
+
+
+:checkout_branch
+REM %~1 = type (ASSET or CLIENT), %~2 = repo name
+REM Uses %BRANCH% to determine which branch to check out, with fallback logic.
+set "CB_TYPE=%~1"
+set "CB_REPO=%~2"
+
+call :log ^> git checkout %BRANCH%...
+call :run git checkout %BRANCH%
+if not errorlevel 1 goto :checkout_done
+
+REM Branch didn't exist — apply fallback logic
+if /I "%BRANCH%"=="dev" (
+  call :log ^> Branch "dev" not found, trying "qa"...
+  call :run git checkout qa
+  if not errorlevel 1 goto :checkout_done
+
+  call :log ^> Branch "qa" not found, falling back to "main"...
+  call :run git checkout main
+  if errorlevel 1 call :markfail "%CB_TYPE%" "%CB_REPO%" "git checkout main (fallback from dev)"
+  goto :checkout_done
+)
+
+if /I "%BRANCH%"=="qa" (
+  call :log ^> Branch "qa" not found, falling back to "main"...
+  call :run git checkout main
+  if errorlevel 1 call :markfail "%CB_TYPE%" "%CB_REPO%" "git checkout main (fallback from qa)"
+  goto :checkout_done
+)
+
+REM Any other branch — fall back to main
+call :log ^> Branch "%BRANCH%" not found, falling back to "main"...
+call :run git checkout main
+if errorlevel 1 call :markfail "%CB_TYPE%" "%CB_REPO%" "git checkout main (fallback from %BRANCH%)"
+
+:checkout_done
+exit /b 0
 
 
 :log
