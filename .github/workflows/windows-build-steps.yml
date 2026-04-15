@@ -123,16 +123,16 @@ jobs:
         run: .\build_clients.bat "$BRANCHES"
 
       # Build DEBUG server and assemble build environment without asking if the server is off
-      - name: Run DEBUG build_server.bat -s -d
+      - name: Run ${{ inputs.branches }} DEBUG server and assemble build environment without asking if the server is off
         working-directory: .\windows\scripts
         if: env.SERVER_TYPE == 'debug'
-        run: .\build_server.bat -s -d
+        run: .\build_server.bat -s -d "$BRANCHES"
 
       # Build RELEASE server and assemble build environment without asking if the server is off
-      - name: Run RELEASE build_server.bat -s
+      - name: Run ${{ inputs.branches }} RELEASE server and assemble build environment without asking if the server is off
         working-directory: .\windows\scripts
         if: env.SERVER_TYPE == 'release'
-        run: .\build_server.bat -s
+        run: .\build_server.bat -s "$BRANCHES"
 
       # Bundle zip without asking if the server is off and indicate GHA
       - name: Run bundle_zip.ps1 -ServerOff "Y" -IsGHA "Y"

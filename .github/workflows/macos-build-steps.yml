@@ -133,15 +133,15 @@ jobs:
         working-directory: ./macos/scripts
         run: ./build_clients.zsh "$BRANCHES"
 
-      - name: Build DEBUG server and assemble build environment without asking if the server is off
+      - name: Build ${{ inputs.branches }} DEBUG server and assemble build environment without asking if the server is off
         working-directory: ./macos/scripts
         if: env.SERVER_TYPE == 'debug'
-        run: ./build_server.zsh -s -d
+        run: ./build_server.zsh -s -d "$BRANCHES"
 
-      - name: Build RELEASE server and assemble build environment without asking if the server is off
+      - name: Build ${{ inputs.branches }} RELEASE server and assemble build environment without asking if the server is off
         working-directory: ./macos/scripts
         if: env.SERVER_TYPE == 'release'
-        run: ./build_server.zsh -s
+        run: ./build_server.zsh -s "$BRANCHES"
 
       - name: Bundle zip without asking if the server is off and indicate GHA
         working-directory: ./macos/scripts

@@ -96,15 +96,15 @@ jobs:
         working-directory: ./linux/scripts
         run: ./build_clients.bsh "$BRANCHES"
 
-      - name: Build DEBUG server and assemble build environment without asking if the server is off
+      - name: Build ${{ inputs.branches }} DEBUG server and assemble build environment without asking if the server is off
         working-directory: ./linux/scripts
         if: env.SERVER_TYPE == 'debug'
-        run: ./build_server.bsh -s -d
+        run: ./build_server.bsh -s -d "$BRANCHES"
 
-      - name: Build RELEASE server and assemble build environment without asking if the server is off
+      - name: Build ${{ inputs.branches }} RELEASE server and assemble build environment without asking if the server is off
         working-directory: ./linux/scripts
         if: env.SERVER_TYPE == 'release'
-        run: ./build_server.bsh -s
+        run: ./build_server.bsh -s "$BRANCHES"
 
       - name: Bundle tgz without asking if the server is off and indicate GHA
         working-directory: ./linux/scripts

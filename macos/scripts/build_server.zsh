@@ -5,23 +5,66 @@ set -u
 
 echo
 
-# Do not ask if the server is off if the -s positional argument is provided in either #1 or #2
-# Debug server if the -d positional argument is provided in either #1 or #2
+# Do not ask if the server is off if the -s positional argument is provided
+# Debug server if the -d positional argument is provided
+# Specify environment as first non-flag positional argument: dev, qa, or main (default: main)
+envArg=""
 while [[ "$#" -gt 0 ]]
   do case $1 in
       -s) askIfOff="$1" # -s means "no"
       ;;
       -d) debugServer="$1" # -d = "yes"
+      ;;
+      *) if [ -z "$envArg" ] && [[ "$1" != -* ]]; then
+           envArg="$1"
+         fi
+      ;;
   esac
   shift
 done
+
+# Normalize: anything other than dev or qa is treated as main
+if [ -z "$envArg" ]; then
+  envArg="main"
+fi
+if [ "$envArg" != "dev" ] && [ "$envArg" != "qa" ]; then
+  envArg="main"
+fi
+
+# For dev and qa, back up Cargo.toml and rewrite the pankosmia_web version
+# For main, Cargo.toml already has the correct version — no replacement needed
+cargoFile="../../local_server/Cargo.toml"
+cargoBackup="../../local_server/Cargo.toml.bak"
+didRewrite=0
+
+restore_cargo() {
+  if [ "$didRewrite" -eq 1 ] && [ -f "$cargoBackup" ]; then
+    cp "$cargoBackup" "$cargoFile"
+    rm "$cargoBackup"
+  fi
+}
+trap restore_cargo EXIT
+
+if [ "$envArg" != "main" ]; then
+  targetVersion=$(grep "^${envArg}=" "../../local_server.env" | cut -d'=' -f2)
+  if [ -z "$targetVersion" ]; then
+    echo "  Could not find environment \"$envArg\" in local_server.env"
+    exit 1
+  fi
+  echo "  Using pankosmia_web version $targetVersion for environment \"$envArg\""
+  cp "$cargoFile" "$cargoBackup"
+  sed -i '' "s|pankosmia_web = \"=[^\"]*\"|pankosmia_web = \"=$targetVersion\"|" "$cargoFile"
+  didRewrite=1
+else
+  echo "  Using pankosmia_web version from Cargo.toml (main)"
+fi
 
 # Assign default value if -s is not present
 if [ -z ${askIfOff+x} ]; then # serverOff is unset
   askIfOff=-yes
 fi
 
-# Assign default value if -s is not present
+# Assign default value if -d is not present
 if [ -z ${debugServer+x} ]; then # debugServer is unset
   debugServer=-no
   buildCommand=(cargo build --release)
@@ -78,6 +121,8 @@ echo "Building local $serverType server at /$replace ..."
 cd ../../local_server
 OPENSSL_STATIC=yes "${buildCommand[@]}"
 cd ../macos/scripts
+
+# Cargo.toml is restored by the EXIT trap
 
 if [ -d ../build ]; then
   echo "Removing last build environment..."
