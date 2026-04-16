@@ -1,0 +1,17 @@
+{
+    "name": "tC3 => Guide à la migration vers tC4",
+    "steps": [
+        {
+            "title": "Configurer la traduction",
+            "bodyPath": "step1.md"
+        },
+                {
+            "title": "Configurer les vérifications",
+            "bodyPath": "step2.md"
+        },
+        {
+            "title": "De premiers pas pour commencer",
+            "bodyPath": "step3.md"
+        }
+
+}
