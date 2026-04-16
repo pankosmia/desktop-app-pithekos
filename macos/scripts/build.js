@@ -166,3 +166,9 @@ if (spec.client_config) {
         path.join(BUILD_DIR, "lib", "app_resources", "product", "client_config.json")
     );
 }
+// Product Resources
+fse.copySync(
+    path.resolve("../../globalBuildResources/product_resources"),
+    path.join(BUILD_DIR, "lib", "app_resources", "product", "product_resources"),
+    { recursive: true }
+);
