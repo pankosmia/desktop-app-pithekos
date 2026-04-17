@@ -6,7 +6,7 @@ REM To pre-confirm the server is off, so as to not be asked.
 
 echo.
 :choice
-IF "%~1"=="-p" (
+IF "%~1" == "-p" (
   goto :yes
 ) ELSE (
   set /P "c=Is the latest already pulled? [Y/n]: "
@@ -55,7 +55,7 @@ set "origintest=good_if_not_changed"
 set "upstreamtest=different_if_not_changed"
 for /l %%b in (1,1,%countb%) do (
   REM Don't proceed if the origin is the intended upstream.
-  IF "!varb%%b!"=="remote.origin.url=https://github.com/pankosmia/desktop-app-template.git" (
+  IF "!varb%%b!" == "remote.origin.url=https://github.com/pankosmia/desktop-app-template.git" (
     set "origintest=stop_because_is_set_to_desired_upstream"
     echo.
     echo origin is set to https://github.com/pankosmia/desktop-app-template.git
@@ -67,9 +67,9 @@ for /l %%b in (1,1,%countb%) do (
   )
   REM This assumes the origin record will always be returned on an earlier line that the upstream record.
   REM Proceed if the origin is set.
-  IF "%origintest%"=="good_if_not_changed" (
+  IF "%origintest%" == "good_if_not_changed" (
       REM Proceed if the upstream is already set as expected.
-    IF "!varb%%b!"=="remote.upstream.url=https://github.com/pankosmia/desktop-app-template.git" (
+    IF "!varb%%b!" == "remote.upstream.url=https://github.com/pankosmia/desktop-app-template.git" (
       set "upstreamtest=as_expected"
       echo upstream is confirmed as set to https://github.com/pankosmia/desktop-app-template.git
       set up=%%b
@@ -80,7 +80,7 @@ for /l %%b in (1,1,%countb%) do (
 )
 REM This assumes the origin record will always be returned on an earlier line that the upstream record.
 REM Proceed if the origin is set.
-if "%origintest%"=="good_if_not_changed" (
+if "%origintest%" == "good_if_not_changed" (
   REM Set the upstream and proceed if it is not yet set.
   if not defined vara2 (
     git remote add upstream https://github.com/pankosmia/desktop-app-template.git
@@ -91,7 +91,7 @@ if "%origintest%"=="good_if_not_changed" (
   )
 )
 REM Don't proceed if the upstream is set elsewhere.
-if "%upstreamtest%"=="different_if_not_changed" (
+if "%upstreamtest%" == "different_if_not_changed" (
   echo.
   echo The upstream is set to: !varb%up%!
   echo However, this script is written for an upstream that is set to https://github.com/pankosmia/desktop-app-template.git
@@ -100,133 +100,92 @@ if "%upstreamtest%"=="different_if_not_changed" (
 )
 
 :sync
-git fetch upstream
-git merge --no-log --no-ff --no-commit upstream/main
-echo package-lock.json:
-git reset package-lock.json
-git checkout package-lock.json
-echo globalBuildResources\favicon.ico:
-git reset globalBuildResources\favicon.ico
-git checkout globalBuildResources\favicon.ico
-echo globalBuildResources\icon.icns:
-git reset globalBuildResources\icon.icns
-git checkout globalBuildResources\icon.icns
-echo globalBuildResources\icon.ico:
-git reset globalBuildResources\icon.ico
-git checkout globalBuildResources\icon.ico
-echo globalBuildResources\linux_icon.png:
-git reset globalBuildResources\linux_icon.png
-git checkout globalBuildResources\linux_icon.png
-echo globalBuildResources\favicon.png:
-git reset globalBuildResources\favicon.png
-git checkout globalBuildResources\favicon.png
-echo globalBuildResources\favicon@1.25x.png:
-git reset globalBuildResources\favicon@1.25x.png
-git checkout globalBuildResources\favicon@1.25x.png
-echo globalBuildResources\favicon@1.5x.png:
-git reset globalBuildResources\favicon@1.5x.png
-git checkout globalBuildResources\favicon@1.5x.png
-echo globalBuildResources\favicon@1.75x.png:
-git reset globalBuildResources\favicon@1.75x.png
-git checkout globalBuildResources\favicon@1.75x.png
-echo globalBuildResources\favicon@2x.png:
-git reset globalBuildResources\favicon@2x.png
-git checkout globalBuildResources\favicon@2x.png
-echo globalBuildResources\theme.json:
-git reset globalBuildResources\theme.json
-git checkout globalBuildResources\theme.json
-echo branding\building_blocks\for_favicon_ico\favicon_16x16.png:
-git reset branding\building_blocks\for_favicon_ico\favicon_16x16.png
-git checkout branding\building_blocks\for_favicon_ico\favicon_16x16.png
-echo branding\building_blocks\for_favicon_ico\favicon_32x32.png:
-git reset branding\building_blocks\for_favicon_ico\favicon_32x32.png
-git checkout branding\building_blocks\for_favicon_ico\favicon_32x32.png
-echo branding\building_blocks\for_icon_icns\icon_128x128.png:
-git reset branding\building_blocks\for_icon_icns\icon_128x128.png
-git checkout branding\building_blocks\for_icon_icns\icon_128x128.png
-echo branding\building_blocks\for_icon_icns\icon_128x128@2x.png:
-git reset branding\building_blocks\for_icon_icns\icon_128x128@2x.png
-git checkout branding\building_blocks\for_icon_icns\icon_128x128@2x.png
-echo branding\building_blocks\for_icon_icns\icon_16x16.png:
-git reset branding\building_blocks\for_icon_icns\icon_16x16.png
-git checkout branding\building_blocks\for_icon_icns\icon_16x16.png
-echo branding\building_blocks\for_icon_icns\icon_16x16@2x.png:
-git reset branding\building_blocks\for_icon_icns\icon_16x16@2x.png
-git checkout branding\building_blocks\for_icon_icns\icon_16x16@2x.png
-echo branding\building_blocks\for_icon_icns\icon_256x256.png:
-git reset branding\building_blocks\for_icon_icns\icon_256x256.png
-git checkout branding\building_blocks\for_icon_icns\icon_256x256.png
-echo branding\building_blocks\for_icon_icns\icon_256x256@2x.png:
-git reset branding\building_blocks\for_icon_icns\icon_256x256@2x.png
-git checkout branding\building_blocks\for_icon_icns\icon_256x256@2x.png
-echo branding\building_blocks\for_icon_icns\icon_32x32.png:
-git reset branding\building_blocks\for_icon_icns\icon_32x32.png
-git checkout branding\building_blocks\for_icon_icns\icon_32x32.png
-echo branding\building_blocks\for_icon_icns\icon_32x32@2x.png:
-git reset branding\building_blocks\for_icon_icns\icon_32x32@2x.png
-git checkout branding\building_blocks\for_icon_icns\icon_32x32@2x.png
-echo branding\building_blocks\for_icon_icns\icon_512x512.png:
-git reset branding\building_blocks\for_icon_icns\icon_512x512.png
-git checkout branding\building_blocks\for_icon_icns\icon_512x512.png
-echo branding\building_blocks\for_icon_icns\icon_512x512@2x.png:
-git reset branding\building_blocks\for_icon_icns\icon_512x512@2x.png
-git checkout branding\building_blocks\for_icon_icns\icon_512x512@2x.png
-echo branding\building_blocks\for_icon_ico\win_icon_16x16.png:
-git reset branding\building_blocks\for_icon_ico\win_icon_16x16.png
-git checkout branding\building_blocks\for_icon_ico\win_icon_16x16.png
-echo branding\building_blocks\for_icon_ico\win_icon_256x256.png:
-git reset branding\building_blocks\for_icon_ico\win_icon_256x256.png
-git checkout branding\building_blocks\for_icon_ico\win_icon_256x256.png
-echo branding\building_blocks\for_icon_ico\win_icon_32x32.png:
-git reset branding\building_blocks\for_icon_ico\win_icon_32x32.png
-git checkout branding\building_blocks\for_icon_ico\win_icon_32x32.png
-echo branding\building_blocks\for_icon_ico\win_icon_48x48.png:
-git reset branding\building_blocks\for_icon_ico\win_icon_48x48.png
-git checkout branding\building_blocks\for_icon_ico\win_icon_48x48.png
-echo branding\source\favicon.png:
-git reset branding\source\favicon.png
-git checkout branding\source\favicon.png
-echo branding\source\mac_icon.png:
-git reset branding\source\mac_icon.png
-git checkout branding\source\mac_icon.png
-echo branding\source\win_icon.png:
-git reset branding\source\win_icon.png
-git checkout branding\source\win_icon.png
-echo branding\source\favicon.svg:
-git reset branding\source\favicon.svg
-git checkout branding\source\favicon.svg
-echo branding\source\mac_icon.svg:
-git reset branding\source\mac_icon.svg
-git checkout branding\source\mac_icon.svg
-echo branding\source\win_icon.svg:
-git reset branding\source\win_icon.svg
-git checkout branding\source\win_icon.svg
-echo branding\source\artwork\favicon_transparent_square_blue-turqoise.psd:
-git reset branding\source\artwork\favicon_transparent_square_blue-turqoise.psd
-git checkout branding\source\artwork\favicon_transparent_square_blue-turqoise.psd
-echo branding\source\artwork\logo_512.png:
-git reset branding\source\artwork\logo_512.png
-git checkout branding\source\artwork\logo_512.png
-echo branding\source\artwork\logo_favicon_inkscape.svg:
-git reset branding\source\artwork\logo_favicon_inkscape.svg
-git checkout branding\source\artwork\logo_favicon_inkscape.svg
-echo branding\source\artwork\logo_inkscape.svg:
-git reset branding\source\artwork\logo_inkscape.svg
-git checkout branding\source\artwork\logo_inkscape.svg
-echo branding\source\artwork\logo_macos.psd:
-git reset branding\source\artwork\logo_macos.psd
-git checkout branding\source\artwork\logo_macos.psd
-echo branding\source\artwork\logo_windows.psd:
-git reset branding\source\artwork\logo_windows.psd
-git checkout branding\source\artwork\logo_windows.psd
+git fetch upstream main
+git merge --no-log --no-ff --no-commit upstream/main > nul 2>&1
+
+del "%TEMP%\sync_excluded.txt" >nul 2>&1
+del "%TEMP%\sync_protected.txt" >nul 2>&1
+
+REM --- Write protected files list to a temp file (avoids @ parsing issues) ---
+(
+  echo package-lock.json
+  echo globalBuildResources\favicon.ico
+  echo globalBuildResources\icon.icns
+  echo globalBuildResources\icon.ico
+  echo globalBuildResources\linux_icon.png
+  echo globalBuildResources\favicon.png
+  echo globalBuildResources\favicon@1.25x.png
+  echo globalBuildResources\favicon@1.5x.png
+  echo globalBuildResources\favicon@1.75x.png
+  echo globalBuildResources\favicon@2x.png
+  echo globalBuildResources\theme.json
+  echo branding\building_blocks\for_favicon_ico\favicon_16x16.png
+  echo branding\building_blocks\for_favicon_ico\favicon_32x32.png
+  echo branding\building_blocks\for_icon_icns\icon_128x128.png
+  echo branding\building_blocks\for_icon_icns\icon_128x128@2x.png
+  echo branding\building_blocks\for_icon_icns\icon_16x16.png
+  echo branding\building_blocks\for_icon_icns\icon_16x16@2x.png
+  echo branding\building_blocks\for_icon_icns\icon_256x256.png
+  echo branding\building_blocks\for_icon_icns\icon_256x256@2x.png
+  echo branding\building_blocks\for_icon_icns\icon_32x32.png
+  echo branding\building_blocks\for_icon_icns\icon_32x32@2x.png
+  echo branding\building_blocks\for_icon_icns\icon_512x512.png
+  echo branding\building_blocks\for_icon_icns\icon_512x512@2x.png
+  echo branding\building_blocks\for_icon_ico\win_icon_16x16.png
+  echo branding\building_blocks\for_icon_ico\win_icon_256x256.png
+  echo branding\building_blocks\for_icon_ico\win_icon_32x32.png
+  echo branding\building_blocks\for_icon_ico\win_icon_48x48.png
+  echo branding\source\favicon.png
+  echo branding\source\mac_icon.png
+  echo branding\source\win_icon.png
+  echo branding\source\favicon.svg
+  echo branding\source\mac_icon.svg
+  echo branding\source\win_icon.svg
+  echo branding\source\artwork\favicon_transparent_square_blue-turqoise.psd
+  echo branding\source\artwork\logo_512.png
+  echo branding\source\artwork\logo_favicon_inkscape.svg
+  echo branding\source\artwork\logo_inkscape.svg
+  echo branding\source\artwork\logo_macos.psd
+  echo branding\source\artwork\logo_windows.psd
+) > "%TEMP%\sync_protected.txt"
+
+SET "excluded_count=0"
+
+REM --- For each staged file, check if it's in the protected list ---
+FOR /F "tokens=* USEBACKQ" %%S IN (`git diff --name-only --cached`) DO (
+  SET "staged_file=%%S"
+  SET "staged_file=!staged_file:/=\!"
+  SET "was_protected=0"
+  FOR /F "usebackq tokens=*" %%P IN ("%TEMP%\sync_protected.txt") DO (
+    IF /I "!staged_file!" == "%%P" (
+      SET "was_protected=1"
+    )
+  )
+  IF "!was_protected!" == "1" (
+    git reset "%%S" >nul 2>&1
+    git checkout "%%S" >nul 2>&1
+    SET /a excluded_count=!excluded_count!+1
+    echo        - !staged_file!>> "%TEMP%\sync_excluded.txt"
+  )
+)
+
+del "%TEMP%\sync_protected.txt" >nul 2>&1
+
+REM --- Print a clean summary ---
+echo.
+echo      !excluded_count! protected file(s) were excluded from this sync.
+IF EXIST "%TEMP%\sync_excluded.txt" (
+  echo.
+  type "%TEMP%\sync_excluded.txt"
+  del "%TEMP%\sync_excluded.txt" >nul 2>&1
+  echo.
+  echo      These files were reset to preserve this repo's versions.
+)
 echo.
 echo      *******************************************************************************
-echo      * Files expected to differ have been excluded from the sync.                  *
 echo      * Now review staged changes, and commit if there are no conflicts, then push. *
 echo      *******************************************************************************
 echo.
 exit /b
 
 :end
-cd windows\scripts\
-ENDLOCAL
