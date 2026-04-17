@@ -3,6 +3,7 @@
 address = "127.0.0.1"
 port = 19119
 limits = { form = "128MiB", json = "128MiB", data = "128MiB", data-form = "128MiB", bytes = "128MiB", file = "128MiB"}
+log_level = "normal"
 
 [default.shutdown]
 ctrlc = true
