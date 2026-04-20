@@ -1,26 +1,39 @@
 #!/usr/bin/env bash
 
 # Run from: pankosmia/<repo-name>/linux/scripts
+
 # Usage:
-#   ./build_clients.bsh [branch] [-d]
+#   ./build_clients.bsh [branch] [fallback_tier] [-d] [-f]
+#     The -d argument means to delete past logs without asking
+#     The -f argument means only fresh clones are being built, so pulling is skipped.
+#     The first non-flag argument is the branch name (default: main)
+#     The second non-flag argument is the fallback tier: dev, qa, or main (default: same as branch)
+
 # Examples:
-#   ./build_clients.bsh              # defaults to "main"
-#   ./build_clients.bsh dev          # tries dev → qa → main
-#   ./build_clients.bsh qa -d        # tries qa → main, deletes past logs
-#   ./build_clients.bsh -d dev       # same as above, flags and branch in any order
+#   ./build_clients.bsh                        # defaults to "main"
+#   ./build_clients.bsh dev                    # tries dev → qa → main
+#   ./build_clients.bsh my-branch dev          # tries my-branch → dev → qa → main
+#   ./build_clients.bsh my-branch qa -d        # tries my-branch → qa → main, deletes past logs
+#   ./build_clients.bsh -f -d dev              # fresh clone (skips pulling), delete logs, branch=dev → qa → main
 
 source ../../app_config.env
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 
-# --- parse args (-d flag and optional branch) ---
+# --- parse args ---
 deleteLogs="-no"
+FRESH_CLONE=""
 BRANCH=""
+FALLBACK_TIER=""
 while [ $# -gt 0 ]; do
   if [ "$1" = "-d" ]; then
     deleteLogs="-d"
+  elif [ "$1" = "-f" ]; then
+    FRESH_CLONE=1
   elif [ -z "$BRANCH" ]; then
     BRANCH="$1"
+  elif [ -z "$FALLBACK_TIER" ]; then
+    FALLBACK_TIER="$1"
   fi
   shift
 done
@@ -29,6 +42,22 @@ done
 if [ -z "$BRANCH" ]; then
   BRANCH="main"
 fi
+
+# If no fallback tier specified, derive from the branch itself
+if [ -z "$FALLBACK_TIER" ]; then
+  case "${BRANCH,,}" in
+    dev) FALLBACK_TIER="dev" ;;
+    qa)  FALLBACK_TIER="qa" ;;
+    *)   FALLBACK_TIER="main" ;;
+  esac
+fi
+
+# Normalize fallback tier: anything other than dev or qa becomes main
+case "${FALLBACK_TIER,,}" in
+  dev) FALLBACK_TIER="dev" ;;
+  qa)  FALLBACK_TIER="qa" ;;
+  *)   FALLBACK_TIER="main" ;;
+esac
 
 # --- delete past logs (prompt unless -d) ---
 if ls "${SCRIPT_DIR}"/build_clients_*.log >/dev/null 2>&1; then
@@ -56,6 +85,8 @@ echo "===== Build started $(date) =====" > "$LOG"
 
 FAILCOUNT=0
 FAILS=()
+SKIPCOUNT=0
+SKIPS=()
 
 log() {
   echo "$*"
@@ -72,6 +103,11 @@ markfail() {
   FAILS+=("[$1] $2 :: $3")
 }
 
+markskip() {
+  SKIPCOUNT=$((SKIPCOUNT + 1))
+  SKIPS+=("[$1] $2 ($3): $4")
+}
+
 # --- checkout with fallback logic ---
 checkout_branch() {
   local cb_type="$1"
@@ -79,35 +115,91 @@ checkout_branch() {
 
   log "> git checkout $BRANCH..."
   if run git checkout "$BRANCH"; then
+    CHECKED_OUT_BRANCH="$BRANCH"
     return
   fi
 
-  # Branch didn't exist — apply fallback logic
-  if [ "${BRANCH,,}" = "dev" ]; then
+  # Branch didn't exist -- apply fallback based on FALLBACK_TIER
+  if [ "$FALLBACK_TIER" = "dev" ]; then
+    if [ "${BRANCH,,}" != "dev" ]; then
+      log "> Branch \"$BRANCH\" not found, trying \"dev\"..."
+      if run git checkout dev; then
+        CHECKED_OUT_BRANCH="dev"
+        return
+      fi
+    fi
+
     log "> Branch \"dev\" not found, trying \"qa\"..."
     if run git checkout qa; then
+      CHECKED_OUT_BRANCH="qa"
       return
     fi
+
     log "> Branch \"qa\" not found, falling back to \"main\"..."
     if ! run git checkout main; then
-      markfail "$cb_type" "$cb_repo" "git checkout main (fallback from dev)"
+      markfail "$cb_type" "$cb_repo" "git checkout main (fallback from $BRANCH)"
     fi
+    CHECKED_OUT_BRANCH="main"
     return
   fi
 
-  if [ "${BRANCH,,}" = "qa" ]; then
+  if [ "$FALLBACK_TIER" = "qa" ]; then
+    if [ "${BRANCH,,}" != "qa" ]; then
+      log "> Branch \"$BRANCH\" not found, trying \"qa\"..."
+      if run git checkout qa; then
+        CHECKED_OUT_BRANCH="qa"
+        return
+      fi
+    fi
+
     log "> Branch \"qa\" not found, falling back to \"main\"..."
     if ! run git checkout main; then
-      markfail "$cb_type" "$cb_repo" "git checkout main (fallback from qa)"
+      markfail "$cb_type" "$cb_repo" "git checkout main (fallback from $BRANCH)"
     fi
+    CHECKED_OUT_BRANCH="main"
     return
   fi
 
-  # Any other branch — fall back to main
   log "> Branch \"$BRANCH\" not found, falling back to \"main\"..."
   if ! run git checkout main; then
     markfail "$cb_type" "$cb_repo" "git checkout main (fallback from $BRANCH)"
   fi
+  CHECKED_OUT_BRANCH="main"
+}
+
+# --- pull logic ---
+safe_pull() {
+  local sp_type="$1"
+  local sp_repo="$2"
+
+  if [ -n "$FRESH_CLONE" ]; then
+    log "> Skipping pull -- -f flag set, 'fresh' clone, no pull"
+    markskip "$sp_type" "$sp_repo" "$CHECKED_OUT_BRANCH" "-f flag set, 'fresh' clone, no pull"
+    return
+  fi
+
+  if ! git diff --quiet || ! git diff --cached --quiet; then
+    log "> Skipping pull -- uncommitted local changes detected on \"$CHECKED_OUT_BRANCH\", no pull"
+    markskip "$sp_type" "$sp_repo" "$CHECKED_OUT_BRANCH" "uncommitted local changes, no pull"
+    return
+  fi
+
+  if ! git rev-parse --verify "origin/$CHECKED_OUT_BRANCH" >/dev/null 2>&1; then
+    log "> Skipping pull -- origin/$CHECKED_OUT_BRANCH does not exist, no pull"
+    markskip "$sp_type" "$sp_repo" "$CHECKED_OUT_BRANCH" "origin/$CHECKED_OUT_BRANCH does not exist, no pull"
+    return
+  fi
+
+  local local_ahead
+  local_ahead=$(git rev-list "origin/$CHECKED_OUT_BRANCH..HEAD" --count 2>/dev/null)
+  if [ "$local_ahead" -gt 0 ] 2>/dev/null; then
+    log "> Skipping pull -- \"$CHECKED_OUT_BRANCH\" has $local_ahead unpushed commit(s), no pull"
+    markskip "$sp_type" "$sp_repo" "$CHECKED_OUT_BRANCH" "$local_ahead unpushed commit(s), no pull"
+    return
+  fi
+
+  log "> git pull origin $CHECKED_OUT_BRANCH..."
+  if ! run git pull origin "$CHECKED_OUT_BRANCH"; then markfail "$sp_type" "$sp_repo" "git pull origin $CHECKED_OUT_BRANCH"; fi
 }
 
 # --- original counting approach ---
@@ -131,9 +223,7 @@ for ((i=1;i<=count;i++)); do
     else
       cd "$asset"
       checkout_branch "ASSET" "$asset"
-
-      log "> git pull..."
-      if ! run git pull; then markfail "ASSET" "$asset" "git pull"; fi
+      safe_pull "ASSET" "$asset"
 
       log "################################ END Asset $i: $asset ################################"
       log
@@ -156,9 +246,7 @@ for ((i=1;i<=count;i++)); do
     else
       cd "$client"
       checkout_branch "CLIENT" "$client"
-
-      log "> git pull..."
-      if ! run git pull; then markfail "CLIENT" "$client" "git pull"; fi
+      safe_pull "CLIENT" "$client"
 
       log "> npm ci..."
       if ! run npm ci; then markfail "CLIENT" "$client" "npm ci"; fi
@@ -183,11 +271,22 @@ if [ "$FAILCOUNT" -eq 0 ]; then
 else
   echo "Failed steps: $FAILCOUNT"
   for f in "${FAILS[@]}"; do
-    echo "$f"
+    echo "  $f"
+  done
+fi
+if [ "$SKIPCOUNT" -gt 0 ]; then
+  echo
+  echo "Skipped pulls: $SKIPCOUNT"
+  for s in "${SKIPS[@]}"; do
+    echo "  $s"
   done
 fi
 echo
-echo "Full log: \"$LOG\""
+if /i "%GITHUB_ACTIONS%"=="true" 2>/dev/null; then
+  echo "Full log: scroll up in the \"Run build_clients.bsh\" step output above."
+else
+  echo "Full log: \"$LOG\""
+fi
 echo "==========================================================================="
 
 if [ "$FAILCOUNT" -gt 0 ]; then

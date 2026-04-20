@@ -94,7 +94,7 @@ jobs:
 
       - name: Build ${{ inputs.branches }} clients
         working-directory: ./linux/scripts
-        run: ./build_clients.bsh "$BRANCHES"
+        run: ./build_clients.bsh -f "$BRANCHES"
 
       - name: Build ${{ inputs.branches }} DEBUG server and assemble build environment without asking if the server is off
         working-directory: ./linux/scripts

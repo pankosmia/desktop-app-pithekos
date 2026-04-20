@@ -131,7 +131,7 @@ jobs:
 
       - name: Build ${{ inputs.branches }} clients
         working-directory: ./macos/scripts
-        run: ./build_clients.zsh "$BRANCHES"
+        run: ./build_clients.zsh -f "$BRANCHES"
 
       - name: Build ${{ inputs.branches }} DEBUG server and assemble build environment without asking if the server is off
         working-directory: ./macos/scripts

@@ -120,7 +120,7 @@ jobs:
       # Install and build clients
       - name: Build ${{ inputs.branches }} clients
         working-directory: .\windows\scripts
-        run: .\build_clients.bat "$BRANCHES"
+        run: .\build_clients.bat -f "$BRANCHES"
 
       # Build DEBUG server and assemble build environment without asking if the server is off
       - name: Run ${{ inputs.branches }} DEBUG server and assemble build environment without asking if the server is off
