@@ -5,23 +5,40 @@ set -u
 
 echo
 
-# Do not ask if the server is off if the -s positional argument is provided
-# Debug server if the -d positional argument is provided
-# Specify environment as first non-flag positional argument: dev, qa, or main (default: main)
+# Do not ask if the server is off if the -s argument is provided
+# Specify environment as an optional non-flag argument: dev, qa, or main (default: main)
+# Specify log level as an optional non-flag argument: critical, normal, debug, or off (default: normal)
 envArg=""
+logArg=""
 while [[ "$#" -gt 0 ]]
   do case $1 in
       -s) askIfOff="$1" # -s = "no"
       ;;
-      -d) debugServer="$1" # -d = "yes"
-      ;;
-      *) if [ -z "$envArg" ] && [[ "$1" != -* ]]; then
-           envArg="$1"
+      *) if [[ "$1" != -* ]]; then
+           if [ -z "$logArg" ] && { [ "$1" = "critical" ] || [ "$1" = "normal" ] || [ "$1" = "debug" ] || [ "$1" = "off" ]; }; then
+             logArg="$1"
+           elif [ -z "$envArg" ]; then
+             envArg="$1"
+           fi
          fi
       ;;
   esac
   shift
 done
+
+# Normalize: anything other than critical, debug, or off is treated as normal
+if [ -z "$logArg" ]; then
+  logArg="normal"
+fi
+if [ "$logArg" != "critical" ] && [ "$logArg" != "debug" ] && [ "$logArg" != "off" ]; then
+  logArg="normal"
+fi
+
+# Rewrite the log level in Rocket.toml (read at run time, so the change is left in place)
+rocketFile="../../Rocket.toml"
+
+echo "  Using log level \"$logArg\""
+sed -i "s|^log_level = \"[^\"]*\"|log_level = \"$logArg\"|" "$rocketFile"
 
 # Normalize: anything other than dev or qa is treated as main
 if [ -z "$envArg" ]; then
@@ -35,10 +52,10 @@ fi
 # For main, Cargo.toml already has the correct version — no replacement needed
 cargoFile="../../local_server/Cargo.toml"
 cargoBackup="../../local_server/Cargo.toml.bak"
-didRewrite=0
+didRewriteCargo=0
 
 restore_cargo() {
-  if [ "$didRewrite" -eq 1 ] && [ -f "$cargoBackup" ]; then
+  if [ "$didRewriteCargo" -eq 1 ] && [ -f "$cargoBackup" ]; then
     cp "$cargoBackup" "$cargoFile"
     rm "$cargoBackup"
   fi
@@ -54,35 +71,21 @@ if [ "$envArg" != "main" ]; then
   echo "  Using pankosmia_web version $targetVersion for environment \"$envArg\""
   cp "$cargoFile" "$cargoBackup"
   sed -i "s|pankosmia_web = \"=[^\"]*\"|pankosmia_web = \"=$targetVersion\"|" "$cargoFile"
-  didRewrite=1
+  didRewriteCargo=1
 else
   echo "  Using pankosmia_web version from Cargo.toml (main)"
 fi
 
 # Assign default value if -s is not present
-if [ -z ${askIfOff+x} ]; then # serverOff is unset
+if [ -z ${askIfOff+x} ]; then # askIfOff is unset
   askIfOff=-yes
 fi
 
-# Assign default value if -d is not present
-if [ -z ${debugServer+x} ]; then # debugServer is unset
-  debugServer=-no
-  buildCommand="cargo build --release"
-  search=local_server/target/debug
-  replace=local_server/target/release
-  serverType=release
-elif [[ $debugServer =~ ^(-d) ]]; then
-  buildCommand="cargo build"
-  search=local_server/target/release
-  replace=local_server/target/debug
-  serverType=debug
-fi
-
-# Do not ask if the server is off if the -s $1 or $2 positional argument is provided
+# Do not ask if the server is off if the -s argument is provided
 if ! [[ $askIfOff =~ ^(-s) ]]; then
   while true; do
     read -p "Is the server off? [Y/n]: " yn
-    case $yn in 
+    case $yn in
       "y" | "Y" | "" ) echo
         echo "Continuing...";
         break
@@ -107,18 +110,14 @@ if [ ! -f ../../buildSpec.json ] || [ ! -f ../../globalBuildResources/i18nPatch.
   echo "  +-----------------------------------------------------------------------------+"
   echo "  | Config files were rebuilt by \`./app_setup.bsh\` as one or more were missing. |"
   echo "  +-----------------------------------------------------------------------------+"
-  echo 
+  echo
 fi
 
-# Ensure buildSpec.json has the location for the indicated server build type
-configFile=../../buildSpec.json
-tmpFile=../../buildSpec.bak
-cp $configFile $tmpFile
-sed -i "s|$search|$replace|g" "$configFile"
-
-echo "Building local $serverType server at /$replace ..."
+# Build the rust server (always release)
+echo "Building local Release server at /local_server/target/release ..."
 cd ../../local_server
-$buildCommand
+echo "cargo build --release"
+cargo build --release
 cd ../linux/scripts
 
 # Cargo.toml is restored by the EXIT trap

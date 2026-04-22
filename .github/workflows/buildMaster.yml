@@ -29,21 +29,23 @@ on:
           - macos
         default: all
 
-      server_type:
-        description: 'Server type'
+      log_level:
+        description: 'Log level'
         required: true
         type: choice
         options:
-          - release
+          - critical
+          - normal
           - debug
-        default: release
+          - 'off'
+        default: critical
 
 # set run name from input so the run appears with that name (no API call needed)
 run-name: >-
   Master Build
   - ${{ inputs.branches }}
   - ${{ inputs.os == 'all' && 'all OSes' || inputs.os }}
-  - ${{ inputs.server_type }} server
+  - log=${{ inputs.log_level }}
 
 jobs:
   build:
@@ -52,7 +54,7 @@ jobs:
       - run: |
           echo "Branches is ${{ inputs.branches }}"
           echo "OS is ${{ inputs.os }}"
-          echo "Server type is ${{ inputs.server_type }}"
+          echo "Log level is ${{ inputs.log_level }}"
 
   build-macos-intel:
     name: Build on macOS Intel64 (x64)
@@ -61,7 +63,7 @@ jobs:
     with:
       runner: macos-15-intel
       delay_seconds: 1
-      server_type: ${{ inputs.server_type }}
+      log_level: ${{ inputs.log_level }}
       branches: ${{ inputs.branches == 'all of main' && 'main' || inputs.branches == 'all of qa' && 'qa' || 'dev' }}
 
   build-macos-arm:
@@ -71,7 +73,7 @@ jobs:
     with:
       runner: macos-14
       delay_seconds: 600
-      server_type: ${{ inputs.server_type }}
+      log_level: ${{ inputs.log_level }}
       branches: ${{ inputs.branches == 'all of main' && 'main' || inputs.branches == 'all of qa' && 'qa' || 'dev' }}
 
   build-windows:
@@ -80,7 +82,7 @@ jobs:
     uses: ./.github/workflows/windows-build-steps.yml
     with:
       runner: windows-2025
-      server_type: ${{ inputs.server_type }}
+      log_level: ${{ inputs.log_level }}
       branches: ${{ inputs.branches == 'all of main' && 'main' || inputs.branches == 'all of qa' && 'qa' || 'dev' }}
 
   build-linux:
@@ -89,7 +91,7 @@ jobs:
     uses: ./.github/workflows/linux-build-steps.yml
     with:
       runner: ubuntu-22.04
-      server_type: ${{ inputs.server_type }}
+      log_level: ${{ inputs.log_level }}
       branches: ${{ inputs.branches == 'all of main' && 'main' || inputs.branches == 'all of qa' && 'qa' || 'dev' }}
 
   finalize:

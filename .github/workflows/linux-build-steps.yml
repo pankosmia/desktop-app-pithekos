@@ -10,7 +10,7 @@ on:
       branches:
         required: true
         type: string
-      server_type:
+      log_level:
         required: true
         type: string
     outputs:
@@ -32,16 +32,16 @@ jobs:
     env:
       CI: false
       BRANCHES: ${{ inputs.branches }}
-      SERVER_TYPE: ${{ inputs.server_type }}
+      LOG_LEVEL: ${{ inputs.log_level }}
 
     steps:
       # Show branches
       - name: Show BRANCHES
         run: echo "BRANCHES = $BRANCHES"
 
-      # Show server type
-      - name: Show SERVER TYPE
-        run: echo "SERVER_TYPE = $SERVER_TYPE"
+      # Show log level
+      - name: Show LOG LEVEL
+        run: echo "LOG_LEVEL = $LOG_LEVEL"
 
       # Turn off re-runs
       - name: No re-runs please
@@ -96,15 +96,9 @@ jobs:
         working-directory: ./linux/scripts
         run: ./build_clients.bsh -f "$BRANCHES"
 
-      - name: Build ${{ inputs.branches }} DEBUG server and assemble build environment without asking if the server is off
-        working-directory: ./linux/scripts
-        if: env.SERVER_TYPE == 'debug'
-        run: ./build_server.bsh -s -d "$BRANCHES"
-
       - name: Build ${{ inputs.branches }} RELEASE server and assemble build environment without asking if the server is off
         working-directory: ./linux/scripts
-        if: env.SERVER_TYPE == 'release'
-        run: ./build_server.bsh -s "$BRANCHES"
+        run: ./build_server.bsh -s "$BRANCHES" "$LOG_LEVEL"
 
       - name: Bundle tgz without asking if the server is off and indicate GHA
         working-directory: ./linux/scripts

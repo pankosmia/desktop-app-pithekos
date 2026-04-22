@@ -1,10 +1,11 @@
 @echo off
 REM Run from pankosmia\[this-repo's-name]\windows\scripts directory in powershell or command by:  .\build_server.bat
 
-REM Do not ask if the server is off if the -s positional argument is provided
-REM Debug server if the -d positional argument is provided
-REM Specify environment as first non-flag positional argument: dev, qa, or main (default: main)
+REM Do not ask if the server is off if the -s argument is provided
+REM Specify environment as an optional non-flag argument: dev, qa, or main (default: main)
+REM Specify log level as as an optional non-flag argument: critical, normal, debug, or off (default: normal)
 set "envArg="
+set "logArg="
 :loop
 IF "%~1"=="" (
   goto :continue
@@ -14,10 +15,11 @@ IF "%~1"=="-s" (
   shift
   goto :loop
 )
-IF "%~1"=="-d" (
-  set "debugServer=%~1"
-  shift
-  goto :loop
+IF not defined logArg (
+  IF "%~1"=="critical" ( set "logArg=critical" & shift & goto :loop )
+  IF "%~1"=="normal"   ( set "logArg=normal"   & shift & goto :loop )
+  IF "%~1"=="debug"    ( set "logArg=debug"     & shift & goto :loop )
+  IF "%~1"=="off"      ( set "logArg=off"       & shift & goto :loop )
 )
 IF not defined envArg (
   IF "%~1"=="dev" set "envArg=dev"
@@ -28,6 +30,34 @@ shift
 goto :loop
 
 :continue
+
+REM Normalize: anything other than critical, debug, or off is treated as normal
+if not defined logArg (
+  set "logArg=normal"
+)
+if /I not "%logArg%"=="critical" if /I not "%logArg%"=="debug" if /I not "%logArg%"=="off" (
+  set "logArg=normal"
+)
+
+REM Rewrite the log level in Rocket.toml (read at run time, so the change is left in place)
+set "rocketFile=..\..\Rocket.toml"
+
+setlocal enabledelayedexpansion
+echo.
+echo   Using log level "%logArg%"
+
+set "rocketTmp=..\..\Rocket.toml.tmp"
+(for /f "usebackq tokens=*" %%a in ("!rocketFile!") do (
+  set "line=%%a"
+  echo !line! | findstr /C:"log_level" >nul
+  if !errorlevel! equ 0 (
+    echo log_level = "%logArg%"
+  ) else (
+    echo(!line!
+  )
+)) > "!rocketTmp!"
+move /y "!rocketTmp!" "!rocketFile!" >nul
+endlocal
 
 REM Normalize: anything other than dev or qa is treated as main
 if not defined envArg (
@@ -41,7 +71,7 @@ REM For dev and qa, back up Cargo.toml and rewrite the pankosmia_web version
 REM For main, Cargo.toml already has the correct version — no replacement needed
 set "cargoFile=..\..\local_server\Cargo.toml"
 set "cargoBackup=..\..\local_server\Cargo.toml.bak"
-set "didRewrite=0"
+set "didRewriteCargo=0"
 
 if /I not "%envArg%"=="main" (
   setlocal enabledelayedexpansion
@@ -75,29 +105,15 @@ if /I not "%envArg%"=="main" (
   move /y "!cargoTmp!" "!cargoFile!" >nul
 
   endlocal
-  set "didRewrite=1"
+  set "didRewriteCargo=1"
 ) else (
   echo.
   echo   Using pankosmia_web version from Cargo.toml ^(main^)
 )
 
 REM Assign default value if -s is not present
-if not defined %askIfOff (
+if not defined askIfOff (
   set "askIfOff=-yes"
-)
-
-REM Assign default value if -d is not present
-if not defined %debugServer (
-  set "debugServer=-no"
-  set "buildCommand=cargo build --release"
-  set "search=local_server/target/debug"
-  set "replace=local_server/target/release"
-  set "serverType=release"
-) else if "%debugServer%"=="-d" (
-  set "buildCommand=cargo build"
-  set "search=local_server/target/release"
-  set "replace=local_server/target/debug"
-  set "serverType=debug"
 )
 
 echo.
@@ -119,8 +135,9 @@ echo      Exiting...
 echo.
 echo      If the server is on, turn it off by exiting the terminal window or app where it is running, then re-run this script.
 echo.
+
 REM Restore Cargo.toml if it was rewritten
-if "%didRewrite%"=="1" (
+if "%didRewriteCargo%"=="1" (
   copy "..\..\local_server\Cargo.toml.bak" "..\..\local_server\Cargo.toml" >nul
   del "..\..\local_server\Cargo.toml.bak"
 )
@@ -129,49 +146,28 @@ exit
 :server_off
 
 if not exist ..\..\buildSpec.json set "runSetup=1"
-if not exist ..\..\globalBuildResources\i18nPatch.json "set runSetup=1"
-if not exist ..\..\globalBuildResources\product.json "set runSetup=1"
-if not exist ..\buildResources\setup\app_setup.json "set runSetup=1"
-if defined %runSetup (
+if not exist ..\..\globalBuildResources\i18nPatch.json set "runSetup=1"
+if not exist ..\..\globalBuildResources\product.json set "runSetup=1"
+if not exist ..\buildResources\setup\app_setup.json set "runSetup=1"
+if defined runSetup (
   cmd /c .\app_setup.bat
   echo.
   echo   +-----------------------------------------------------------------------------+
-  echo   ^| Config files were rebuilt by `./app_setup.bsh` as one or more were missing. ^|
+  echo   ^| Config files were rebuilt by `.\app_setup.bat` as one or more were missing. ^|
   echo   +-----------------------------------------------------------------------------+
   echo.
 )
 
-REM Ensure buildSpec.json has the location for the indicated server build type
-@echo off
-setlocal enabledelayedexpansion
-
-set "configFile=..\..\buildSpec.json"
-set "tmpFile=..\..\buildSpec.bak"
-copy %configFile% %tmpFile%
-
-
-(for /f "tokens=*" %%a in ('type "%tmpFile%" ^| findstr /n "^"') do (
-    set "line=%%a"
-    set "line=!line:*:=!"
-
-    if defined line (
-        set "line=!line:%search%=%replace%!"
-        echo(!line!
-    ) else echo.
-)) > "%configFile%"
-
-endlocal
-
 REM Build the rust server of the specified build type
-echo "Building local %serverType% server at /%replace% ..."
+echo "Building local Release server at /local_server/target/release ..."
 cd ..\..\local_server
-echo "%buildCommand%"
-%buildCommand%
+echo "cargo build --release"
+cargo build --release
 set "buildResult=%errorlevel%"
 cd ..\windows\scripts
 
 REM Restore Cargo.toml if it was rewritten
-if "%didRewrite%"=="1" (
+if "%didRewriteCargo%"=="1" (
   copy "..\..\local_server\Cargo.toml.bak" "..\..\local_server\Cargo.toml" >nul
   del "..\..\local_server\Cargo.toml.bak"
 )

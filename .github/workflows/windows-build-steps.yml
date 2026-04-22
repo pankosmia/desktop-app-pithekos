@@ -10,7 +10,7 @@ on:
       branches:
         required: true
         type: string
-      server_type:
+      log_level:
         required: true
         type: string
     outputs:
@@ -36,16 +36,16 @@ jobs:
     env:
       CI: false
       BRANCHES: ${{ inputs.branches }}
-      SERVER_TYPE: ${{ inputs.server_type }}
+      LOG_LEVEL: ${{ inputs.log_level }}
 
     steps:
       # Show branches
       - name: Show BRANCHES
         run: echo "BRANCHES = $env:BRANCHES"
 
-      # Show server type
-      - name: Show SERVER TYPE
-        run: echo "SERVER_TYPE = $env:SERVER_TYPE"
+      # Show log level
+      - name: Show LOG LEVEL
+        run: echo "LOG_LEVEL = $env:LOG_LEVEL"
 
       # Turn off re-runs
       - name: No re-runs please
@@ -122,17 +122,10 @@ jobs:
         working-directory: .\windows\scripts
         run: .\build_clients.bat -f "$env:BRANCHES"
 
-      # Build DEBUG server and assemble build environment without asking if the server is off
-      - name: Run ${{ inputs.branches }} DEBUG server and assemble build environment without asking if the server is off
-        working-directory: .\windows\scripts
-        if: env.SERVER_TYPE == 'debug'
-        run: .\build_server.bat -s -d "$env:BRANCHES"
-
       # Build RELEASE server and assemble build environment without asking if the server is off
       - name: Run ${{ inputs.branches }} RELEASE server and assemble build environment without asking if the server is off
         working-directory: .\windows\scripts
-        if: env.SERVER_TYPE == 'release'
-        run: .\build_server.bat -s "$env:BRANCHES"
+        run: .\build_server.bat -s "$env:BRANCHES" "$env:LOG_LEVEL"
 
       # Bundle zip without asking if the server is off and indicate GHA
       - name: Run bundle_zip.ps1 -ServerOff "Y" -IsGHA "Y"

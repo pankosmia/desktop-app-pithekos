@@ -3,9 +3,12 @@ REM Run from pankosmia\[this-repo's-name]\windows\scripts directory in powershel
 REM Optional argument: .\clean.bat -s
 REM To pre-confirm the server is off, so as to not be asked.
 
+set "askIfOff="
+IF "%~1"=="-s" set "askIfOff=-s"
+
 echo.
 :choice
-IF "%~1"=="-s" (
+IF "%askIfOff%"=="-s" (
   goto :server_off
 ) ELSE (
   set /P "c=Is the server off? [Y/n]: "
@@ -32,12 +35,7 @@ if exist ..\build (
   rmdir ..\build /s /q
 )
 
-set "cleanServer=false"
-
-if exist ..\..\local_server\target\release\local_server.exe set "cleanServer=true"
-if exist ..\..\local_server\target\debug\local_server.exe set "cleanServer=true"
-
-if "%cleanServer%"=="true" (
+if exist ..\..\local_server\target\release\local_server.exe (
   echo Cleaning local server
   cd ..\..\local_server
   cargo clean
