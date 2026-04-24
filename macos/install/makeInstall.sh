@@ -6,14 +6,19 @@ source ../../app_config.env
 # requires shc - do `brew install shc`
 
 # Confirm both APP_VERSION and APP_NAME environment variables are set
-if [ \( -z "$APP_VERSION" \) -o \( -z "$APP_NAME" \) ]; then
+EMSG="environment variable is not set in makeInstall.sh."
+if [ \( -z "$APP_VERSION" \) -o \( -z "$APP_NAME" \) -o \( -z "$APP_SHORT_NAME" \) ]; then
 
     if [ -z "$APP_VERSION" ]; then
-      echo "Error: APP_VERSION environment variable is not set."
+      echo "Error: APP_VERSION $EMSG"
     fi
 
     if [ -z "$APP_NAME" ]; then
-      echo "Error: APP_NAME environment variable is not set."
+      echo "Error: APP_NAME $EMSG"
+    fi
+
+    if [ -z "$APP_SHORT_NAME" ]; then
+      echo "Error: APP_SHORT_NAME $EMSG"
     fi
 
     exit 1
@@ -88,8 +93,13 @@ chmod 755 ../project/payload/"$APP_NAME".app/Contents/bin/server.bin
 cp -R ./lib ../project/payload/"$APP_NAME".app/Contents/
 
 mkdir -p ../project/scripts
-cp ../build/post_install_script.sh ../project/scripts/postinstall
+cp ../buildResources/post_install_script.sh ../project/scripts/postinstall
 chmod +x ../project/scripts/postinstall
+PREINST_FILE="../project/scripts/preinstall"
+cp ../buildResources/preinstall "$PREINST_FILE"
+sed -i.bak "s/{APP_SHORT_NAME}/$APP_SHORT_NAME/g" "$PREINST_FILE"
+echo "Replaced {APP_SHORT_NAME} with \"$APP_SHORT_NAME\" in $PREINST_FILE"
+chmod +x "$PREINST_FILE"
 
 # build pkg
 cd ..

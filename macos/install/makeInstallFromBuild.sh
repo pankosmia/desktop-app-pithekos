@@ -3,15 +3,17 @@
 # This script uses the APP_VERSION and APP_NAME environment variables as defined in app_config.env, as well as $filename
 source ../../app_config.env $filename
 
+EMSG="environment variable is not set in makeInstallFromBuild.sh."
+
 # Confirm both APP_VERSION and APP_NAME environment variables are set
 if [ \( -z "$APP_VERSION" \) -o \( -z "$APP_NAME" \) ]; then
 
     if [ -z "$APP_VERSION" ]; then
-      echo "Error: APP_VERSION environment variable is not set."
+      echo "Error: APP_VERSION $EMSG"
     fi
 
     if [ -z "$APP_NAME" ]; then
-      echo "Error: APP_NAME environment variable is not set."
+      echo "Error: APP_NAME $EMSG"
     fi
 
     exit 1

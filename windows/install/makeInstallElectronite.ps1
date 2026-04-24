@@ -41,27 +41,36 @@ param(
 # Save the initial working directory
 $initialLocation = Get-Location
 
+$eMsg = "environment variable is not set in makeInstallElectronite.ps1."
+
 try {
     # Check if APP_VERSION environment variable is set
     if (-not $env:APP_VERSION) {
-        Write-Host "Error: APP_VERSION environment variable is not set."
+        Write-Host "Error: APP_VERSION $eMsg"
         Write-Host "Set it in app_config.env"
         exit 1
     }
     
     # Check if APP_NAME environment variable is set
     if (-not $env:APP_NAME) {
-        Write-Host "Error: APP_NAME environment variable is not set."
+        Write-Host "Error: APP_NAME $eMsg"
         Write-Host "Set it in app_config.env"
         exit 1
     }
     
     # Check if FILE_APP_NAME environment variable is set
     if (-not $env:FILE_APP_NAME) {
-        Write-Host "Warning: FILE_APP_NAME environment variable is not set. Generating..."
+        Write-Host "FILE_APP_NAME $eMsg. Generating..."
         $fileAppName = $env:APP_NAME.ToLower().Replace(" ","-").Replace("'","")   # Use lower case app name in filename and replace spaces with dashes (-) and remove single apostrophes (')
         $env:FILE_APP_NAME = $fileAppName
         echo "FILE_APP_NAME=$env:FILE_APP_NAME"
+    }
+
+    # Check if APP_SHORT_NAME environment variable is set
+    if (-not $env:APP_SHORT_NAME) {
+        Write-Host "Error: APP_SHORT_NAME $eMsg"
+        Write-Host "Set it in app_config.env"
+        exit 1
     }
 
     Write-Host "Version is $env:APP_VERSION"

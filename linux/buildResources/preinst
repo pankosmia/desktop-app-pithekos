@@ -1,0 +1,21 @@
+#!/bin/bash
+set -e
+
+# Iterate over user home directories
+for USER_HOME in /home/*; do
+    CONFIG_DIR="$USER_HOME/pankosmia/{APP_SHORT_NAME}"
+    if [ -d "$CONFIG_DIR" ]; then
+        if [ -d "$CONFIG_DIR/webfonts" ]; then
+            echo "Removing prior webfonts config directory: $CONFIG_DIR/webfonts"
+            rm -rf "$CONFIG_DIR/webfonts"
+        fi
+        if [ -d "$CONFIG_DIR/temp" ]; then
+            echo "Removing prior temp directory: $CONFIG_DIR/temp"
+            rm -rf "$CONFIG_DIR/temp"
+        fi
+        if [ -f "$CONFIG_DIR/i18n.json" ]; then
+            echo "Removing prior config file: $CONFIG_DIR/i18n.json"
+            rm -f "$CONFIG_DIR/i18n.json"
+        fi
+    fi
+done

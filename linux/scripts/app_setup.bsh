@@ -8,8 +8,12 @@ echo "     *   - /windows/buildResources/setup/app_setup.json *"
 echo "     *   - /macos/buildResources/setup/app_setup.json   *"
 echo "     *   - /linux/buildResources/setup/app_setup.json   *"
 echo "     *   - /buildSpec.json                              *"
-echo "     *   - /globalBuildResources/i18nPatch.json         *"
 echo "     *   - /globalBuildResources/product.json           *"
+echo "     *                                                  *"
+echo "     * /globalBuildResources/i18nPatch.json:            *"
+echo "     *   - Created if it does not exist, otherwise      *"
+echo "     *     the English name (branding/software/name/en) *"
+echo "     *     is ensured as set to APP_NAME.               *"
 echo "     ****************************************************"
 echo
 
@@ -20,15 +24,32 @@ spec="../../buildSpec.json"
 name="../../globalBuildResources/i18nPatch.json"
 product="../../globalBuildResources/product.json"
 
-echo "{"> $name
-echo "  \"branding\": {">> $name
-echo "    \"software\": {">> $name
-echo "      \"name\": {">> $name
-echo "        \"en\": \"$APP_NAME\"">> $name
-echo "      }">> $name
-echo "    }">> $name
-echo "  }">> $name
-echo "}">> $name
+if [ ! -f "$name" ]; then
+  # File doesn't exist — build it from scratch
+  echo "{"> $name
+  echo "  \"branding\": {">> $name
+  echo "    \"software\": {">> $name
+  echo "      \"name\": {">> $name
+  echo "        \"en\": \"$APP_NAME\"">> $name
+  echo "      }">> $name
+  echo "    }">> $name
+  echo "  }">> $name
+  echo "}">> $name
+else
+  # File exists — update only branding.software.name.en,
+  # restoring the key path if any part of it is missing
+  node -e "
+    const fs = require('fs');
+    const data = JSON.parse(fs.readFileSync('$name', 'utf8'));
+
+    if (!data.branding) data.branding = {};
+    if (!data.branding.software) data.branding.software = {};
+    if (!data.branding.software.name) data.branding.software.name = {};
+    data.branding.software.name.en = '$APP_NAME';
+
+    fs.writeFileSync('$name', JSON.stringify(data, null, 2) + '\n');
+  "
+fi
 
 echo "{"> $spec
 echo "  \"app\": {">> $spec

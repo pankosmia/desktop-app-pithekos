@@ -32,21 +32,29 @@
 # Output:
 #   Creates installer package at: ../releases/macos/<app-name>_installer_<arch>_<version>.pkg
 
+EMSG="environment variable is not set in makeInstallElectronite.sh."
+
 # Check if APP_NAME environment variable is set
 if [ -z "$APP_NAME" ]; then
-    echo "Error: APP_NAME environment variable is not set."
+    echo "Error: APP_NAME $EMSG"
     exit 1
 fi
 
 # Check if APP_VERSION environment variable is set
 if [ -z "$APP_VERSION" ]; then
-    echo "Error: APP_VERSION environment variable is not set."
+    echo "Error: APP_VERSION $EMSG"
+    exit 1
+fi
+
+# Check if APP_SHORT_NAME environment variable is set
+if [ -z "$APP_SHORT_NAME" ]; then
+    echo "Error: APP_SHORT_NAME $EMSG"
     exit 1
 fi
 
 # Check if FILE_APP_NAME environment variable is set
 if [ -z "$FILE_APP_NAME" ]; then
-    echo "Error: FILE_APP_NAME environment variable is not set."
+    echo "Error: FILE_APP_NAME $EMSG"
     exit 1
 fi
 
@@ -179,9 +187,19 @@ if ! [[ $devRun =~ ^(-d) ]]; then
   cp -R ./lib ${APP_BASE_DIR}/Contents/
   echo "copied lib to $APP_BASE_DIR/Contents/"
 
-  mkdir -p ../$pkgDir/project/scripts
-  cp ../install/post_install_script.sh ../$pkgDir/project/scripts/postinstall
-  chmod +x ../$pkgDir/project/scripts/postinstall
+  SCRIPTS_DIR="../$pkgDir/project/scripts"
+  mkdir -p $SCRIPTS_DIR
+  PREINST_FILE="../$pkgDir/project/scripts/preinstall"
+  cp ../buildResources/preinstall "$PREINST_FILE"
+  echo "copied preinstall to $SCRIPTS_DIR"
+  sed -i.bak "s/{APP_SHORT_NAME}/$APP_SHORT_NAME/g" "$PREINST_FILE"
+  echo "Replaced {APP_SHORT_NAME} with \"$APP_SHORT_NAME\" in $PREINST_FILE."
+  chmod +x "$PREINST_FILE"
+  POSTINST_FILE="../$pkgDir/project/scripts/postinstall"
+  cp ../build/post_install_script.sh $POSTINST_FILE
+  echo "copied post_install_script.sh to $SCRIPTS_DIR"
+  echo "Variables in post_install_script.sh were already replaced by: node build.js"
+  chmod +x $POSTINST_FILE
 fi
 
 # set execute permission on all folders

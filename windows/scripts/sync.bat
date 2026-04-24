@@ -118,6 +118,7 @@ REM --- Write protected files list to a temp file (avoids @ parsing issues) ---
   echo globalBuildResources\favicon@1.5x.png
   echo globalBuildResources\favicon@1.75x.png
   echo globalBuildResources\favicon@2x.png
+  echo globalBuildResources\i18nPatch.json
   echo globalBuildResources\theme.json
   echo branding\building_blocks\for_favicon_ico\favicon_16x16.png
   echo branding\building_blocks\for_favicon_ico\favicon_32x32.png

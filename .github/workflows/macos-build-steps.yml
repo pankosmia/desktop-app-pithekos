@@ -242,8 +242,8 @@ jobs:
             cd ./releases/macos
             echo "Found arm64 release:"
             ls -als *.pkg
-            PKG_NAME_ARM=$(ls *-standalone-arm64*.pkg | head -n 1)
-            echo "PKG_NAME_ARM=$PKG_NAME_ARM" >> $GITHUB_ENV
+            ELECTRONITE_PKG_NAME_ARM=$(ls *-standalone-arm64*.pkg | head -n 1)
+            echo "ELECTRONITE_PKG_NAME_ARM=$ELECTRONITE_PKG_NAME_ARM" >> $GITHUB_ENV
             cd ../..
           else
             echo "No arm64 .pkg files found in ./releases/macos"
@@ -255,27 +255,27 @@ jobs:
             cd ./releases/macos
             echo "Found intel64 release:"
             ls -als *.pkg
-            PKG_NAME_INTEL=$(ls *-standalone-intel64*.pkg | head -n 1)
-            echo "PKG_NAME_INTEL=$PKG_NAME_INTEL" >> $GITHUB_ENV
+            ELECTRONITE_PKG_NAME_INTEL=$(ls *-standalone-intel64*.pkg | head -n 1)
+            echo "ELECTRONITE_PKG_NAME_INTEL=$ELECTRONITE_PKG_NAME_INTEL" >> $GITHUB_ENV
             cd ../..
           else
             echo "No intel64 .pkg files found in ./releases/macos"
           fi
 
       - name: Upload electronite arm64 artifacts
-        if: env.PKG_NAME_ARM != ''
+        if: env.ELECTRONITE_PKG_NAME_ARM != ''
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ env.PKG_NAME_ARM }}
-          path: ./releases/macos/${{ env.PKG_NAME_ARM }}
+          name: ${{ env.ELECTRONITE_PKG_NAME_ARM }}
+          path: ./releases/macos/${{ env.ELECTRONITE_PKG_NAME_ARM }}
           if-no-files-found: error
           retention-days: 90
 
       - name: Upload electronite intel64 artifacts
-        if: env.PKG_NAME_INTEL != ''
+        if: env.ELECTRONITE_PKG_NAME_INTEL != ''
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ env.PKG_NAME_INTEL }}
-          path: ./releases/macos/${{ env.PKG_NAME_INTEL }}
+          name: ${{ env.ELECTRONITE_PKG_NAME_INTEL }}
+          path: ./releases/macos/${{ env.ELECTRONITE_PKG_NAME_INTEL }}
           if-no-files-found: error
           retention-days: 90

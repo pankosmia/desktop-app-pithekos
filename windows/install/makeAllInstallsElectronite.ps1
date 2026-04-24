@@ -40,6 +40,7 @@ get-content ..\..\app_config.env | foreach {
 
 $env:APP_NAME=$APP_NAME.Trim("'")
 $env:APP_VERSION=$APP_VERSION
+$env:APP_SHORT_NAME=$APP_SHORT_NAME
 
 if ($IsGHA -ne 'N') {
   # show environment variables defined

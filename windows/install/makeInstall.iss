@@ -9,6 +9,14 @@ OutputBaseFilename={#GetEnv('FILE_APP_NAME')}-windows-setup-{#GetEnv('APP_VERSIO
 Compression=lzma
 SolidCompression=yes
 
+[Tasks]
+Name: "desktopicon"; Description: "Create a {#GetEnv('APP_NAME')} &desktop icon"; GroupDescription: "{#GetEnv('APP_NAME')} icons:"
+
+[InstallDelete]
+Type: filesandordirs; Name: "{%USERPROFILE}\pankosmia\{#GetEnv('APP_SHORT_NAME')}\webfonts"
+Type: filesandordirs; Name: "{%USERPROFILE}\pankosmia\{#GetEnv('APP_SHORT_NAME')}\temp"
+Type: files; Name: "{%USERPROFILE}\pankosmia\{#GetEnv('APP_SHORT_NAME')}\i18n.json"
+
 [Files]
 Source: "..\build\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs
 Source: "..\buildResources\appLauncher.bat"; DestDir: "{app}"; Flags: ignoreversion
@@ -23,6 +31,3 @@ Name: "{group}\Uninstall {#GetEnv('APP_NAME')} (Delete App Files)"; Filename: "{
 
 [Run]
 Filename: "{app}\custom_uninstaller.bat"; Parameters: "{app}"
-
-[Tasks]
-Name: "desktopicon"; Description: "Create a {#GetEnv('APP_NAME')} &desktop icon"; GroupDescription: "{#GetEnv('APP_NAME')} icons:"

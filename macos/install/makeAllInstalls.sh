@@ -3,9 +3,11 @@
 # This script uses the APP_NAME environment variables as defined in app_config.env
 source ../../app_config.env
 
+EMSG="environment variable is not set in makeAllInstalls.sh."
+
 # Confirm the APP_NAME environment variables is set
 if [ -z "$APP_NAME" ]; then
-    echo "Error: APP_NAME environment variable is not set."
+    echo "Error: APP_NAME $EMSG"
     exit 1
 fi
 

@@ -89,7 +89,7 @@ jobs:
           echo "APP_VERSION=$version" | Out-File -FilePath $env:GITHUB_ENV -Append
           echo "APP_VERSION=$version"
 
-      # Set APP_NAME from app_config.env, and use it to define FILE_APP_NAME
+      # Set APP_NAME and APP_SHORT_NAME from app_config.env, and define FILE_APP_NAME
       - name: Extract APP_NAME from app_config.env
         id: get_app_name
         run: |
@@ -102,7 +102,10 @@ jobs:
           $fileAppName = $appName.ToLower().Replace(" ","-").Replace("'","")   # Use lower case app name in filename and replace spaces with dashes (-) and remove single apostrophes (')
           echo "FILE_APP_NAME=$fileAppName" | Out-File -FilePath $env:GITHUB_ENV -Append
           echo "FILE_APP_NAME=$fileAppName"
-  
+          $appShortNameLine = Get-Content $envFile | Where-Object { $_ -match '^APP_SHORT_NAME\s*=' }
+          $appShortName = $appShortNameLine -replace ".*=(.*)", '$1'
+          echo "APP_SHORT_NAME=$appShortName" | Out-File -FilePath $env:GITHUB_ENV -Append
+          echo "APP_SHORT_NAME=$appShortName"
       # Install the repository
       - name: Install this repo
         run: npm ci
@@ -163,6 +166,7 @@ jobs:
           echo "APP_NAME: ${{ env.APP_NAME }}"
           echo "APP_VERSION: ${{ env.APP_VERSION }}"
           echo "FILE_APP_NAME: ${{ env.FILE_APP_NAME }}"
+          echo "APP_SHORT_NAME: ${{ env.APP_SHORT_NAME }}"
           & "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" /O"..\..\releases\windows" makeInstall.iss
 
       # Get names for exe artifacts

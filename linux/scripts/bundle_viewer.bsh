@@ -71,6 +71,11 @@ cp $FROM_DIR/linux/buildResources/control $TO_DIR/DEBIAN
 INSTALLED_SIZE=`du -c $TO_DIR | grep total | cut -f1`
 sed -i "s|{PACKAGE_VERSION}|$APP_VERSION|g; s|{PACKAGE_NAME}|$PACKAGE_NAME|g; s|{INSTALLED_SIZE}|$INSTALLED_SIZE|g" $TO_DIR/DEBIAN/control
 
+# Copy preinst to DEBIAN package
+cp $FROM_DIR/linux/buildResources/preinst $TO_DIR/DEBIAN
+sed -i "s|{APP_SHORT_NAME}|$APP_SHORT_NAME|g" $TO_DIR/DEBIAN/preinst
+chmod +x $TO_DIR/DEBIAN/preinst
+
 # Finally, build the package and write it to the Release directory
 cd /tmp
 dpkg-deb --root-owner-group --build $PACKAGE_NAME $RELEASE_DIR/$PACKAGE_NAME-linux-standalone-intel64-$APP_VERSION.deb

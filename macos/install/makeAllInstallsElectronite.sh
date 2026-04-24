@@ -24,9 +24,17 @@ devRun="${1:-no}" # This is a development viewer run if $1 is -d
 # This script uses the APP_NAME environment variables as defined in app_config.env
 source ../../app_config.env
 
+EMSG="environment variable is not set in makeAllInstallsElecrtronite.sh."
+
 # Confirm the APP_NAME environment variables is set
 if [ -z "$APP_NAME" ]; then
-    echo "Error: APP_NAME environment variable is not set."
+    echo "Error: APP_NAME $EMSG"
+    exit 1
+fi
+
+# Confirm the APP_SHORT_NAME environment variables is set
+if [ -z "$APP_SHORT_NAME" ]; then
+    echo "Error: APP_SHORT_NAME $EMSG"
     exit 1
 fi
 
@@ -42,6 +50,8 @@ echo "APP_NAME=$APP_NAME"
 export APP_NAME="$APP_NAME"
 echo "APP_VERSION=$APP_VERSION"
 export APP_VERSION="$APP_VERSION"
+echo "APP_SHORT_NAME=$APP_SHORT_NAME" 
+export APP_SHORT_NAME="$APP_SHORT_NAME"
 
 ElectronArm64="https://github.com/unfoldingWord/electronite/releases/download/v37.1.0-graphite/electronite-v37.1.0-graphite-darwin-arm64.zip"
 ElectronIntel64="https://github.com/unfoldingWord/electronite/releases/download/v37.1.0-graphite/electronite-v37.1.0-graphite-darwin-x64.zip"

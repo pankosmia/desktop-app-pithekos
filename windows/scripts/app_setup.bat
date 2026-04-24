@@ -8,8 +8,12 @@ echo      *   - \windows\buildResources\setup\app_setup.json *
 echo      *   - \macos\buildResources\setup\app_setup.json   *
 echo      *   - \linux\buildResources\setup\app_setup.json   *
 echo      *   - \buildSpec.json                              *
-echo      *   - \globalBuildResources\i18nPatch.json         *
 echo      *   - \globalBuildResources\product.json           *
+echo      *                                                  *
+echo      * \globalBuildResources\i18nPatch.json:            *
+echo      *   - Created if it does not exist, otherwise      *
+echo      *     the English name (branding/software/name/en) *
+echo      *     is ensured as set to APP_NAME.               *
 echo      ****************************************************
 echo.
 
@@ -22,15 +26,24 @@ set "spec=..\..\buildSpec.json"
 set "name=..\..\globalBuildResources\i18nPatch.json"
 set "product=..\..\globalBuildResources\product.json"
 
-echo {> %name%
-echo   "branding": {>> %name%
-echo     "software": {>> %name%
-echo       "name": {>> %name%
-echo         "en": "%APP_NAME:'=%">> %name%
-echo       }>> %name%
-echo     }>> %name%
-echo   }>> %name%
-echo }>> %name%
+set "nameFwd=%name:\=/%"
+if not exist %name% (
+  echo {> %name%
+  echo   "branding": {>> %name%
+  echo     "software": {>> %name%
+  echo       "name": {>> %name%
+  echo         "en": "%APP_NAME:'=%">> %name%
+  echo       }>> %name%
+  echo     }>> %name%
+  echo   }>> %name%
+  echo }>> %name%
+) else (
+  REM File exists — update only branding.software.name.en,
+  REM restoring the key path if any part of it is missing; Keep `node -e` on a single line for cmd.exe!
+  setlocal DISABLEDELAYEDEXPANSION
+  node -e "const fs = require('fs'); const p = process.argv[1]; const data = JSON.parse(fs.readFileSync(p, 'utf8')); if (!data.branding) data.branding = {}; if (!data.branding.software) data.branding.software = {}; if (!data.branding.software.name) data.branding.software.name = {}; data.branding.software.name.en = process.argv[2]; fs.writeFileSync(p, JSON.stringify(data, null, 2) + '\n');" "%nameFwd%" "%APP_NAME:'=%"
+  endlocal
+)
 
 echo {> %spec%
 echo   "app": {>> %spec%

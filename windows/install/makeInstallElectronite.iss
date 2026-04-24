@@ -1,3 +1,6 @@
+#define AppShortName GetEnv("APP_SHORT_NAME")
+#pragma message "APP_SHORT_NAME resolved to: " + AppShortName
+
 #define AppIcoName "icon.ico"
 
 [Setup]
@@ -8,6 +11,14 @@ DefaultGroupName={#GetEnv('APP_NAME')}
 OutputBaseFilename={#GetEnv('FILE_APP_NAME')}-windows-setup-standalone-{#GetEnv('APP_VERSION')}
 Compression=lzma
 SolidCompression=yes
+
+[Tasks]
+Name: "desktopicon"; Description: "Create a {#GetEnv('APP_NAME')} &desktop icon"; GroupDescription: "{#GetEnv('APP_NAME')} icons:"
+
+[InstallDelete]
+Type: filesandordirs; Name: "{%USERPROFILE}\pankosmia\{#GetEnv('APP_SHORT_NAME')}\webfonts"
+Type: filesandordirs; Name: "{%USERPROFILE}\pankosmia\{#GetEnv('APP_SHORT_NAME')}\temp"
+Type: files; Name: "{%USERPROFILE}\pankosmia\{#GetEnv('APP_SHORT_NAME')}\i18n.json"
 
 [Files]
 Source: "..\temp\project\payload\app\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs
@@ -21,6 +32,3 @@ Name: "{group}\Uninstall {#GetEnv('APP_NAME')} (Delete App Files)"; Filename: "{
 
 [Run]
 Filename: "{app}\custom_uninstaller.bat"; Parameters: "{app}"
-
-[Tasks]
-Name: "desktopicon"; Description: "Create a {#GetEnv('APP_NAME')} &desktop icon"; GroupDescription: "{#GetEnv('APP_NAME')} icons:"

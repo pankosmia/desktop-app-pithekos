@@ -19,6 +19,7 @@ doSync() {
     "globalBuildResources/favicon@1.5x.png"
     "globalBuildResources/favicon@1.75x.png"
     "globalBuildResources/favicon@2x.png"
+    "globalBuildResources/i18nPatch.json"
     "globalBuildResources/theme.json"
     "branding/building_blocks/for_favicon_ico/favicon_16x16.png"
     "branding/building_blocks/for_favicon_ico/favicon_32x32.png"
