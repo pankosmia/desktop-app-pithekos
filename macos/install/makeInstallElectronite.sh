@@ -108,6 +108,36 @@ cp -R ../../buildResources/electron ${APP_BASE_DIR}/Contents/
 cp ../../globalBuildResources/favicon*.png ${APP_BASE_DIR}/Contents/electron
 echo "Successfully copied electron files"
 
+# Copy required node_modules and dependencies -- all OSes
+NODE_MODULES_SRC="../../node_modules"
+NODE_MODULES_DEST="${APP_BASE_DIR}/Contents/electron/node_modules"
+
+ALL_OS_MODULES=(
+    "puppeteer-core"
+    "@puppeteer/browsers"
+    "chromium-bidi"
+    "debug"
+    "devtools-protocol"
+    "ms"
+    "typed-query-selector"
+    "webdriver-bidi-protocol"
+    "ws"
+    "semver"
+    "proxy-agent"
+    "lru-cache"
+    "agent-base"
+    "proxy-from-env"
+    "progress"
+    "mitt"
+)
+
+for mod in "${ALL_OS_MODULES[@]}"; do
+    mkdir -p "${NODE_MODULES_DEST}/${mod}"
+    cp -R "${NODE_MODULES_SRC}/${mod}/." "${NODE_MODULES_DEST}/${mod}/"
+done
+
+echo "Successfully copied node_modules dependencies"
+
 # Determine which startup to use -- dev viewer or production
 if [[ $devRun =~ ^(-d) ]]; then
   rm ${APP_BASE_DIR}/Contents/electron/electronStartup.js

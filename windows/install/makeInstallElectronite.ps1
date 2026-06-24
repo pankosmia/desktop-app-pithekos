@@ -144,6 +144,51 @@ try {
         Write-Host "Copying favicon*.png to $electronDestPath ..."
         Copy-Item $electronIconSrc -Destination $electronDestPath
 
+        # Copy required modules and dependencies
+        $nodeModulesSrc = Join-Path $PSScriptRoot "..\..\node_modules"
+        $nodeModulesDest = Join-Path $electronDestPath "node_modules"
+
+        # 7zip-min (full directory) -- Windows only
+        $7zipMinDest = Join-Path $nodeModulesDest "7zip-min"
+        New-Item -ItemType Directory -Path $7zipMinDest -Force | Out-Null
+        Copy-Item -Path (Join-Path $nodeModulesSrc "7zip-min\*") -Destination $7zipMinDest -Recurse -Force -ErrorAction Stop
+
+        # 7zip-bin (selective: index.js, package.json, and arch-specific binary) -- Windows only
+        $7zipBinDest = Join-Path $nodeModulesDest "7zip-bin"
+        $7zipBinWinArchDest = Join-Path $7zipBinDest "win\$arch"
+        New-Item -ItemType Directory -Path $7zipBinWinArchDest -Force | Out-Null
+        Copy-Item -Path (Join-Path $nodeModulesSrc "7zip-bin\index.js") -Destination $7zipBinDest -Force -ErrorAction Stop
+        Copy-Item -Path (Join-Path $nodeModulesSrc "7zip-bin\package.json") -Destination $7zipBinDest -Force -ErrorAction Stop
+        Copy-Item -Path (Join-Path $nodeModulesSrc "7zip-bin\win\$arch\*") -Destination $7zipBinWinArchDest -Recurse -Force -ErrorAction Stop
+
+        # Copy required modules and dependencies -- all OSes
+        $allOsModules = @(
+            "puppeteer-core",
+            "@puppeteer\browsers",
+            "chromium-bidi",
+            "debug",
+            "devtools-protocol",
+            "ms",
+            "typed-query-selector",
+            "webdriver-bidi-protocol",
+            "ws"
+            "semver"
+            "proxy-agent"
+            "lru-cache"
+            "agent-base"
+            "proxy-from-env"
+            "progress"
+            "mitt"
+        )
+
+        foreach ($mod in $allOsModules) {
+            $modDest = Join-Path $nodeModulesDest $mod
+            New-Item -ItemType Directory -Path $modDest -Force | Out-Null
+            Copy-Item -Path (Join-Path $nodeModulesSrc "$mod\*") -Destination $modDest -Recurse -Force -ErrorAction Stop
+        }
+
+        Write-Host "Successfully copied node_modules dependencies"
+
         # Determine which startup to use -- dev viewer or production
         if ($Dev -eq "Y") {
           Remove-Item $electronDestPath\electronStartup.js
