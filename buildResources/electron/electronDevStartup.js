@@ -42,15 +42,18 @@ const { pipeline } = require("stream/promises");
 
 const FIREFOX_VERSION = "149.0.2";
 const FIREFOX_BUILD_ID = "stable_" + FIREFOX_VERSION;
-const BROWSER_CACHE_DIR = path.join(
+const ASSET_CACHE_DIR = path.join(
   app.getPath("home"),
   "pankosmia",
   "_assets",
 );
+const FFMPEG_BASE_DIR = path.join(ASSET_CACHE_DIR, 'ffmpeg');
+const FFMPEG_VERSION = '7.1.1'; // Matching url's entered for each OS/Arch
+const FFMPEG_DIR = path.join(FFMPEG_BASE_DIR, FFMPEG_VERSION);
 
 // Where the extracted Firefox binary lives on Windows
 const FIREFOX_WIN_EXTRACT_DIR = path.join(
-  BROWSER_CACHE_DIR,
+  ASSET_CACHE_DIR,
   "firefox",
   "win64-" + FIREFOX_BUILD_ID,
 );
@@ -103,12 +106,176 @@ getPort()
 app.name = "${APP_NAME}";
 let canClose = true;
 
+
+// Does user already have ffmpeg installed?
+function getSystemFfmpegCommandName() {
+  return process.platform === 'win32' ? 'ffmpeg.exe' : 'ffmpeg';
+}
+
+async function getSystemFfmpegCommand() {
+  const command = getSystemFfmpegCommandName();
+
+  try {
+    await verifyFfmpegWorks(command);
+    return command;
+  } catch {
+    return null;
+  }
+}
+
+function verifyFfmpegWorks(ffmpegPathOrCommand) {
+  return new Promise((resolve, reject) => {
+    const child = spawn(ffmpegPathOrCommand, ['-version']);
+
+    let stdout = '';
+    let stderr = '';
+
+    child.stdout.on('data', (d) => {
+      stdout += d.toString();
+    });
+
+    child.stderr.on('data', (d) => {
+      stderr += d.toString();
+    });
+
+    child.on('error', reject);
+
+    child.on('close', (code) => {
+      if (code === 0 && /ffmpeg version/i.test(stdout || stderr)) {
+        resolve(true);
+      } else {
+        reject(new Error(`FFmpeg verification failed with exit code ${code}`));
+      }
+    });
+  });
+}
+
+async function getAvailableFfmpegPath() {
+  const bundledPath = getBundledFfmpegExecutablePath();
+  if (bundledPath && fs.existsSync(bundledPath)) {
+    try {
+      await verifyFfmpegWorks(bundledPath);
+      return bundledPath;
+    } catch {
+      // ignore broken bundled install
+    }
+  }
+
+  const systemCommand = await getSystemFfmpegCommand();
+  if (systemCommand) {
+    return systemCommand;
+  }
+
+  return null;
+}
+
+// ffmpeg install details
+function getPlatformInfo() {
+  if (process.platform === 'win32') {
+    if (process.arch === 'x64') {
+      return {
+        archiveExt: 'zip',
+        executableName: 'ffmpeg.exe',
+        downloadUrl:
+          'https://github.com/GyanD/codexffmpeg/releases/download/7.1.1/ffmpeg-7.1.1-essentials_build.zip',
+      };
+    }
+
+    if (process.arch === 'arm64') {
+      return {
+        archiveExt: '7z',
+        executableName: 'ffmpeg.exe',
+        downloadUrl:
+          'https://github.com/tordona/ffmpeg-win-arm64/releases/download/7.1.1/ffmpeg-7.1.1-essentials-shared-win-arm64.7z',
+      };
+    }
+
+    throw new Error(`Unsupported Windows architecture: ${process.arch}`);
+  }
+
+  if (process.platform === 'darwin') {
+    if (process.arch === 'x64') {
+      return {
+        archiveExt: 'zip',
+        executableName: 'ffmpeg',
+        downloadUrl:
+          'https://ffmpeg.martin-riedl.de/download/macos/amd64/1741001873_7.1.1/ffmpeg.zip',
+      };
+    }
+
+    if (process.arch === 'arm64') {
+      return {
+        archiveExt: 'zip',
+        executableName: 'ffmpeg',
+        downloadUrl:
+          'https://ffmpeg.martin-riedl.de/download/macos/arm64/1741000090_7.1.1/ffmpeg.zip',
+      };
+    }
+
+    throw new Error(`Unsupported macOS architecture: ${process.arch}`);
+  }
+
+  if (process.platform === 'linux') {
+    if (process.arch === 'x64') {
+      return {
+        archiveExt: 'zip',
+        executableName: 'ffmpeg',
+        downloadUrl:
+          'https://ffmpeg.martin-riedl.de/download/linux/amd64/1741000776_7.1.1/ffmpeg.zip',
+      };
+    }
+
+    if (process.arch === 'arm64') {
+      return {
+        archiveExt: 'zip',
+        executableName: 'ffmpeg',
+        downloadUrl:
+          'https://ffmpeg.martin-riedl.de/download/linux/arm64/1740999880_7.1.1/ffmpeg.zip',
+      };
+    }
+
+    throw new Error(`Unsupported Linux architecture: ${process.arch}`);
+  }
+
+  throw new Error(`Unsupported platform: ${process.platform}`);
+}
+
+function getBundledFfmpegExecutablePath() {
+  const executableName = process.platform === 'win32' ? 'ffmpeg.exe' : 'ffmpeg';
+
+  if (!fs.existsSync(FFMPEG_DIR)) return null;
+
+  const stack = [FFMPEG_DIR];
+
+  while (stack.length) {
+    const current = stack.pop();
+    const entries = fs.readdirSync(current, { withFileTypes: true });
+
+    for (const entry of entries) {
+      const fullPath = path.join(current, entry.name);
+
+      if (entry.isDirectory()) {
+        stack.push(fullPath);
+      } else if (entry.isFile() && entry.name === executableName) {
+        return fullPath;
+      }
+    }
+  }
+
+  return null;
+}
+
+async function isFfmpegInstalled() {
+  const ffmpegPath = await getAvailableFfmpegPath();
+  return !!ffmpegPath;
+}
+
 // Helper to get the Firefox executable path (used by generate-pdf)
 function getFirefoxExecutablePath() {
   return computeExecutablePath({
     browser: "firefox",
     buildId: FIREFOX_BUILD_ID,
-    cacheDir: BROWSER_CACHE_DIR,
+    cacheDir: ASSET_CACHE_DIR,
   });
 }
 
@@ -213,8 +380,8 @@ async function downloadFirefoxDefault(event) {
   await install({
     browser: "firefox",
     buildId: FIREFOX_BUILD_ID,
-    cacheDir: BROWSER_CACHE_DIR,
-    onProgress: (downloadedBytes, totalBytes) => {
+    cacheDir: ASSET_CACHE_DIR,
+    downloadProgressCallback: (downloadedBytes, totalBytes) => {
       if (
         typeof downloadedBytes === "number" &&
         typeof totalBytes === "number" &&
@@ -225,6 +392,199 @@ async function downloadFirefoxDefault(event) {
       }
     },
   });
+}
+
+// ffmpeg
+async function downloadToFile(url, destination, onProgress) {
+  const response = await fetch(url);
+  if (!response.ok) {
+    throw new Error(`Download failed: HTTP ${response.status} from ${url}`);
+  }
+
+  const totalBytes = parseInt(response.headers.get('content-length'), 10) || 0;
+  let downloadedBytes = 0;
+
+  fs.mkdirSync(path.dirname(destination), { recursive: true });
+
+  const fileStream = fs.createWriteStream(destination);
+  const reader = response.body.getReader();
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+
+    fileStream.write(Buffer.from(value));
+    downloadedBytes += value.length;
+
+    if (totalBytes > 0 && onProgress) {
+      const percent = Math.round((downloadedBytes / totalBytes) * 100);
+      onProgress(percent);
+    }
+  }
+
+  fileStream.end();
+
+  await new Promise((resolve, reject) => {
+    fileStream.on('finish', resolve);
+    fileStream.on('error', reject);
+  });
+}
+
+function extractZipWith7zip(zipPath, destinationDir) {
+  return new Promise((resolve, reject) => {
+    fs.mkdirSync(destinationDir, { recursive: true });
+
+    // Same local-require pattern as your Firefox Windows extraction
+    const _7z = require("7zip-min");
+
+    _7z.unpack(zipPath, destinationDir, (err) => {
+      if (err) {
+        reject(new Error(`7zip extraction failed: ${err.message || err}`));
+      } else {
+        resolve();
+      }
+    });
+  });
+}
+
+function extractZipWithDitto(zipPath, destinationDir) {
+  return new Promise((resolve, reject) => {
+    fs.mkdirSync(destinationDir, { recursive: true });
+
+    const child = spawn("ditto", ["-x", "-k", zipPath, destinationDir]);
+
+    let stderr = "";
+
+    child.stderr.on("data", (data) => {
+      stderr += data.toString();
+    });
+
+    child.on("error", (err) => {
+      reject(new Error(`Failed to start ditto: ${err.message}`));
+    });
+
+    child.on("close", (code) => {
+      if (code === 0) {
+        resolve();
+      } else {
+        reject(new Error(`ditto extraction failed with code ${code}: ${stderr}`));
+      }
+    });
+  });
+}
+
+function extractZipWithUnzip(zipPath, destinationDir) {
+  return new Promise((resolve, reject) => {
+    fs.mkdirSync(destinationDir, { recursive: true });
+
+    const child = spawn('unzip', ['-o', zipPath, '-d', destinationDir]);
+
+    let stderr = '';
+
+    child.stderr.on('data', (data) => {
+      stderr += data.toString();
+    });
+
+    child.on('error', (err) => {
+      reject(new Error(`Failed to start unzip: ${err.message}`));
+    });
+
+    child.on('close', (code) => {
+      if (code === 0) {
+        resolve();
+      } else {
+        reject(new Error(`unzip extraction failed with code ${code}: ${stderr}`));
+      }
+    });
+  });
+}
+
+function extractTarXzWithSystemTar(archivePath, destinationDir) {
+  return new Promise((resolve, reject) => {
+    fs.mkdirSync(destinationDir, { recursive: true });
+
+    const child = spawn("tar", ["-xJf", archivePath, "-C", destinationDir]);
+
+    let stderr = "";
+
+    child.stderr.on("data", (data) => {
+      stderr += data.toString();
+    });
+
+    child.on("error", (err) => {
+      reject(new Error(`Failed to start tar: ${err.message}`));
+    });
+
+    child.on("close", (code) => {
+      if (code === 0) {
+        resolve();
+      } else {
+        reject(new Error(`tar extraction failed with code ${code}: ${stderr}`));
+      }
+    });
+  });
+}
+
+async function extractFfmpegArchive(archivePath, destinationDir, archiveExt) {
+  fs.mkdirSync(destinationDir, { recursive: true });
+
+  if (process.platform === 'win32' && (archiveExt === 'zip' || archiveExt === '7z')) {
+    await extractZipWith7zip(archivePath, destinationDir);
+    return;
+  }
+
+  if (process.platform === 'darwin' && archiveExt === 'zip') {
+    await extractZipWithDitto(archivePath, destinationDir);
+    return;
+  }
+
+  if (process.platform === 'linux' && archiveExt === 'zip') {
+    await extractZipWithUnzip(archivePath, destinationDir);
+    return;
+  }
+
+  throw new Error(
+    `Unsupported archive/platform combination: ${process.platform} / ${archiveExt}`,
+  );
+}
+
+function ensureExecutablePermissions(filePath) {
+  if (process.platform !== 'win32') {
+    fs.chmodSync(filePath, 0o755);
+  }
+}
+
+async function downloadFfmpeg(event) {
+  const { archiveExt, downloadUrl } = getPlatformInfo();
+  const tempArchive = path.join(os.tmpdir(), `ffmpeg-${Date.now()}.${archiveExt}`);
+  const extractDir = FFMPEG_DIR;
+
+  event.sender.send('ffmpeg-download-progress', 0);
+
+  fs.rmSync(FFMPEG_BASE_DIR, { recursive: true, force: true });
+  fs.mkdirSync(extractDir, { recursive: true });
+
+  await downloadToFile(downloadUrl, tempArchive, (percent) => {
+    event.sender.send('ffmpeg-download-progress', percent);
+  });
+
+  await extractFfmpegArchive(tempArchive, extractDir, archiveExt);
+
+  const exePath = getBundledFfmpegExecutablePath();
+  if (!exePath || !fs.existsSync(exePath)) {
+    throw new Error('FFmpeg extraction succeeded but executable was not found.');
+  }
+
+  ensureExecutablePermissions(exePath);
+  await verifyFfmpegWorks(exePath);
+
+  try {
+    fs.unlinkSync(tempArchive);
+  } catch {
+    // ignore cleanup failure
+  }
+
+  event.sender.send('ffmpeg-download-progress', 100);
 }
 
 function InitializeMenu() {
@@ -361,72 +721,53 @@ function installAudioCaptureHandlers(ses) {
 function createWindow() {
   console.log("resourcesDir is " + env.APP_RESOURCES_DIR);
 
-  console.log('resourcesDir is ' + env.APP_RESOURCES_DIR);
+  delay(500).then(() => {
+    // console.log('createWindow() - dev viewer');
+    const win = new BrowserWindow({
+      width: 1024,
+      height: 768,
+      minWidth: 900,
+      minHeight: 600,
+      autoHideMenuBar: false,
+      show: false, // Don't show until ready to maximize
+      icon: path.join(__dirname, "favicon.png"),
+      webPreferences: {
+        preload: path.join(__dirname, "preload.js"),
+        nodeIntegration: false, //default is also false. True leads to console error.
+        contextIsolation: true, //default is also true. What is the impact of changing this to false?
+        enableRemoteModule: false, //default is also false. What is the impact of changing this to true?
+        sandbox: false, // default is also false
+      },
+    });
 
-    delay(500).then(() => {
-        // console.log('createWindow() - dev viewer');
-        const win = new BrowserWindow({
-            width: 1024,
-            height: 768,
-            minWidth: 900,
-            minHeight: 600,
-            autoHideMenuBar: false,
-            show: false,  // Don't show until ready to maximize
-            icon: path.join(__dirname, 'favicon.png'),
-            webPreferences: {
-                preload: path.join(__dirname, 'preload.js'),
-                nodeIntegration: false, //default is also false. True leads to console error.
-                contextIsolation: true, //default is also true. What is the impact of changing this to false?
-                enableRemoteModule: false, //default is also false. What is the impact of changing this to true?
-                sandbox: false, // default is also false
-              }
-        });
+    installAudioCaptureHandlers(win.webContents.session);
 
-        installAudioCaptureHandlers(win.webContents.session);
+    win.once("ready-to-show", () => {
+      win.maximize();
+      win.show();
+      setTimeout(() => {
+        InitializeMenu();
+        win.show();
+        win.maximize();
+      }, 300);
+    });
 
-        win.once('ready-to-show', () => {
-            win.maximize();
-            win.show();
-            setTimeout(() => {
-                InitializeMenu();
-                win.show();
-                win.maximize();
-              }, 300);
-        });
-
-        // Show a dialog to the user to confirm the close
-        win.on('close', (event) => {
-            if (!canClose) {
-                event.preventDefault();
-                dialog.showMessageBox(win, {
-                    type: 'question',
-                    title: 'Unsaved changes',
-                    message: 'You have unsaved changes. Are you sure you want to close the application?',
-                    buttons: ['Yes', 'No'],
-                }).then((result) => {
-                    if (result.response === 0) {
-                        canClose = true;
-                        win.close();
-                    }
-                });
-            }
-        });
-
-        // Show a dialog to the user switch pages
-        win.webContents.on('will-navigate', async (event, url) => {
-            if (!canClose) {
-                event.preventDefault();
-                dialog.showMessageBox(win, {
-                    title: 'Unsaved changes',
-                    type: 'question',
-                    message: 'You have unsaved changes. Are you sure you want to leave this page?',
-                    buttons: ['Yes', 'No'],
-                }).then((result) => {
-                    if (result.response === 0) {
-                        canClose = true;
-                        win.loadURL(url);
-                    }
-                });
+    // Show a dialog to the user to confirm the close
+    win.on("close", (event) => {
+      if (!canClose) {
+        event.preventDefault();
+        dialog
+          .showMessageBox(win, {
+            type: "question",
+            title: "Unsaved changes",
+            message:
+              "You have unsaved changes. Are you sure you want to close the application?",
+            buttons: ["Yes", "No"],
+          })
+          .then((result) => {
+            if (result.response === 0) {
+              canClose = true;
+              win.close();
             }
           });
      
@@ -466,7 +807,7 @@ app.whenReady().then(() => {
   // IPC: Download Firefox browser engine on user request
   ipcMain.on("download-firefox", async (event) => {
     console.log("download-firefox triggered");
-    console.log("Cache dir:", BROWSER_CACHE_DIR);
+    console.log("Cache dir:", ASSET_CACHE_DIR);
     console.log("Build ID:", FIREFOX_BUILD_ID);
     console.log("Platform:", process.platform);
 
@@ -573,28 +914,48 @@ app.whenReady().then(() => {
     return JSON.parse(JSON.stringify(uploadResult.uuid));
   });
   ipcMain.handle("generate-pdf-final", async (event, uuid) => {
-  const response = await fetch(
-    `http://127.0.0.1:${env.ROCKET_PORT}/api/temp/bytes/${uuid}`,
-    {
-      method: "GET",
+    const response = await fetch(
+      `http://127.0.0.1:${env.ROCKET_PORT}/api/temp/bytes/${uuid}`,
+      {
+        method: "GET",
+      }
+    );
+
+    // Convert response to binary data
+    const arrayBuffer = await response.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
+
+    // Get Downloads folder
+    const downloadsPath = app.getPath("downloads");
+
+    // Create file name
+    const filePath = path.join(downloadsPath, `document-${uuid}.pdf`);
+
+    // Write file
+    fs.writeFileSync(filePath, buffer);
+
+    return filePath;
+  });
+
+  // Ensure ffmpeg is installed before using
+  ipcMain.handle('check-ffmpeg-installed', async () => {
+    return await isFfmpegInstalled();
+  });
+
+  ipcMain.handle('get-ffmpeg-path', async () => {
+    return await getAvailableFfmpegPath();
+  });
+
+  ipcMain.on('download-ffmpeg', async (event) => {
+    try {
+      await downloadFfmpeg(event);
+      event.sender.send('ffmpeg-download-complete', true);
+    } catch (err) {
+      console.error('FFmpeg download failed:', err);
+      event.sender.send('ffmpeg-download-complete', false, err.message);
     }
-  );
+  });
 
-  // Convert response to binary data
-  const arrayBuffer = await response.arrayBuffer();
-  const buffer = Buffer.from(arrayBuffer);
-
-  // Get Downloads folder
-  const downloadsPath = app.getPath("downloads");
-
-  // Create file name
-  const filePath = path.join(downloadsPath, `document-${uuid}.pdf`);
-
-  // Write file
-  fs.writeFileSync(filePath, buffer);
-
-  return filePath;
-});
   setTimeout(createWindow, 0); // Do not wait for server to start (dev viewer)
 });
 
