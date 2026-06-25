@@ -429,9 +429,7 @@ function createWindow() {
                 });
             }
           });
-      }
-    });
-
+     
     // Show a dialog to the user switch pages
     win.webContents.on("will-navigate", async (event, url) => {
       if (!canClose) {
@@ -454,7 +452,7 @@ function createWindow() {
     });
 
     win.loadURL(`http://127.0.0.1:${env.ROCKET_PORT}`);
-  });
+  })
 }
 
 app.whenReady().then(() => {
