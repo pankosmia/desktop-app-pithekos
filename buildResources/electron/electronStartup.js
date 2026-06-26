@@ -981,8 +981,9 @@ app.whenReady().then(() => {
       event.sender.send('ffmpeg-download-complete', false, err.message);
     }
   });
-
-  setTimeout(createWindow, 0); // Do not wait for server to start (dev viewer)
+  
+  startServer();
+  setTimeout(createWindow, 2000); // Wait 2 seconds for server to start (adjust as needed)
 });
 app.on('window-all-closed', () => {
   console.log('window-all-closed() - app quitting');
