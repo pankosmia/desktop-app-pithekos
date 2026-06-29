@@ -60,10 +60,6 @@ const FIREFOX_WIN_EXTRACT_DIR = path.join(
 
 const env = {
   ...process.env,
-  APP_RESOURCES_DIR:
-    process.env.APP_RESOURCES_DIR === undefined
-      ? "./lib/"
-      : process.env.APP_RESOURCES_DIR,
 };
 
 function findFreePort(start = 19119, end = 65535) {
@@ -719,7 +715,6 @@ function installAudioCaptureHandlers(ses) {
 }
 
 function createWindow() {
-  console.log("resourcesDir is " + env.APP_RESOURCES_DIR);
 
   delay(500).then(() => {
     // console.log('createWindow() - dev viewer');

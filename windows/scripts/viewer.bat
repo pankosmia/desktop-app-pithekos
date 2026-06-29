@@ -6,13 +6,12 @@ set "ROCKET_PORT=%~1"
 if "%ROCKET_PORT%"=="" set "ROCKET_PORT=19119"
 
 echo ========================
-echo
-echo Starting electronite viewer...
+echo(
+echo Starting electronite viewer, accessing the development build environment running at port shown below:
 
-REM Using dev server.
+REM Using devevelopment server.
 
-REM Starting electronite viewer loading dev build environment
-set "APP_RESOURCES_DIR=..\..\build\lib\"
+REM Starting electronite viewer, accessing the development build environment
 
 REM This bypasses viewer\appLauncherElectron.bat
-..\viewer\project\payload\app\electron\electron.exe ..\viewer\project\payload\app\electron &
+..\viewer\project\payload\app\electron\electron.exe ..\viewer\project\payload\app\electron

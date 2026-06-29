@@ -11,13 +11,11 @@ source ../../app_config.env
 
 echo "========================"
 echo "Starting up:"
-echo "Current directory:"
-pwd
+echo "Starting electronite viewer, accessing the development build environment running at port shown below:"
 
-# Using dev server.
+# Using development server.
 
-# Starting electronite viewer loading dev build environment
-export APP_RESOURCES_DIR=../../build/lib/
+# Starting electronite viewer, accessing the development build environment
 
 # This bypasses ../viewer/start-*.sh (which, fyi, originates from ../buildResources/appLauncherElectron.sh)
 ../viewer/project/payload/${APP_NAME}.app/Contents/electron/Electron/Contents/MacOS/Electron ../viewer/project/payload/${APP_NAME}.app/Contents/electron
