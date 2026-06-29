@@ -23,61 +23,42 @@
  * - Environment variable APP_NAME must be set for proper application naming
  */
 
-const {
-  app,
-  BrowserWindow,
-  Menu,
-  shell,
-  ipcMain,
-  ipcRenderer,
-  contextBridge,
-  dialog,
-} = require("electron");
-const { spawn, execSync } = require("child_process");
-const path = require("path");
-const net = require("net");
-const fs = require("fs");
-const puppeteer = require("puppeteer-core");
-const os = require("os");
-const { install, computeExecutablePath } = require("@puppeteer/browsers");
-const { pipeline } = require("stream/promises");
+const { app, BrowserWindow, Menu, shell, ipcMain, ipcRenderer, contextBridge, dialog } = require('electron');
+const { spawn, execSync } = require('child_process');
+const path = require('path');
+const net = require('net');
+const fs = require('fs');
+const puppeteer = require('puppeteer-core');
+const os = require('os');
+const { install, computeExecutablePath } = require('@puppeteer/browsers');
+const { pipeline } = require('stream/promises');
 
-const FIREFOX_VERSION = "149.0.2";
-const FIREFOX_BUILD_ID = "stable_" + FIREFOX_VERSION;
-const ASSET_CACHE_DIR = path.join(app.getPath("home"), "pankosmia", "_assets");
-const FFMPEG_BASE_DIR = path.join(ASSET_CACHE_DIR, "ffmpeg");
-const FFMPEG_VERSION = "7.1.1"; // Matching url's entered for each OS/Arch
+const FIREFOX_VERSION = '149.0.2';
+const FIREFOX_BUILD_ID = 'stable_' + FIREFOX_VERSION;
+const ASSET_CACHE_DIR = path.join(app.getPath('home'), 'pankosmia', '_assets');
+const FFMPEG_BASE_DIR = path.join(ASSET_CACHE_DIR, 'ffmpeg');
+const FFMPEG_VERSION = '7.1.1'; // Matching url's entered for each OS/Arch
 const FFMPEG_DIR = path.join(FFMPEG_BASE_DIR, FFMPEG_VERSION);
 
 // Where the extracted Firefox binary lives on Windows
-const FIREFOX_WIN_EXTRACT_DIR = path.join(
-  ASSET_CACHE_DIR,
-  "firefox",
-  "win64-" + FIREFOX_BUILD_ID,
-);
+const FIREFOX_WIN_EXTRACT_DIR = path.join(ASSET_CACHE_DIR, 'firefox', 'win64-' + FIREFOX_BUILD_ID);
 
 const env = {
   ...process.env,
-  APP_RESOURCES_DIR:
-    process.env.APP_RESOURCES_DIR === undefined
-      ? "./lib/"
-      : process.env.APP_RESOURCES_DIR,
+  APP_RESOURCES_DIR: process.env.APP_RESOURCES_DIR === undefined ? './lib/' : process.env.APP_RESOURCES_DIR,
 };
 
 function findFreePort(start = 19119, end = 65535) {
   return new Promise((resolve, reject) => {
     let port = start;
     function tryPort() {
-      if (port > end) return reject(new Error("free port not found"));
+      if (port > end) return reject(new Error('free port not found'));
       const server = net.createServer();
-      server.once("error", () => {
-        port++;
-        tryPort();
-      });
-      server.once("listening", () => {
+      server.once('error', () => { port++; tryPort(); });
+      server.once('listening', () => {
         server.close(() => resolve(port));
       });
-      server.listen(port, "127.0.0.1");
+      server.listen(port, '127.0.0.1');
     }
     tryPort();
   });
@@ -85,29 +66,29 @@ function findFreePort(start = 19119, end = 65535) {
 
 // Use existing env var or find one
 async function getPort() {
-  if (env.ROCKET_PORT && env.ROCKET_PORT.trim() !== "") {
+  if (env.ROCKET_PORT && env.ROCKET_PORT.trim() !== '') {
     return Number(env.ROCKET_PORT);
   }
   return await findFreePort(19119);
 }
 
 getPort()
-  .then((port) => {
-    console.log("Using port ", port);
+  .then(port => {
+    console.log('Using port ', port);
     if (env.ROCKET_PORT === undefined) env.ROCKET_PORT = port;
   })
-  .catch((err) => {
-    console.error("Failed to obtain port:", err);
+  .catch(err => {
+    console.error('Failed to obtain port:', err);
     app.quit?.();
   });
 
 let serverProcess = null;
-app.name = "${APP_NAME}";
+app.name = '${APP_NAME}';
 let canClose = true;
 
 // Does user already have ffmpeg installed?
 function getSystemFfmpegCommandName() {
-  return process.platform === "win32" ? "ffmpeg.exe" : "ffmpeg";
+  return process.platform === 'win32' ? 'ffmpeg.exe' : 'ffmpeg';
 }
 
 async function getSystemFfmpegCommand() {
@@ -123,22 +104,22 @@ async function getSystemFfmpegCommand() {
 
 function verifyFfmpegWorks(ffmpegPathOrCommand) {
   return new Promise((resolve, reject) => {
-    const child = spawn(ffmpegPathOrCommand, ["-version"]);
+    const child = spawn(ffmpegPathOrCommand, ['-version']);
 
-    let stdout = "";
-    let stderr = "";
+    let stdout = '';
+    let stderr = '';
 
-    child.stdout.on("data", (d) => {
+    child.stdout.on('data', (d) => {
       stdout += d.toString();
     });
 
-    child.stderr.on("data", (d) => {
+    child.stderr.on('data', (d) => {
       stderr += d.toString();
     });
 
-    child.on("error", reject);
+    child.on('error', reject);
 
-    child.on("close", (code) => {
+    child.on('close', (code) => {
       if (code === 0 && /ffmpeg version/i.test(stdout || stderr)) {
         resolve(true);
       } else {
@@ -169,66 +150,66 @@ async function getAvailableFfmpegPath() {
 
 // ffmpeg install details
 function getPlatformInfo() {
-  if (process.platform === "win32") {
-    if (process.arch === "x64") {
+  if (process.platform === 'win32') {
+    if (process.arch === 'x64') {
       return {
-        archiveExt: "zip",
-        executableName: "ffmpeg.exe",
+        archiveExt: 'zip',
+        executableName: 'ffmpeg.exe',
         downloadUrl:
-          "https://github.com/GyanD/codexffmpeg/releases/download/7.1.1/ffmpeg-7.1.1-essentials_build.zip",
+          'https://github.com/GyanD/codexffmpeg/releases/download/7.1.1/ffmpeg-7.1.1-essentials_build.zip',
       };
     }
 
-    if (process.arch === "arm64") {
+    if (process.arch === 'arm64') {
       return {
-        archiveExt: "7z",
-        executableName: "ffmpeg.exe",
+        archiveExt: '7z',
+        executableName: 'ffmpeg.exe',
         downloadUrl:
-          "https://github.com/tordona/ffmpeg-win-arm64/releases/download/7.1.1/ffmpeg-7.1.1-essentials-shared-win-arm64.7z",
+          'https://github.com/tordona/ffmpeg-win-arm64/releases/download/7.1.1/ffmpeg-7.1.1-essentials-shared-win-arm64.7z',
       };
     }
 
     throw new Error(`Unsupported Windows architecture: ${process.arch}`);
   }
 
-  if (process.platform === "darwin") {
-    if (process.arch === "x64") {
+  if (process.platform === 'darwin') {
+    if (process.arch === 'x64') {
       return {
-        archiveExt: "zip",
-        executableName: "ffmpeg",
+        archiveExt: 'zip',
+        executableName: 'ffmpeg',
         downloadUrl:
-          "https://ffmpeg.martin-riedl.de/download/macos/amd64/1741001873_7.1.1/ffmpeg.zip",
+          'https://ffmpeg.martin-riedl.de/download/macos/amd64/1741001873_7.1.1/ffmpeg.zip',
       };
     }
 
-    if (process.arch === "arm64") {
+    if (process.arch === 'arm64') {
       return {
-        archiveExt: "zip",
-        executableName: "ffmpeg",
+        archiveExt: 'zip',
+        executableName: 'ffmpeg',
         downloadUrl:
-          "https://ffmpeg.martin-riedl.de/download/macos/arm64/1741000090_7.1.1/ffmpeg.zip",
+          'https://ffmpeg.martin-riedl.de/download/macos/arm64/1741000090_7.1.1/ffmpeg.zip',
       };
     }
 
     throw new Error(`Unsupported macOS architecture: ${process.arch}`);
   }
 
-  if (process.platform === "linux") {
-    if (process.arch === "x64") {
+  if (process.platform === 'linux') {
+    if (process.arch === 'x64') {
       return {
-        archiveExt: "zip",
-        executableName: "ffmpeg",
+        archiveExt: 'zip',
+        executableName: 'ffmpeg',
         downloadUrl:
-          "https://ffmpeg.martin-riedl.de/download/linux/amd64/1741000776_7.1.1/ffmpeg.zip",
+          'https://ffmpeg.martin-riedl.de/download/linux/amd64/1741000776_7.1.1/ffmpeg.zip',
       };
     }
 
-    if (process.arch === "arm64") {
+    if (process.arch === 'arm64') {
       return {
-        archiveExt: "zip",
-        executableName: "ffmpeg",
+        archiveExt: 'zip',
+        executableName: 'ffmpeg',
         downloadUrl:
-          "https://ffmpeg.martin-riedl.de/download/linux/arm64/1740999880_7.1.1/ffmpeg.zip",
+          'https://ffmpeg.martin-riedl.de/download/linux/arm64/1740999880_7.1.1/ffmpeg.zip',
       };
     }
 
@@ -239,7 +220,7 @@ function getPlatformInfo() {
 }
 
 function getBundledFfmpegExecutablePath() {
-  const executableName = process.platform === "win32" ? "ffmpeg.exe" : "ffmpeg";
+  const executableName = process.platform === 'win32' ? 'ffmpeg.exe' : 'ffmpeg';
 
   if (!fs.existsSync(FFMPEG_DIR)) return null;
 
@@ -272,7 +253,7 @@ async function isFfmpegInstalled() {
 function isServerRunning() {
   try {
     // macOS & Linux: use lsof; Windows would require a different approach
-    execSync(`lsof -i:${env.ROCKET_PORT} | grep LISTEN`, { stdio: "ignore" });
+    execSync(`lsof -i:${env.ROCKET_PORT} | grep LISTEN`, { stdio: 'ignore' });
     return true;
   } catch {
     return false;
@@ -282,7 +263,7 @@ function isServerRunning() {
 // Helper to get the Firefox executable path (used by generate-pdf)
 function getFirefoxExecutablePath() {
   return computeExecutablePath({
-    browser: "firefox",
+    browser: 'firefox',
     buildId: FIREFOX_BUILD_ID,
     cacheDir: ASSET_CACHE_DIR,
   });
@@ -304,25 +285,22 @@ function isFirefoxInstalled() {
  */
 async function downloadFirefoxWindows(event) {
   const url = `https://archive.mozilla.org/pub/firefox/releases/${FIREFOX_VERSION}/win64/en-US/Firefox%20Setup%20${FIREFOX_VERSION}.exe`;
-  const tempExe = path.join(
-    os.tmpdir(),
-    `firefox-setup-${FIREFOX_VERSION}.exe`,
-  );
+  const tempExe = path.join(os.tmpdir(), `firefox-setup-${FIREFOX_VERSION}.exe`);
   const extractDir = FIREFOX_WIN_EXTRACT_DIR;
 
-  console.log("Download URL:", url);
-  console.log("Temp file:", tempExe);
-  console.log("Extract to:", extractDir);
+  console.log('Download URL:', url);
+  console.log('Temp file:', tempExe);
+  console.log('Extract to:', extractDir);
 
   // Step 1: Download the .exe with progress
-  event.sender.send("download-progress", 0);
+  event.sender.send('download-progress', 0);
 
   const response = await fetch(url);
   if (!response.ok) {
     throw new Error(`Download failed: HTTP ${response.status} from ${url}`);
   }
 
-  const totalBytes = parseInt(response.headers.get("content-length"), 10) || 0;
+  const totalBytes = parseInt(response.headers.get('content-length'), 10) || 0;
   let downloadedBytes = 0;
 
   // Ensure temp directory exists
@@ -338,21 +316,21 @@ async function downloadFirefoxWindows(event) {
     downloadedBytes += value.length;
     if (totalBytes > 0) {
       const percent = Math.round((downloadedBytes / totalBytes) * 100);
-      event.sender.send("download-progress", percent);
+      event.sender.send('download-progress', percent);
     }
   }
 
   fileStream.end();
   await new Promise((resolve, reject) => {
-    fileStream.on("finish", resolve);
-    fileStream.on("error", reject);
+    fileStream.on('finish', resolve);
+    fileStream.on('error', reject);
   });
 
-  console.log("Download complete, extracting...");
-  event.sender.send("download-progress", 100);
+  console.log('Download complete, extracting...');
+  event.sender.send('download-progress', 100);
 
   // Step 2: Extract the self-extracting 7z archive
-  const _7z = require("7zip-min");
+  const _7z = require('7zip-min');
 
   await new Promise((resolve, reject) => {
     _7z.unpack(tempExe, extractDir, (err) => {
@@ -364,40 +342,38 @@ async function downloadFirefoxWindows(event) {
   // Step 3: Clean up temp file
   try {
     fs.unlinkSync(tempExe);
-    console.log("Temp file cleaned up");
+    console.log('Temp file cleaned up');
   } catch {
-    console.warn("Could not delete temp file:", tempExe);
+    console.warn('Could not delete temp file:', tempExe);
   }
 
   // Step 4: Verify extraction
   const exePath = getFirefoxExecutablePath();
   if (!fs.existsSync(exePath)) {
-    throw new Error(
-      `Extraction appeared to succeed but firefox.exe not found at: ${exePath}`,
-    );
+    throw new Error(`Extraction appeared to succeed but firefox.exe not found at: ${exePath}`);
   }
 
-  console.log("Firefox extracted successfully to:", exePath);
+  console.log('Firefox extracted successfully to:', exePath);
 }
 
 /**
  * Downloads Firefox on macOS/Linux using @puppeteer/browsers install().
  */
 async function downloadFirefoxDefault(event) {
-  event.sender.send("download-progress", null);
+  event.sender.send('download-progress', null);
 
   await install({
-    browser: "firefox",
+    browser: 'firefox',
     buildId: FIREFOX_BUILD_ID,
     cacheDir: ASSET_CACHE_DIR,
     downloadProgressCallback: (downloadedBytes, totalBytes) => {
       if (
-        typeof downloadedBytes === "number" &&
-        typeof totalBytes === "number" &&
+        typeof downloadedBytes === 'number' &&
+        typeof totalBytes === 'number' &&
         totalBytes > 0
       ) {
         const percent = Math.round((downloadedBytes / totalBytes) * 100);
-        event.sender.send("download-progress", percent);
+        event.sender.send('download-progress', percent);
       }
     },
   });
@@ -410,7 +386,7 @@ async function downloadToFile(url, destination, onProgress) {
     throw new Error(`Download failed: HTTP ${response.status} from ${url}`);
   }
 
-  const totalBytes = parseInt(response.headers.get("content-length"), 10) || 0;
+  const totalBytes = parseInt(response.headers.get('content-length'), 10) || 0;
   let downloadedBytes = 0;
 
   fs.mkdirSync(path.dirname(destination), { recursive: true });
@@ -434,8 +410,8 @@ async function downloadToFile(url, destination, onProgress) {
   fileStream.end();
 
   await new Promise((resolve, reject) => {
-    fileStream.on("finish", resolve);
-    fileStream.on("error", reject);
+    fileStream.on('finish', resolve);
+    fileStream.on('error', reject);
   });
 }
 
@@ -476,9 +452,7 @@ function extractZipWithDitto(zipPath, destinationDir) {
       if (code === 0) {
         resolve();
       } else {
-        reject(
-          new Error(`ditto extraction failed with code ${code}: ${stderr}`),
-        );
+        reject(new Error(`ditto extraction failed with code ${code}: ${stderr}`));
       }
     });
   });
@@ -488,25 +462,23 @@ function extractZipWithUnzip(zipPath, destinationDir) {
   return new Promise((resolve, reject) => {
     fs.mkdirSync(destinationDir, { recursive: true });
 
-    const child = spawn("unzip", ["-o", zipPath, "-d", destinationDir]);
+    const child = spawn('unzip', ['-o', zipPath, '-d', destinationDir]);
 
-    let stderr = "";
+    let stderr = '';
 
-    child.stderr.on("data", (data) => {
+    child.stderr.on('data', (data) => {
       stderr += data.toString();
     });
 
-    child.on("error", (err) => {
+    child.on('error', (err) => {
       reject(new Error(`Failed to start unzip: ${err.message}`));
     });
 
-    child.on("close", (code) => {
+    child.on('close', (code) => {
       if (code === 0) {
         resolve();
       } else {
-        reject(
-          new Error(`unzip extraction failed with code ${code}: ${stderr}`),
-        );
+        reject(new Error(`unzip extraction failed with code ${code}: ${stderr}`));
       }
     });
   });
@@ -541,20 +513,17 @@ function extractTarXzWithSystemTar(archivePath, destinationDir) {
 async function extractFfmpegArchive(archivePath, destinationDir, archiveExt) {
   fs.mkdirSync(destinationDir, { recursive: true });
 
-  if (
-    process.platform === "win32" &&
-    (archiveExt === "zip" || archiveExt === "7z")
-  ) {
+  if (process.platform === 'win32' && (archiveExt === 'zip' || archiveExt === '7z')) {
     await extractZipWith7zip(archivePath, destinationDir);
     return;
   }
 
-  if (process.platform === "darwin" && archiveExt === "zip") {
+  if (process.platform === 'darwin' && archiveExt === 'zip') {
     await extractZipWithDitto(archivePath, destinationDir);
     return;
   }
 
-  if (process.platform === "linux" && archiveExt === "zip") {
+  if (process.platform === 'linux' && archiveExt === 'zip') {
     await extractZipWithUnzip(archivePath, destinationDir);
     return;
   }
@@ -565,35 +534,30 @@ async function extractFfmpegArchive(archivePath, destinationDir, archiveExt) {
 }
 
 function ensureExecutablePermissions(filePath) {
-  if (process.platform !== "win32") {
+  if (process.platform !== 'win32') {
     fs.chmodSync(filePath, 0o755);
   }
 }
 
 async function downloadFfmpeg(event) {
   const { archiveExt, downloadUrl } = getPlatformInfo();
-  const tempArchive = path.join(
-    os.tmpdir(),
-    `ffmpeg-${Date.now()}.${archiveExt}`,
-  );
+  const tempArchive = path.join(os.tmpdir(), `ffmpeg-${Date.now()}.${archiveExt}`);
   const extractDir = FFMPEG_DIR;
 
-  event.sender.send("ffmpeg-download-progress", 0);
+  event.sender.send('ffmpeg-download-progress', 0);
 
   fs.rmSync(FFMPEG_BASE_DIR, { recursive: true, force: true });
   fs.mkdirSync(extractDir, { recursive: true });
 
   await downloadToFile(downloadUrl, tempArchive, (percent) => {
-    event.sender.send("ffmpeg-download-progress", percent);
+    event.sender.send('ffmpeg-download-progress', percent);
   });
 
   await extractFfmpegArchive(tempArchive, extractDir, archiveExt);
 
   const exePath = getBundledFfmpegExecutablePath();
   if (!exePath || !fs.existsSync(exePath)) {
-    throw new Error(
-      "FFmpeg extraction succeeded but executable was not found.",
-    );
+    throw new Error('FFmpeg extraction succeeded but executable was not found.');
   }
 
   ensureExecutablePermissions(exePath);
@@ -605,113 +569,107 @@ async function downloadFfmpeg(event) {
     // ignore cleanup failure
   }
 
-  event.sender.send("ffmpeg-download-progress", 100);
+  event.sender.send('ffmpeg-download-progress', 100);
 }
 
 function InitializeMenu() {
-  const isMac = process.platform === "darwin";
+  const isMac = process.platform === 'darwin';
   const template = [
     {
-      label: "Edit",
+      label: 'Edit',
       submenu: [
-        { role: "undo" },
-        { role: "redo" },
-        { type: "separator" },
-        { role: "cut" },
-        { role: "copy" },
-        { role: "paste" },
-        { role: "pasteAndMatchStyle" },
+        {role: 'undo'},
+        {role: 'redo'},
+        {type: 'separator'},
+        {role: 'cut'},
+        {role: 'copy'},
+        {role: 'paste'},
+        {role: 'pasteAndMatchStyle'},
         // {role: 'delete'},
-        { role: "selectAll" },
-      ],
+        {role: 'selectAll'}
+      ]
     },
     {
-      label: "View",
+      label: 'View',
       submenu: [
         {
-          label: "Default Zoom",
-          accelerator: isMac ? "Cmd+0" : "Ctrl+0",
+          label: 'Default Zoom',
+          accelerator: isMac ? 'Cmd+0' : 'Ctrl+0',
           click: (_menuItem, browserWindow) => {
             const win = browserWindow || BrowserWindow.getFocusedWindow();
             if (!win) return;
             win.webContents.setZoomLevel(0);
-          },
+          }
         },
-        { role: "zoomin" },
-        { role: "zoomout" },
+        {role: 'zoomin'},
+        {role: 'zoomout'},
         // {type: 'separator'}
         // {role: 'togglefullscreen'}
-      ],
+      ]
     },
     {
-      label: "Window",
+      label: 'Window',
       submenu: [
         {
-          label: "Reload",
-          accelerator: isMac ? "Cmd+R" : "Ctrl+R",
-          click: (menuItem, bw) => {
-            if (bw) bw.webContents.reload();
-          },
+          label: 'Reload',
+          accelerator: isMac ? 'Cmd+R' : 'Ctrl+R',
+          click: (menuItem, bw) => { if (bw) bw.webContents.reload(); }
         },
         {
-          label: "Force Reload",
-          accelerator: isMac ? "Shift+Cmd+R" : "Ctrl+Shift+R",
-          click: (menuItem, bw) => {
-            if (bw) bw.webContents.reloadIgnoringCache();
-          },
+          label: 'Force Reload',
+          accelerator: isMac ? 'Shift+Cmd+R' : 'Ctrl+Shift+R',
+          click: (menuItem, bw) => { if (bw) bw.webContents.reloadIgnoringCache(); }
         },
         {
-          label: "Toggle Developer Tools",
-          accelerator: isMac ? "Alt+Cmd+I" : "Ctrl+Shift+I",
-          click: (menuItem, bw) => {
-            if (bw) bw.webContents.toggleDevTools();
-          },
-        },
+          label: 'Toggle Developer Tools',
+          accelerator: isMac ? 'Alt+Cmd+I' : 'Ctrl+Shift+I',
+          click: (menuItem, bw) => { if (bw) bw.webContents.toggleDevTools(); }
+        }
         // {role: 'minimize'},
         // {role: 'zoom'},
         // {type: 'separator'},
         // {role: 'front'},
         // {role: 'window'}
-      ],
-    },
+      ]
+    }
   ];
 
   if (isMac) {
-    template.unshift({
+    template.unshift(  {
       label: app.name, // <--- This name will NOT show up in the macOS app menu, will need to update the Info.plist in the Electron folder
       submenu: [
-        { role: "hide" },
-        { role: "hideothers" },
-        { role: "unhide" },
-        { type: "separator" },
-        { role: "quit" },
-      ],
+        {role: 'hide'},
+        {role: 'hideothers'},
+        {role: 'unhide'},
+        {type: 'separator'},
+        {role: 'quit'}
+      ]
     });
   }
-  // Removed:
-  /**
+    // Removed:
+    /**
           {role: 'about'},
           {type: 'separator'},
           {role: 'services'},
           {type: 'separator'},
     */
 
-  try {
-    const initialMenu = Menu.getApplicationMenu();
-    // console.log('initialMenu', initialMenu);
+    try {
+      const initialMenu = Menu.getApplicationMenu();
+      // console.log('initialMenu', initialMenu);
 
-    // build menu
-    // const menu = isMac ? Menu.buildFromTemplate(template) : [];
-    const menu = Menu.buildFromTemplate(template);
-    Menu.setApplicationMenu(menu);
-    // console.log('Menu set successfully');
+      // build menu
+      // const menu = isMac ? Menu.buildFromTemplate(template) : [];
+      const menu = Menu.buildFromTemplate(template);
+      Menu.setApplicationMenu(menu);
+      // console.log('Menu set successfully');
 
-    const currentMenu = Menu.getApplicationMenu();
-    // console.log('Current application menu:', currentMenu ? 'Set successfully' : 'Not set');
-    // console.log('currentMenu', currentMenu);
-  } catch (error) {
-    console.error("Failed to set application menu:", error);
-  }
+      const currentMenu = Menu.getApplicationMenu();
+      // console.log('Current application menu:', currentMenu ? 'Set successfully' : 'Not set');
+      // console.log('currentMenu', currentMenu);
+    } catch (error) {
+      console.error('Failed to set application menu:', error);
+    }
 }
 
 /**
@@ -720,29 +678,30 @@ function InitializeMenu() {
  * @returns {Promise<unknown>}
  */
 function delay(ms) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
+  return new Promise((resolve) =>
+    setTimeout(resolve, ms)
+  );
 }
 
-const MAC_SERVER_PATH = "./bin/server.bin";
-const WIN_SERVER_PATH = "./bin/server.exe";
+const MAC_SERVER_PATH = './bin/server.bin';
+const WIN_SERVER_PATH = './bin/server.exe';
 
 function startServer() {
   if (!isServerRunning()) {
-    const serverPath =
-      process.platform === "win32" ? WIN_SERVER_PATH : MAC_SERVER_PATH;
-    const workingDir = path.join(__dirname, "..");
+    const serverPath = process.platform === 'win32' ? WIN_SERVER_PATH : MAC_SERVER_PATH;
+    const workingDir =  path.join(__dirname, '..');
 
-    console.log("resourcesDir is " + env.APP_RESOURCES_DIR);
+  console.log('resourcesDir is ' + env.APP_RESOURCES_DIR);
 
     // console.log('startServer() - workingDir is ' + workingDir);
     // console.log('startServer() - resourcesDir is ' + resourcesDir);
     // console.log('startServer() - env is ', env);
-
+    
     serverProcess = spawn(serverPath, [], {
-      stdio: "ignore",
+      stdio: 'ignore',
       detached: true,
       env: env,
-      cwd: workingDir,
+      cwd: workingDir
     });
     serverProcess.unref();
     // console.log('startServer() - Server started at ' + path.join(workingDir, serverPath));
@@ -756,148 +715,139 @@ function stopServer() {
     // Kill the process we spawned (or use another mechanism if you need gentle shutdown)
     try {
       process.kill(serverProcess.pid);
-      console.log("stopServer() - Server stopped.");
+      console.log('stopServer() - Server stopped.');
     } catch (e) {
       // It may have already exited
-      console.error(
-        "stopServer() - Server Failed to stop - process ID kill failed.",
-      );
+      console.error('stopServer() - Server Failed to stop - process ID kill failed.');
     }
   } else {
     // Optionally: kill whatever is listening on port
     try {
-      console.log("stopServer() - Trying to stop server forcefully.");
+      console.log('stopServer() - Trying to stop server forcefully.');
       execSync(`lsof -t -i:${env.ROCKET_PORT} | xargs kill -9`);
-      console.log("stopServer() - Server stopped forcefully.");
+      console.log('stopServer() - Server stopped forcefully.');
     } catch {
       // ignore if nothing is running
-      console.error(
-        `stopServer() - Server Failed to stop - process at port ${env.ROCKET_PORT} ID kill failed.`,
-      );
+      console.error(`stopServer() - Server Failed to stop - process at port ${env.ROCKET_PORT} ID kill failed.`);
     }
   }
 }
 
 function handleSetCanClose(event, newCanClose) {
-  canClose = newCanClose;
+    canClose = newCanClose;
 }
 
 // Accorde la permission micro sans prompt OS : l'app est l'hôte de son propre
 // contenu servi sur 127.0.0.1, donc le sélecteur de micro du recorder OBS peut
 // énumérer les périphériques (labels remplis) et enregistrer directement.
 function installAudioCaptureHandlers(ses) {
-  ses.setPermissionRequestHandler((webContents, permission, callback) => {
-    callback(permission === "media" || permission === "audioCapture");
-  });
-  ses.setPermissionCheckHandler((webContents, permission) => {
-    return permission === "media" || permission === "audioCapture";
-  });
+    ses.setPermissionRequestHandler((webContents, permission, callback) => {
+        callback(permission === 'media' || permission === 'audioCapture');
+    });
+    ses.setPermissionCheckHandler((webContents, permission) => {
+        return permission === 'media' || permission === 'audioCapture';
+    });
 }
 
 function createWindow() {
-  delay(500).then(() => {
-    // console.log('createWindow() - after delay');
-    const win = new BrowserWindow({
-      width: 1024,
-      height: 768,
-      minWidth: 900,
-      minHeight: 600,
-      autoHideMenuBar: false,
-      show: false, // Don't show until ready to maximize
-      icon: path.join(__dirname, "favicon.png"),
-      webPreferences: {
-        preload: path.join(__dirname, "preload.js"),
-        nodeIntegration: false, //default is also false. True leads to console error.
-        contextIsolation: true, //default is also true. What is the impact of changing this to false?
-        enableRemoteModule: false, //default is also false. What is the impact of changing this to true?
-        sandbox: false, // default is also false
-      },
-    });
+    delay(500).then(() => {
+        // console.log('createWindow() - after delay');
+        const win = new BrowserWindow({
+            width: 1024,
+            height: 768,
+            minWidth: 900,
+            minHeight: 600,
+            autoHideMenuBar: false,
+            show: false,  // Don't show until ready to maximize
+            icon: path.join(__dirname, 'favicon.png'),
+            webPreferences: {
+                preload: path.join(__dirname, 'preload.js'),
+                nodeIntegration: false, //default is also false. True leads to console error.
+                contextIsolation: true, //default is also true. What is the impact of changing this to false?
+                enableRemoteModule: false, //default is also false. What is the impact of changing this to true?
+                sandbox: false, // default is also false
+              }
+        });
 
-    installAudioCaptureHandlers(win.webContents.session);
+        installAudioCaptureHandlers(win.webContents.session);
 
-    win.once("ready-to-show", () => {
-      win.maximize();
-      win.show();
-      setTimeout(() => {
-        InitializeMenu();
-        win.show();
-        win.maximize();
-      }, 300);
-    });
+        win.once('ready-to-show', () => {
+            win.maximize();
+            win.show();
+            setTimeout(() => {
+              InitializeMenu();
+              win.show();
+              win.maximize();
+            }, 300);
+        });
 
-    // Show a dialog to the user to confirm the close
-    win.on("close", (event) => {
-      if (!canClose) {
-        event.preventDefault();
-        dialog
-          .showMessageBox(win, {
-            type: "question",
-            title: "Unsaved changes",
-            message:
-              "You have unsaved changes. Are you sure you want to close the application?",
-            buttons: ["Yes", "No"],
-          })
-          .then((result) => {
-            if (result.response === 0) {
-              canClose = true;
-              win.close();
+        // Show a dialog to the user to confirm the close
+        win.on('close', (event) => {
+            if (!canClose) {
+                event.preventDefault();
+                dialog.showMessageBox(win, {
+                    type: 'question',
+                    title: 'Unsaved changes',
+                    message: 'You have unsaved changes. Are you sure you want to close the application?',
+                    buttons: ['Yes', 'No'],
+                }).then((result) => {
+                    if (result.response === 0) {
+                        canClose = true;
+                        win.close();
+                    }
+                });
             }
-          });
-      }
-    });
+        });
 
-    // Show a dialog to the user switch pages
-    win.webContents.on("will-navigate", async (event, url) => {
-      if (!canClose) {
-        event.preventDefault();
-        dialog
-          .showMessageBox(win, {
-            title: "Unsaved changes",
-            type: "question",
-            message:
-              "You have unsaved changes. Are you sure you want to leave this page?",
-            buttons: ["Yes", "No"],
-          })
-          .then((result) => {
-            if (result.response === 0) {
-              canClose = true;
-              win.loadURL(url);
+        // Show a dialog to the user switch pages
+        win.webContents.on('will-navigate', async (event, url) => {
+            if (!canClose) {
+                event.preventDefault();
+                dialog.showMessageBox(win, {
+                    title: 'Unsaved changes',
+                    type: 'question',
+                    message: 'You have unsaved changes. Are you sure you want to leave this page?',
+                    buttons: ['Yes', 'No'],
+                }).then((result) => {
+                    if (result.response === 0) {
+                        canClose = true;
+                        win.loadURL(url);
+                    }
+                });
             }
-          });
-      }
-    });
+        });
 
-    win.loadURL(`http://127.0.0.1:${env.ROCKET_PORT}`);
-  });
+        win.loadURL(`http://127.0.0.1:${env.ROCKET_PORT}`);
+    })
+
 }
 
 app.whenReady().then(() => {
-  ipcMain.on("setCanClose", handleSetCanClose);
+  ipcMain.on('setCanClose', handleSetCanClose);
 
   // IPC: Check if Firefox browser engine is already downloaded
-  ipcMain.handle("check-firefox-installed", async () => {
+  ipcMain.handle('check-firefox-installed', async () => {
     return isFirefoxInstalled();
   });
 
   // IPC: Download Firefox browser engine on user request
-  ipcMain.on("download-firefox", async (event) => {
-    console.log("download-firefox triggered");
-    console.log("Cache dir:", ASSET_CACHE_DIR);
-    console.log("Build ID:", FIREFOX_BUILD_ID);
-    console.log("Platform:", process.platform);
+  ipcMain.on('download-firefox', async (event) => {
+    console.log('download-firefox triggered');
+    console.log('Cache dir:', ASSET_CACHE_DIR);
+    console.log('Build ID:', FIREFOX_BUILD_ID);
+    console.log('Platform:', process.platform);
 
     try {
-      if (process.platform === "win32") {
+      if (process.platform === 'win32') {
         await downloadFirefoxWindows(event);
       } else {
         await downloadFirefoxDefault(event);
       }
-      event.sender.send("download-complete", true);
+      event.sender.send('download-complete', true);
     } catch (err) {
-      console.error("Firefox download failed:", err.message);
-      console.error("Full error:", err);
-      event.sender.send("download-complete", false, err.message);
+      console.error('Firefox download failed:', err.message);
+      console.error('Full error:', err);
+      event.sender.send('download-complete', false, err.message);
     }
   });
 
@@ -928,14 +878,13 @@ app.whenReady().then(() => {
     const page = await browser.newPage();
     page.setDefaultTimeout(900000);
     page.setDefaultNavigationTimeout(900000);
-    // Fetch HTML from temp storage
+     // Fetch HTML from temp storage
 
-    await page.goto(
-      `http://127.0.0.1:${env.ROCKET_PORT}/api/temp/html/${uuid}`,
-      {
-        waitUntil: "networkidle0",
-      },
-    );
+
+    await page.goto(`http://127.0.0.1:${env.ROCKET_PORT}/api/temp/html/${uuid}`, {
+      waitUntil: "networkidle0",
+    });
+
 
     await page.evaluate(async () => {
       await new Promise((resolve) => {
@@ -989,7 +938,7 @@ app.whenReady().then(() => {
       `http://127.0.0.1:${env.ROCKET_PORT}/api/temp/bytes/${uuid}`,
       {
         method: "GET",
-      },
+      }
     );
 
     // Convert response to binary data
@@ -1009,51 +958,49 @@ app.whenReady().then(() => {
   });
 
   // Ensure ffmpeg is installed before using
-  ipcMain.handle("check-ffmpeg-installed", async () => {
+  ipcMain.handle('check-ffmpeg-installed', async () => {
     return await isFfmpegInstalled();
   });
 
-  ipcMain.handle("get-ffmpeg-path", async () => {
+  ipcMain.handle('get-ffmpeg-path', async () => {
     return await getAvailableFfmpegPath();
   });
 
-  ipcMain.on("download-ffmpeg", async (event) => {
+  ipcMain.on('download-ffmpeg', async (event) => {
     try {
       await downloadFfmpeg(event);
-      event.sender.send("ffmpeg-download-complete", true);
+      event.sender.send('ffmpeg-download-complete', true);
     } catch (err) {
-      console.error("FFmpeg download failed:", err);
-      event.sender.send("ffmpeg-download-complete", false, err.message);
+      console.error('FFmpeg download failed:', err);
+      event.sender.send('ffmpeg-download-complete', false, err.message);
     }
   });
-
+  
   startServer();
   setTimeout(createWindow, 2000); // Wait 2 seconds for server to start (adjust as needed)
 });
-app.on("window-all-closed", () => {
-  console.log("window-all-closed() - app quitting");
+app.on('window-all-closed', () => {
+  console.log('window-all-closed() - app quitting');
   // On macOS, apps are expected to stay alive until explicitly quit
   // but we quit anyway so server doesn't remain running
   app.quit();
 });
 
-app.on("will-quit", () => {
-  console.log("will-quit() - app quitting");
+app.on('will-quit', () => {
+  console.log('will-quit() - app quitting');
   stopServer();
 });
 
-app.on("before-quit", () => {
-  console.log("before-quit() - app quitting");
+app.on('before-quit', () => {
+  console.log('before-quit() - app quitting');
   stopServer();
 });
 
-app.on("activate", () => {
+app.on('activate', () => {
   if (BrowserWindow.getAllWindows().length === 0) {
-    console.log("activate() - app creating window since there are none");
+    console.log('activate() - app creating window since there are none');
     createWindow();
   } else {
-    console.log(
-      "activate() - app not creating window since there are already windows",
-    );
+    console.log('activate() - app not creating window since there are already windows');
   }
 });
