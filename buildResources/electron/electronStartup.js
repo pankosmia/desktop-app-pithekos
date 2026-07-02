@@ -878,19 +878,13 @@ app.whenReady().then(() => {
     const page = await browser.newPage();
     page.setDefaultTimeout(900000);
     page.setDefaultNavigationTimeout(900000);
-    // Fetch HTML from temp storage
-    const response = await fetch(
-      `http://127.0.0.1:${env.ROCKET_PORT}/api/temp/bytes/${uuid}`,
-      {
-        method: "GET",
-      },
-    );
+   // Fetch HTML from temp storage
 
-    const resultHTML = await response.text();
 
-    await page.setContent(resultHTML, {
+    await page.goto(`http://127.0.0.1:${env.ROCKET_PORT}/api/temp/html/${uuid}`, {
       waitUntil: "networkidle0",
     });
+
 
     await page.evaluate(async () => {
       await new Promise((resolve) => {
