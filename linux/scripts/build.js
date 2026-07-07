@@ -138,6 +138,14 @@ if (spec.product) {
         path.join(BUILD_DIR, "lib", "app_resources", "product", "product.json")
     );
 }
+// i18n Overrides
+const I18N_OVERRIDES = "../../globalBuildResources/i18n-overrides.json";
+if (I18N_OVERRIDES) {
+    fse.copySync(
+        path.resolve(I18N_OVERRIDES),
+        path.join(BUILD_DIR, "lib", "app_resources", "product", "i18n-overrides.json")
+    );
+}
 // client_config
 if (spec.client_config) {
     fse.copySync(
