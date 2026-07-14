@@ -18,6 +18,7 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           gh workflow run buildMaster.yml \
+            --repo ${{ github.repository }} \
             --ref main \
             -f branches='all of dev' \
             -f os='all' \
