@@ -1,0 +1,24 @@
+name: Nightly all-of-dev Build Trigger
+
+on:
+  schedule:
+    - cron: '0 4 * * *' # runs daily at 04:00 UTC
+  workflow_dispatch: # optional: allow manual run too
+
+permissions:
+  actions: write
+  contents: read
+
+jobs:
+  trigger:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger buildMaster.yml
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh workflow run buildMaster.yml \
+            --ref main \
+            -f branches='all of dev' \
+            -f os='all' \
+            -f log_level='debug'
