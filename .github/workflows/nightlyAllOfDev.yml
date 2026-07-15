@@ -2,8 +2,7 @@ name: Nightly all-of-dev Build Trigger
 
 on:
   schedule:
-    - cron: '0 4 * * *' # runs daily at 04:00 UTC
-  workflow_dispatch: # optional: allow manual run too
+    - cron: '0 3 * * *' # runs daily at 03:00 UTC
 
 permissions:
   actions: write
