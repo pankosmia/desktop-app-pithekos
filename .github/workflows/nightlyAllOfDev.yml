@@ -23,5 +23,5 @@ jobs:
             -f branches='all of dev' \
             -f os='all' \
             -f log_level='debug' \
-            -f nightly=true
+            -f artifact_suffix='nightly'
 
