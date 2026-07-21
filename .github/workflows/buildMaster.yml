@@ -17,7 +17,6 @@ on:
           - all of qa
           - all of dev
         default: all of main
-
       os:
         description: 'OS'
         required: true
@@ -28,7 +27,6 @@ on:
           - linux
           - macos
         default: all
-
       log_level:
         description: 'Log level'
         required: true
@@ -39,6 +37,10 @@ on:
           - debug
           - 'off'
         default: critical
+      artifact_suffix:
+        description: 'Artifact name identifier (optional)'
+        required: false
+        default: ""
 
 # set run name from input so the run appears with that name (no API call needed)
 run-name: >-
@@ -48,15 +50,29 @@ run-name: >-
   - log=${{ inputs.log_level }}
 
 jobs:
-  build:
+  setup:
     runs-on: ubuntu-latest
+    outputs:
+      timestamp:       ${{ steps.stamp.outputs.timestamp }}
+      artifact_suffix: ${{ steps.sanitize.outputs.artifact_suffix }}
     steps:
+      - name: Sanitize artifact_suffix
+        id: sanitize
+        env:
+          ARTIFACT_SUFFIX: ${{ inputs.artifact_suffix }}
+        run: |
+          CLEAN=$(printf '%s' "$ARTIFACT_SUFFIX" | tr -cd 'A-Za-z0-9._-')
+          CLEAN=${CLEAN:0:50}
+          echo "artifact_suffix=$CLEAN" >> "$GITHUB_OUTPUT"
+      - id: stamp
+        run: echo "timestamp=$(date -u +'%Y%m%d-%H%M%S')" >> "$GITHUB_OUTPUT"
       - run: |
           echo "Branches is ${{ inputs.branches }}"
           echo "OS is ${{ inputs.os }}"
           echo "Log level is ${{ inputs.log_level }}"
 
   build-macos-x64:
+    needs: setup
     name: Build on macOS x64 (Intel64)
     if: ${{ inputs.os == 'all' || inputs.os == 'macos' }}
     uses: ./.github/workflows/macos-build-steps.yml
@@ -65,8 +81,11 @@ jobs:
       delay_seconds: 1
       log_level: ${{ inputs.log_level }}
       branches: ${{ inputs.branches == 'all of main' && 'main' || inputs.branches == 'all of qa' && 'qa' || 'dev' }}
+      timestamp:       ${{ needs.setup.outputs.timestamp }}
+      artifact_suffix: ${{ needs.setup.outputs.artifact_suffix }}
 
   build-macos-arm64:
+    needs: setup
     name: Build on macOS ARM64 (Apple Silicon)
     if: ${{ inputs.os == 'all' || inputs.os == 'macos' }}
     uses: ./.github/workflows/macos-build-steps.yml
@@ -75,8 +94,11 @@ jobs:
       delay_seconds: 600
       log_level: ${{ inputs.log_level }}
       branches: ${{ inputs.branches == 'all of main' && 'main' || inputs.branches == 'all of qa' && 'qa' || 'dev' }}
+      timestamp:       ${{ needs.setup.outputs.timestamp }}
+      artifact_suffix: ${{ needs.setup.outputs.artifact_suffix }}
 
   build-windows-x64:
+    needs: setup
     name: Build on Windows x64
     if: ${{ inputs.os == 'all' || inputs.os == 'windows' }}
     uses: ./.github/workflows/windows-build-steps.yml
@@ -84,8 +106,11 @@ jobs:
       runner: windows-2025
       log_level: ${{ inputs.log_level }}
       branches: ${{ inputs.branches == 'all of main' && 'main' || inputs.branches == 'all of qa' && 'qa' || 'dev' }}
+      timestamp:       ${{ needs.setup.outputs.timestamp }}
+      artifact_suffix: ${{ needs.setup.outputs.artifact_suffix }}
 
   build-windows-arm64:
+    needs: setup
     name: Build on Windows arm64
     if: ${{ inputs.os == 'all' || inputs.os == 'windows' }}
     uses: ./.github/workflows/windows-build-steps.yml
@@ -93,8 +118,11 @@ jobs:
       runner: windows-11-arm
       log_level: ${{ inputs.log_level }}
       branches: ${{ inputs.branches == 'all of main' && 'main' || inputs.branches == 'all of qa' && 'qa' || 'dev' }}
+      timestamp:       ${{ needs.setup.outputs.timestamp }}
+      artifact_suffix: ${{ needs.setup.outputs.artifact_suffix }}
 
   build-linux-x64:
+    needs: setup
     name: Build on Linux x64
     if: ${{ inputs.os == 'all' || inputs.os == 'linux' }}
     uses: ./.github/workflows/linux-build-steps.yml
@@ -102,8 +130,11 @@ jobs:
       runner: ubuntu-22.04
       log_level: ${{ inputs.log_level }}
       branches: ${{ inputs.branches == 'all of main' && 'main' || inputs.branches == 'all of qa' && 'qa' || 'dev' }}
+      timestamp:       ${{ needs.setup.outputs.timestamp }}
+      artifact_suffix: ${{ needs.setup.outputs.artifact_suffix }}
 
   build-linux-arm64:
+    needs: setup
     name: Build on Linux arm64
     if: ${{ inputs.os == 'all' || inputs.os == 'linux' }}
     uses: ./.github/workflows/linux-build-steps.yml
@@ -111,6 +142,8 @@ jobs:
       runner: ubuntu-22.04-arm
       log_level: ${{ inputs.log_level }}
       branches: ${{ inputs.branches == 'all of main' && 'main' || inputs.branches == 'all of qa' && 'qa' || 'dev' }}
+      timestamp:       ${{ needs.setup.outputs.timestamp }}
+      artifact_suffix: ${{ needs.setup.outputs.artifact_suffix }}
 
   finalize:
     needs: [build-macos-x64, build-macos-arm64, build-windows-x64, build-windows-arm64, build-linux-x64, build-linux-arm64]
@@ -151,28 +184,3 @@ jobs:
           check "linux-arm64"        "${{ needs.build-linux-arm64.result }}"
 
           echo "Selected builds completed successfully"
-
-# TODO
-#  create-universal-binary:
-#    needs: [build-macos-x64, build-macos-arm64]
-#    runs-on: macos-latest
-#    steps:
-#      - name: Checkout repository
-#        uses: actions/checkout@v3
-#
-#      - name: Download Intel artifact
-#        uses: actions/download-artifact@v4
-#        with:
-#          name: ${{ needs.build-macos-x64.outputs.zip-name }}
-#          path: ./downloads/intel
-#
-#      - name: Download ARM artifact
-#        uses: actions/download-artifact@v4
-#        with:
-#          name: ${{ needs.build-macos-arm64.outputs.zip-name }}
-#          path: ./downloads/arm
-#
-#      - name: Create universal binary
-#        run: |
-#          # Your script to combine the Intel and ARM builds
-#          echo "Creating universal binary from Intel and ARM artifacts"

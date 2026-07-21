@@ -14,6 +14,15 @@ on:
       log_level:
         required: true
         type: string
+      timestamp:
+        description: 'Build-order timestamp computed once in the setup job'
+        required: true
+        type: string
+      artifact_suffix:
+        description: 'Artifact name identifier (optional)'
+        required: false
+        type: string
+        default: ''
       delay_seconds:
         description: 'Number of seconds to delay before starting the build'
         required: false
@@ -92,6 +101,13 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20.19.5'
+
+      # Add suffix to version
+      - name: Run gha_ver_suffix.zsh
+        working-directory: ./macos/install
+        run: |
+          chmod +x ./gha_ver_suffix.zsh
+          ./gha_ver_suffix.zsh "${{ inputs.artifact_suffix != '' && format('{0}-{1}', inputs.artifact_suffix, inputs.timestamp) || inputs.timestamp }}"
 
       # Install the repository
       - name: Install this repo

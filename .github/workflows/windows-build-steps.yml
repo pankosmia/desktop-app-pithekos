@@ -13,6 +13,15 @@ on:
       log_level:
         required: true
         type: string
+      timestamp:
+        description: 'Build-order timestamp computed once in the setup job'
+        required: true
+        type: string
+      artifact_suffix:
+        description: 'Artifact name identifier (optional)'
+        required: false
+        type: string
+        default: ''
     outputs:
       zip-name:
         description: "Name of the generated ZIP file"
@@ -73,6 +82,11 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20.19.5'
+
+      # Add suffix to version
+      - name: Run gha_ver_suffix.bat
+        working-directory: .\windows\install
+        run: .\gha_ver_suffix.bat "${{ inputs.artifact_suffix != '' && format('{0}-{1}', inputs.artifact_suffix, inputs.timestamp) || inputs.timestamp }}"
 
       # Set APP_VERSION from app_config.env
       - name: Extract APP_VERSION from app_config.env
