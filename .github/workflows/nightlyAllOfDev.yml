@@ -21,4 +21,6 @@ jobs:
             --ref main \
             -f branches='all of dev' \
             -f os='all' \
-            -f log_level='debug'
+            -f log_level='debug' \
+            -f artifact_suffix='nightly'
+
