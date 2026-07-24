@@ -128,7 +128,8 @@ echo "{"> $product
 echo "  \"name\": \"$APP_NAME\",">> $product
 echo "  \"short_name\": \"$APP_SHORT_NAME\",">> $product
 echo "  \"version\": \"$APP_VERSION\",">> $product
-echo "  \"datetime\": \"$(date '+%d %b %Y %H:%M:%S UTC%:z')\"">> $product
+echo "  \"datetime\": \"$(date '+%d %b %Y %H:%M:%S UTC%:z')\",">> $product
+echo "  \"homepage\": \"$HOMEPAGE\"">> $product
 echo "}">> $product
 
 echo "  ],">> $spec
