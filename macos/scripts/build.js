@@ -1,6 +1,7 @@
 const path = require('path');
 const fse = require('fs-extra');
 const copyDir = require('copy-dir');
+const crypto = require('crypto');
 require('@dotenvx/dotenvx').config({path: ['../../app_config.env'], quiet: true});
 
 // Locations
@@ -121,6 +122,11 @@ for (const libClientSrc of spec['libClients'].map(s => path.resolve(s))) {
     const clientDestParent = path.join(BUILD_DIR, "lib", "clients", clientSrcLeaf);
     // - mkdir
     fse.mkdirSync(clientDestParent);
+    // - storage_id.json
+    fse.writeFileSync(
+        path.join(clientDestParent, 'storage_id.json'),
+        JSON.stringify({ id: crypto.randomUUID() })
+    );
     // - package.json
     fse.copySync(
         path.join(libClientSrc, "package.json"),
