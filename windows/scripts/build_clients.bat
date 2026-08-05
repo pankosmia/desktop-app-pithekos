@@ -207,8 +207,9 @@ for /l %%a in (1,1,%count%) do (
         call :log -- temporarily adding notistack...
         call :run pnpm add notistack
       ) else if /I "!CLIENT%%a!"=="core-contenthandler_translation_plan" (
-        call :log -- temporarily adding @mui/icons-material...
+        call :log -- temporarily adding @mui/icons-material and prop-types...
         call :run pnpm add @mui/icons-material@6.1.5
+        call :run pnpm add prop-types
       )
 
       if errorlevel 1 call :markfail "CLIENT" "!CLIENT%%a!" "pnpm --config.dangerouslyAllowAllBuilds=true install --no-frozen-lockfile"

@@ -309,8 +309,9 @@ for ((i=1;i<=count;i++)); do
           run pnpm add notistack
           ;;
         core-contenthandler_translation_plan)
-          log "-- temporarily adding @mui/icons-material..."
+          log "-- temporarily adding @mui/icons-material and prop-types..."
           run pnpm add @mui/icons-material@6.1.5
+          run pnpm add prop-types
           ;;
       esac
 
