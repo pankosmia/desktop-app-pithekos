@@ -96,11 +96,17 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
+      # Specify pnpm version
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11.20.0
+
       # Specify node.js version
       - name: Use Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20.19.5'
+          node-version: '24.11.0'
+          # cache: pnpm
 
       # Add suffix to version
       - name: Run gha_ver_suffix.zsh
@@ -111,7 +117,7 @@ jobs:
 
       # Install the repository
       - name: Install this repo
-        run: npm ci
+        run: pnpm install
 
       # Set APP_NAME from app_config.env, and use it to define FILE_APP_NAME
       - name: Extract APP_NAME from app_config.env

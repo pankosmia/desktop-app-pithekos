@@ -16,6 +16,11 @@
 #   ./build_clients.bsh my-branch qa -d        # tries my-branch → qa → main, deletes past logs
 #   ./build_clients.bsh -f -d dev              # fresh clone (skips pulling), delete logs, branch=dev → qa → main
 
+# Temporary until migration from npm to pnpm is complete
+export CI=true
+export npm_config_dangerouslyAllowAllBuilds=true
+export npm_config_dangerously_allow_all_builds=true
+
 source ../../app_config.env
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
@@ -256,11 +261,36 @@ for ((i=1;i<=count;i++)); do
       checkout_branch "CLIENT" "$client"
       safe_pull "CLIENT" "$client"
 
-      log "> npm ci..."
-      if ! run npm ci; then markfail "CLIENT" "$client" "npm ci"; fi
+      # Temporary until migration from npm to pnpm is complete
+      log "> pnpm --config.dangerouslyAllowAllBuilds=true install --no-frozen-lockfile ..."
+      if ! run pnpm --config.dangerouslyAllowAllBuilds=true install --no-frozen-lockfile; then markfail "CLIENT" "$client" "run pnpm --config.dangerouslyAllowAllBuilds=true install --no-frozen-lockfile"; fi
 
-      log "> npm run build..."
-      if ! run npm run build; then markfail "CLIENT" "$client" "npm run build"; fi
+      case "$client" in
+        core-client-dashboard)
+          log "-- temporarily adding @mui/icons-material..."
+          run pnpm add @mui/icons-material@6.5.0
+          ;;
+        core-client-i18n-editor|core-client-settings)
+          log "-- temporarily adding notistack..."
+          run pnpm add notistack
+          ;;
+        core-contenthandler_t_core)
+          log "-- temporarily adding notistack and prop-types..."
+          run pnpm add notistack
+          run pnpm add prop-types
+          ;;
+        core-client_pdf_publisher)
+          log "-- temporarily adding @mui/icons-material, notistack and proskomma-json-tools..."
+          run pnpm add @mui/icons-material@6.1.5
+          run pnpm add notistack
+          run pnpm add proskomma-json-tools
+          ;;
+      esac
+
+      if [ $? -ne 0 ]; then markfail "CLIENT" "$client" "pnpm --config.dangerouslyAllowAllBuilds=true install --no-frozen-lockfile"; fi
+
+      log "run pnpm --config.dangerouslyAllowAllBuilds=true run build ..."
+      if ! run pnpm --config.dangerouslyAllowAllBuilds=true run build; then markfail "CLIENT" "$client" "run pnpm --config.dangerouslyAllowAllBuilds=true run build"; fi
 
       log "################################ END Client $i: $client ################################"
       log
