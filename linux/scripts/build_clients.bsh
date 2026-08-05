@@ -285,6 +285,14 @@ for ((i=1;i<=count;i++)); do
           run pnpm add notistack
           run pnpm add proskomma-json-tools
           ;;
+        core-contenthandler-print_specs)
+          log "-- temporarily adding notistack..."
+          run pnpm add notistack
+          ;;
+        core-contenthandler_translation_plan)
+          log "-- temporarily adding @mui/icons-material..."
+          run pnpm add @mui/icons-material@6.1.5
+          ;;
       esac
 
       if [ $? -ne 0 ]; then markfail "CLIENT" "$client" "pnpm --config.dangerouslyAllowAllBuilds=true install --no-frozen-lockfile"; fi
