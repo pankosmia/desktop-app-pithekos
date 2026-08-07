@@ -8,7 +8,6 @@ echo      *   - \windows\buildResources\setup\app_setup.json *
 echo      *   - \macos\buildResources\setup\app_setup.json   *
 echo      *   - \linux\buildResources\setup\app_setup.json   *
 echo      *   - \buildSpec.json                              *
-echo      *   - \globalBuildResources\product.json           *
 echo      *                                                  *
 echo      * \globalBuildResources\i18nPatch.json:            *
 echo      *   - Created if it does not exist, otherwise      *
@@ -161,14 +160,6 @@ if %tzH% LSS 10 set "tzH=0%tzH%"
 if %tzM% LSS 10 set "tzM=0%tzM%"
 set tz=%sign%%tzH%:%tzM%
 
-echo {>%product%
-echo   "name": "%APP_NAME:'=%",>> %product%
-echo   "short_name": "%APP_SHORT_NAME%",>> %product%
-echo   "version": "%APP_VERSION%",>> %product%
-echo   "datetime": "%dd% %mname% %yyyy% %hh%:%min%:%ss% UTC%tz%",>> %product%
-echo   "homepage": "%HOMEPAGE%">> %product%
-echo }>> %product%
-
 echo   ],>> %spec%
 echo   "favIcon": "../../globalBuildResources/favicon.ico",>> %spec%
 echo   "theme": "../../globalBuildResources/theme.json",>> %spec%
@@ -179,7 +170,6 @@ echo }>> %spec%
 echo.
 echo \buildSpec.json generated/rebuilt/replaced
 echo \globalBuildResources\i18nPatch.json generated/rebuilt/replaced
-echo \globalBuildResources\product.json generated/rebuilt/replaced
 echo \windows\buildResources\setup\app_setup.json generated/rebuilt/replaced
 echo.
 echo Copying \windows\buildResources\setup\app_setup.json to \linux\buildResources\setup\

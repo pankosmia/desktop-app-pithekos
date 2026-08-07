@@ -1,8 +1,49 @@
 const path = require('path');
-const fse = require('fs-extra');
+const fs = require('fs-extra');
 const copyDir = require('copy-dir');
 const crypto = require('crypto');
-require('@dotenvx/dotenvx').config({path: ['../../app_config.env'], quiet: true});
+require('@dotenvx/dotenvx').config({
+  path: ['../../app_config.env'],
+  quiet: true
+});
+
+function formatProductDatetime() {
+  const now = new Date();
+
+  const pad = (n) => String(n).padStart(2, '0');
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+  const day = pad(now.getDate());
+  const month = months[now.getMonth()];
+  const year = now.getFullYear();
+  const hours = pad(now.getHours());
+  const minutes = pad(now.getMinutes());
+  const seconds = pad(now.getSeconds());
+
+  const offsetMinutes = -now.getTimezoneOffset();
+  const sign = offsetMinutes >= 0 ? '+' : '-';
+  const offsetHours = pad(Math.floor(Math.abs(offsetMinutes) / 60));
+  const offsetMins = pad(Math.abs(offsetMinutes) % 60);
+
+  return `${day} ${month} ${year} ${hours}:${minutes}:${seconds} UTC${sign}${offsetHours}:${offsetMins}`;
+}
+
+function writeProductJson() {
+  const productPath = path.resolve(__dirname, '../../globalBuildResources/product.json');
+
+  const product = {
+    name: (process.env.APP_NAME || '').replace(/^'|'$/g, ''),
+    short_name: process.env.APP_SHORT_NAME || '',
+    version: process.env.APP_VERSION || '',
+    datetime: formatProductDatetime(),
+    homepage: process.env.HOMEPAGE || '',
+    start_offline: process.env.START_OFFLINE === 'true' ? true : false,
+  };
+
+  fs.writeFileSync(productPath, JSON.stringify(product, null, 2) + '\n', 'utf8');
+
+  return productPath;
+}
 
 // Locations
 const BUILD_DIR = path.resolve('../build');
@@ -13,73 +54,73 @@ const SPEC_PATH = path.resolve('../../buildSpec.json');
 const MACOS_BUILD_RESOURCES = path.resolve("../buildResources");
 const REPO_ROOT = path.resolve("../../");
 // Delete build dir if it exists
-if (fse.existsSync(BUILD_DIR)) {
-    fse.rmSync(BUILD_DIR, {recursive: true, force: true});
+if (fs.existsSync(BUILD_DIR)) {
+    fs.rmSync(BUILD_DIR, {recursive: true, force: true});
 }
 // Make build directory
-fse.mkdirSync(BUILD_DIR);
+fs.mkdirSync(BUILD_DIR);
 // Load spec and extract some reusable information
-const spec = fse.readJsonSync(path.resolve(SPEC_PATH));
+const spec = fs.readJsonSync(path.resolve(SPEC_PATH));
 const APP_NAME = spec['app']['name']
 const FILE_APP_NAME = spec['app']['name'].toLowerCase().replace(/ /g, "-");
 const APP_EXT = "zsh";
 const APP_VERSION = process.env.APP_VERSION;
 // Copy Rocket config
-fse.copySync(
+fs.copySync(
     path.join(REPO_ROOT, "Rocket.toml"),
     path.join(BUILD_DIR, "Rocket.toml")
 );
 // Copy and rename launcher script
-fse.copySync(
+fs.copySync(
     path.join(MACOS_BUILD_RESOURCES, "appLauncher.zsh"),
     path.join(BUILD_DIR, FILE_APP_NAME + "." + APP_EXT)
 );
 // Copy and customize sh launcher for pkg
-const appLauncherSh = fse.readFileSync(path.join(MACOS_BUILD_RESOURCES, "appLauncher.sh"))
+const appLauncherSh = fs.readFileSync(path.join(MACOS_BUILD_RESOURCES, "appLauncher.sh"))
     .toString()
     .replace(/%%APP_NAME%%/g, APP_NAME)
     .replace(/%%FILE_APP_NAME%%/g, FILE_APP_NAME);
-fse.writeFileSync(
+fs.writeFileSync(
     path.join(BUILD_DIR, "appLauncher.sh"),
     appLauncherSh
 );
 // Copy and customize sh post-install script for pkg
-const postInstallSh = fse.readFileSync(path.join(MACOS_BUILD_RESOURCES, "post_install_script.sh"))
+const postInstallSh = fs.readFileSync(path.join(MACOS_BUILD_RESOURCES, "post_install_script.sh"))
     .toString()
     .replace(/%%APP_NAME%%/g, APP_NAME)
     .replace(/%%FILE_APP_NAME%%/g, FILE_APP_NAME);
-fse.writeFileSync(
+fs.writeFileSync(
     path.join(BUILD_DIR, "post_install_script.sh"),
     postInstallSh
 );
 // Copy port checker
 const FIND_FREE_PORT = "find_free_port.sh";
-fse.copySync(
+fs.copySync(
     path.join(MACOS_BUILD_RESOURCES, FIND_FREE_PORT),
     path.join(BUILD_DIR, FIND_FREE_PORT)
 );
 // Copy and customize README
-const readMe = fse.readFileSync(path.join(MACOS_BUILD_RESOURCES, "README.txt"))
+const readMe = fs.readFileSync(path.join(MACOS_BUILD_RESOURCES, "README.txt"))
     .toString()
     .replace(/%%APP_NAME%%/g, APP_NAME)
     .replace(/%%FILE_APP_NAME%%/g, FILE_APP_NAME)
     .replace(/%%APP_EXT%%/g, APP_EXT)
     .replace(/%%APP_VERSION%%/g, APP_VERSION);
-fse.writeFileSync(
+fs.writeFileSync(
     path.join(BUILD_DIR, "README.txt"),
     readMe
 );
 // Make bin directory
-fse.mkdirSync(path.join(BUILD_DIR, "bin"));
+fs.mkdirSync(path.join(BUILD_DIR, "bin"));
 // Copy bin
 const BIN_SRC = path.resolve(spec['bin']['src']);
-fse.copySync(
+fs.copySync(
     BIN_SRC,
     path.join(BUILD_DIR, "bin", "server.bin")
 );
 // Make lib directory
 const libDirPath = path.join(BUILD_DIR, "lib");
-fse.mkdirSync(libDirPath);
+fs.mkdirSync(libDirPath);
 // Copy lib directories
 for (
     const libSpec of spec['lib']
@@ -100,9 +141,9 @@ for (
 }
 // Patch i18n
 const builtI18nPath = path.join(BUILD_DIR, "lib", "templates", "i18n.json");
-const i18nJson = fse.readJsonSync(builtI18nPath);
+const i18nJson = fs.readJsonSync(builtI18nPath);
 const i18nPatchPath = path.resolve("../../globalBuildResources/i18nPatch.json");
-const patchJson = fse.readJsonSync(i18nPatchPath);
+const patchJson = fs.readJsonSync(i18nPatchPath);
 for ([level1, level1Values] of Object.entries(patchJson)) {
     for ([level2, level2Values] of Object.entries(level1Values)) {
         for ([level3, payload] of Object.entries(level2Values)) {
@@ -113,27 +154,27 @@ for ([level1, level1Values] of Object.entries(patchJson)) {
         }
     }
 }
-fse.writeJsonSync(builtI18nPath, i18nJson);
+fs.writeJsonSync(builtI18nPath, i18nJson);
 // Make lib/clients
-fse.mkdirSync(path.join(BUILD_DIR, "lib", "clients"));
+fs.mkdirSync(path.join(BUILD_DIR, "lib", "clients"));
 // Copy clients and, optionally, favicon:
 for (const libClientSrc of spec['libClients'].map(s => path.resolve(s))) {
     const clientSrcLeaf = libClientSrc.split("/").reverse()[0];
     const clientDestParent = path.join(BUILD_DIR, "lib", "clients", clientSrcLeaf);
     // - mkdir
-    fse.mkdirSync(clientDestParent);
+    fs.mkdirSync(clientDestParent);
     // - storage_id.json
-    fse.writeFileSync(
+    fs.writeFileSync(
         path.join(clientDestParent, 'storage_id.json'),
         JSON.stringify({ id: crypto.randomUUID() })
     );
     // - package.json
-    fse.copySync(
+    fs.copySync(
         path.join(libClientSrc, "package.json"),
         path.join(clientDestParent, "package.json")
     );
     // - pankosmia-metadata.json
-    fse.copySync(
+    fs.copySync(
         path.join(libClientSrc, "pankosmia_metadata.json"),
         path.join(clientDestParent, "pankosmia_metadata.json")
     );
@@ -145,7 +186,7 @@ for (const libClientSrc of spec['libClients'].map(s => path.resolve(s))) {
     );
     // - maybe favicon
     if (spec.favIcon) {
-        fse.copySync(
+        fs.copySync(
             path.resolve(spec.favIcon),
             path.join(clientDestParent, "build", "favicon.ico")
         );
@@ -153,35 +194,37 @@ for (const libClientSrc of spec['libClients'].map(s => path.resolve(s))) {
 }
 // Theme
 if (spec.theme) {
-    fse.copySync(
+    fs.copySync(
         path.resolve(spec.theme),
         path.join(BUILD_DIR, "lib", "app_resources", "themes", "default.json")
     );
 }
 // Product
+const generatedProductPath = writeProductJson();
+
 if (spec.product) {
-    fse.copySync(
-        path.resolve(spec.product),
-        path.join(BUILD_DIR, "lib", "app_resources", "product", "product.json")
-    );
+  fs.copySync(
+    generatedProductPath,
+    path.join(BUILD_DIR, "lib", "app_resources", "product", "product.json")
+  );
 }
 // i18n Overrides
 const I18N_OVERRIDES = "../../globalBuildResources/i18n-overrides.json";
 if (I18N_OVERRIDES) {
-    fse.copySync(
+    fs.copySync(
         path.resolve(I18N_OVERRIDES),
         path.join(BUILD_DIR, "lib", "app_resources", "product", "i18n-overrides.json")
     );
 }
 // client_config
 if (spec.client_config) {
-    fse.copySync(
+    fs.copySync(
         path.resolve(spec.client_config),
         path.join(BUILD_DIR, "lib", "app_resources", "product", "client_config.json")
     );
 }
 // Product Resources
-fse.copySync(
+fs.copySync(
     path.resolve("../../globalBuildResources/product_resources"),
     path.join(BUILD_DIR, "lib", "app_resources", "product", "product_resources"),
     { recursive: true }
