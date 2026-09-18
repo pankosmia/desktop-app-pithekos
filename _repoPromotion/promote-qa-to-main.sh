@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #
-# Opens a pull request promoting 'qa' -> 'main' in every repo listed in
-# repos.env. It only opens PRs; it never merges them. Existing open qa -> main
+# Opens a PR promoting 'qa' → 'main' in every repo listed in repos.env.
+# It only opens PRs; it never merges them. Existing open 'qa' → 'main'
 # PRs are detected and left untouched.
 #
 # Flags:
@@ -12,6 +12,7 @@
 #
 # Requirements:
 #   - Linux
+#   - jq
 #   - GitHub CLI (gh) installed
 #   - Run `gh auth login` once (per account/host)
 #   - repos.env and promote-lib.sh exist in this same directory
@@ -23,5 +24,5 @@ run_promotion \
   "main" \
   "qa" \
   "Promote qa to main" \
-  "Automated promotion from qa to main." \
+  "Promotion from qa to main." \
   "$@"
