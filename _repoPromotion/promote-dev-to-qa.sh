@@ -12,6 +12,7 @@
 #
 # Requirements:
 #   - Linux
+#   - jq
 #   - GitHub CLI (gh) installed
 #   - Run `gh auth login` once (per account/host)
 #   - repos.env and promote-lib.sh exist in this same directory
@@ -23,5 +24,5 @@ run_promotion \
   "qa" \
   "dev" \
   "Promote dev to qa" \
-  "Automated promotion from dev to qa." \
+  "Promotion from dev to qa." \
   "$@"

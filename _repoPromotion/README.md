@@ -28,6 +28,11 @@
     - _Preferred protocol for Git operations:_ This script does no git operation, but this needs an answer; `https` has one less step.[^1]
       - With https, you can answer "_Authenticate Git with your GitHub credentials (Y/n):_" with  "n" as the script doesn't use git, though it will still work just the same if you go with "Y".
     - _How would you like to authenticate GitHub CLI?_: It is simplest to use the "login with a web browser" option. It will show a one-time device code. When you press Enter, the browser will open for the code paste and authorization.[^2]
+3. Install `jq` if not already installed. For Ubuntu:
+```
+sudo apt update
+sudo apt install jq
+```
 
 ### Use
 
