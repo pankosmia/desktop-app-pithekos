@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 # Shared library for branch-promotion scripts. Sourced, not run directly.
 #
-# Behavior: for each repo listed in repos.env, opens a pull request promoting
-# one branch into another (e.g. dev -> qa). It never merges — it only opens
-# PRs. Existing open PRs for the same branch pair are detected and left alone.
+# Behavior: for each repo listed in repos.env, opens a PR promoting one branch
+# into another (e.g. 'dev' → 'qa'). It only opens PRs; it never merges them.
+# Existing open PRs for the same branch pair are detected and left alone.
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -13,9 +13,9 @@ REPOS_ENV="${SCRIPT_DIR}/repos.env"
 GH_ORG="pankosmia"
 
 # ---- toggles -------------------------------------------------------------
-# DRY_RUN is normally set via the --dry-run flag (see run_promotion). It is
-# also readable from the environment as a fallback, but you do not need to
-# set it manually — the flag is the intended interface.
+# DRY_RUN is normally set via the --dry-run flag. See run_promotion(). It is
+# also readable from the environment, but you do not need to set it manually;
+# The flag is the intended interface.
 DRY_RUN="${DRY_RUN:-0}"
 
 # ---- colors (only if stdout is a tty) ------------------------------------

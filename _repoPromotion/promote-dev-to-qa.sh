@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #
-# Opens a pull request promoting 'dev' -> 'qa' in every repo listed in
-# repos.env. It only opens PRs; it never merges them. Existing open dev -> qa
+# Opens a PR promoting 'dev' → 'qa' in every repo listed in repos.env.
+# It only opens PRs; it never merges them. Existing open 'dev' → 'qa'
 # PRs are detected and left untouched.
 #
 # Flags:
