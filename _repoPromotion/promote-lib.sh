@@ -34,7 +34,7 @@ else
 fi
 
 # ---- summary accumulators ------------------------------------------------
-# SUM_FLAGGED: PRs opened where base has commits head doesn't (needs review).
+# SUM_FLAGGED: PRs opened where base has commits head doesn't; Will list them in PR description.
 declare -a SUM_CREATED=() SUM_FLAGGED=() SUM_EXISTING=() SUM_NOCHANGE=() \
            SUM_WARN=() SUM_SKIP=() SUM_ERROR=()
 
@@ -287,8 +287,8 @@ print_summary() {
 
   local created_label="Created"
   (( DRY_RUN )) && created_label="Would Create"
-  local flagged_label="Created (base has commits not in head — needs review)"
-  (( DRY_RUN )) && flagged_label="Would Create (base has commits not in head — needs review)"
+  local flagged_label="Created (base has commits not in head; Listed in PR description"
+  (( DRY_RUN )) && flagged_label="Would Create (base has commits not in head; Would be listed in PR description)"
   local skipped_label="Skipped"
   (( DRY_RUN )) && skipped_label="Would Skip"
 
