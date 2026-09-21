@@ -39,8 +39,8 @@
   ],
   "core-client_pdf_publisher": [
     {
-      "id": "audioTranslation",
-      "i18n": "Audio Translation",
+      "id": "firefox",
+      "i18n": "firefox",
       "fields": [{ "value": true, "i18n": "firefox", "id": "firefox" }]
     }
   ],
