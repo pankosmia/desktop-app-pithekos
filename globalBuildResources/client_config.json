@@ -30,8 +30,22 @@
       ]
     }
   ],
-    "_global":[
-     {
+  "core-contenthandler_audio_translation": [
+    {
+      "id": "audioTranslation",
+      "i18n": "Audio Translation",
+      "fields": [{ "value": true, "i18n": "ffmpeg", "id": "ffmpeg" }]
+    }
+  ],
+  "core-client_pdf_publisher": [
+    {
+      "id": "audioTranslation",
+      "i18n": "Audio Translation",
+      "fields": [{ "value": true, "i18n": "firefox", "id": "firefox" }]
+    }
+  ],
+  "_global": [
+    {
       "id": "internetConfig",
       "i18n": "Config Internet",
       "fields": [
