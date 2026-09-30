@@ -5,7 +5,7 @@ on:
   workflow_call:
     inputs:
       runner:
-        description: 'The GitHub runner to use (e.g., macos-13, macos-14)'
+        description: 'The GitHub runner to use (e.g., macos-15, macos-26)'
         required: true
         type: string
       branches:
@@ -85,13 +85,13 @@ jobs:
       # ARM: Homebrew for OpenSSL for OPENSSL_STATIC=yes with cargo (rust)
       - name: Set up Homebrew
         id: set-up-homebrew
-        if: ${{ inputs.runner == 'macos-14' }}
+        if: ${{ inputs.runner == 'macos-15' }}
         uses: Homebrew/actions/setup-homebrew@main
 
       # ARM: OpenSSL for build environment
       - name: Set up OpenSSL with Homebrew
         id: set-up-openssl-arm
-        if: ${{ inputs.runner == 'macos-14' }}
+        if: ${{ inputs.runner == 'macos-15' }}
         run: brew install openssl
 
       # Intel: MacPorts for OpenSSL for OPENSSL_STATIC=yes with cargo (rust)
