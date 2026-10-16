@@ -16,7 +16,7 @@
 #   ./build_clients.zsh my-branch qa -d       # tries my-branch → qa → main, deletes past logs
 #   ./build_clients.zsh -f -d dev              # fresh clone (skips pulling), delete logs, branch=dev → qa → main
 
-# Temporary until migration from npm to pnpm is complete
+# Temporary until migration from npm to pnpm is complete on main
 export CI=true
 export npm_config_dangerouslyAllowAllBuilds=true
 export npm_config_dangerously_allow_all_builds=true
@@ -172,23 +172,7 @@ checkout_branch() {
     return
   fi
 
-  if [ "$branch_lower" = "qa" ]; then
-    if [ "$branch_lower" != "qa" ]; then
-      log "> Branch \"$BRANCH\" not found, trying \"qa\"..."
-      if run git checkout qa; then
-        CHECKED_OUT_BRANCH="qa"
-        return
-      fi
-    fi
-
-    log "> Branch \"qa\" not found, falling back to \"main\"..."
-    if ! run git checkout main; then
-      markfail "$cb_type" "$cb_repo" "git checkout main (fallback from $BRANCH)"
-    fi
-    CHECKED_OUT_BRANCH="main"
-    return
-  fi
-
+  
   # FALLBACK_TIER is main -- fall back directly to main
   log "> Branch \"$BRANCH\" not found, falling back to \"main\"..."
   if ! run git checkout main; then
@@ -250,7 +234,7 @@ for ((i=1;i<=count;i++)); do
       log "$asset does not exist; Run ./clone.zsh"
       log "****************************************************"
       log
-      markfail "ASSET" "$asset" "directory not found; Run ./clone.bsh"
+      markfail "ASSET" "$asset" "directory not found; Run ./clone.zsh"
     else
       cd "$asset"
       checkout_branch "ASSET" "$asset"
@@ -274,51 +258,61 @@ for ((i=1;i<=count;i++)); do
       log "$client does not exist; Run ./clone.zsh then rerun this script"
       log "***************************************************************************************"
       log
-      markfail "CLIENT" "$client" "directory not found; Run ./clone.bsh"
+      markfail "CLIENT" "$client" "directory not found; Run ./clone.zsh"
     else
       cd "$client"
       checkout_branch "CLIENT" "$client"
       safe_pull "CLIENT" "$client"
 
-      # Temporary until migration from npm to pnpm is complete
-      log "> pnpm --config.dangerouslyAllowAllBuilds=true install --no-frozen-lockfile ..."
-      if ! run pnpm --config.dangerouslyAllowAllBuilds=true install --no-frozen-lockfile; then markfail "CLIENT" "$client" "run pnpm --config.dangerouslyAllowAllBuilds=true install --no-frozen-lockfile"; fi
+      if [ "${CHECKED_OUT_BRANCH:l}" = "main" ]; then
+        # Temporary until migration from npm to pnpm is complete on main
+        log "> pnpm --config.dangerouslyAllowAllBuilds=true install --no-frozen-lockfile ..."
+        if ! run pnpm --config.dangerouslyAllowAllBuilds=true install --no-frozen-lockfile; then markfail "CLIENT" "$client" "run pnpm --config.dangerouslyAllowAllBuilds=true install --no-frozen-lockfile"; fi
 
-      case "$client" in
-        core-client-dashboard)
-          log "-- temporarily adding @mui/icons-material..."
-          run pnpm add @mui/icons-material@6.5.0
-          ;;
-        core-client-i18n-editor|core-client-settings)
-          log "-- temporarily adding notistack..."
-          run pnpm add notistack
-          ;;
-        core-contenthandler_t_core)
-          log "-- temporarily adding notistack and prop-types..."
-          run pnpm add notistack
-          run pnpm add prop-types
-          ;;
-        core-client_pdf_publisher)
-          log "-- temporarily adding @mui/icons-material, notistack and proskomma-json-tools..."
-          run pnpm add @mui/icons-material@6.1.5
-          run pnpm add notistack
-          run pnpm add proskomma-json-tools
-          ;;
-        core-contenthandler-print_specs)
-          log "-- temporarily adding notistack..."
-          run pnpm add notistack
-          ;;
-        core-contenthandler_translation_plan)
-          log "-- temporarily adding @mui/icons-material and prop-types..."
-          run pnpm add @mui/icons-material@6.1.5
-          run pnpm add prop-types
-          ;;
-      esac
+        case "$client" in
+          core-client-dashboard)
+            log "-- temporarily adding @mui/icons-material..."
+            if ! run pnpm add @mui/icons-material@6.5.0; then markfail "CLIENT" "$client" "pnpm add @mui/icons-material@6.5.0"; fi
+            ;;
+          core-client-i18n-editor|core-client-settings)
+            log "-- temporarily adding notistack..."
+            if ! run pnpm add notistack; then markfail "CLIENT" "$client" "pnpm add notistack"; fi
+            ;;
+          core-contenthandler_t_core)
+            log "-- temporarily adding notistack and prop-types..."
+            if ! run pnpm add notistack; then markfail "CLIENT" "$client" "pnpm add notistack"; fi
+            if ! run pnpm add prop-types; then markfail "CLIENT" "$client" "pnpm add prop-types"; fi
+            ;;
+          core-client_pdf_publisher)
+            log "-- temporarily adding @mui/icons-material, notistack and proskomma-json-tools..."
+            if ! run pnpm add @mui/icons-material@6.1.5; then markfail "CLIENT" "$client" "pnpm add @mui/icons-material@6.1.5"; fi
+            if ! run pnpm add notistack; then markfail "CLIENT" "$client" "pnpm add notistack"; fi
+            if ! run pnpm add proskomma-json-tools; then markfail "CLIENT" "$client" "pnpm add proskomma-json-tools"; fi
+            ;;
+          core-contenthandler-print_specs)
+            log "-- temporarily adding notistack..."
+            if ! run pnpm add notistack; then markfail "CLIENT" "$client" "pnpm add notistack"; fi
+            ;;
+          core-contenthandler_translation_plan)
+            log "-- temporarily adding @mui/icons-material and prop-types..."
+            if ! run pnpm add @mui/icons-material@6.1.5; then markfail "CLIENT" "$client" "pnpm add @mui/icons-material@6.1.5"; fi
+            if ! run pnpm add prop-types; then markfail "CLIENT" "$client" "pnpm add prop-types"; fi
+            ;;
+        esac
+      else
+        log "> pnpm install..."
+        if ! run pnpm install; then markfail "CLIENT" "$client" "run pnpm install"; fi
+      fi
 
-      if [[ $? -ne 0 ]]; then markfail "CLIENT" "$client" "pnpm --config.dangerouslyAllowAllBuilds=true install --no-frozen-lockfile"; fi
+      
 
-      log "run pnpm --config.dangerouslyAllowAllBuilds=true run build ..."
-      if ! run pnpm --config.dangerouslyAllowAllBuilds=true run build; then markfail "CLIENT" "$client" "run pnpm --config.dangerouslyAllowAllBuilds=true run build"; fi
+      if [ "${CHECKED_OUT_BRANCH:l}" = "main" ]; then
+        log "run pnpm --config.dangerouslyAllowAllBuilds=true run build ..."
+        if ! run pnpm --config.dangerouslyAllowAllBuilds=true run build; then markfail "CLIENT" "$client" "run pnpm --config.dangerouslyAllowAllBuilds=true run build"; fi
+      else
+        log "run pnpm run build ..."
+        if ! run pnpm run build; then markfail "CLIENT" "$client" "run pnpm run build"; fi
+      fi
 
       log "################################ END Client $i: $client ################################"
       log
@@ -348,7 +342,11 @@ if [ "$SKIPCOUNT" -gt 0 ]; then
   done
 fi
 echo
-echo "Full log: \"$LOG\""
+if [ "$GITHUB_ACTIONS" = "true" ]; then
+  echo "Full log: scroll up in the \"Run build_clients.zsh\" step output above."
+else
+  echo "Full log: \"$LOG\""
+fi
 echo "==========================================================================="
 
 if [ "$FAILCOUNT" -gt 0 ]; then

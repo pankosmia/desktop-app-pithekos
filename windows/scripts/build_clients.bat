@@ -21,7 +21,7 @@ set "BRANCH="
 set "FALLBACK_TIER="
 set "FRESH_CLONE="
 
-REM Temporary until migration from npm to pnpm is complete
+REM Temporary until migration from npm to pnpm is complete on main
 if /I "%PROCESSOR_ARCHITECTURE%"=="ARM64" (
   set npm_config_dangerouslyAllowAllBuilds=true
   set npm_config_dangerously_allow_all_builds=true
@@ -178,45 +178,65 @@ for /l %%a in (1,1,%count%) do (
       call :checkout_branch "CLIENT" "!CLIENT%%a!"
       call :safe_pull "CLIENT" "!CLIENT%%a!"
 
-      REM Temporary until migration from npm to pnpm is complete
-      set CI=true
-      set npm_config_dangerously_allow_all_builds=true
+      if /I "!CHECKED_OUT_BRANCH!"=="main" (
+        REM Temporary until migration from npm to pnpm is complete on main
+        set CI=true
+        set npm_config_dangerously_allow_all_builds=true
 
-      call :log -- pnpm --config.dangerouslyAllowAllBuilds=true install --no-frozen-lockfile ...
-      call :run pnpm --config.dangerouslyAllowAllBuilds=true install --no-frozen-lockfile
+        call :log -- pnpm --config.dangerouslyAllowAllBuilds=true install --no-frozen-lockfile ...
+        call :run pnpm --config.dangerouslyAllowAllBuilds=true install --no-frozen-lockfile
+        if errorlevel 1 call :markfail "CLIENT" "!CLIENT%%a!" "pnpm --config.dangerouslyAllowAllBuilds=true install --no-frozen-lockfile"
 
-      if /I "!CLIENT%%a!"=="core-client-dashboard" (
-        call :log -- temporarily adding @mui/icons-material...
-        call :run pnpm add @mui/icons-material@6.5.0
-      ) else if /I "!CLIENT%%a!"=="core-client-i18n-editor" (
-        call :log -- temporarily adding notistack...
-        call :run pnpm add notistack
-      ) else if /I "!CLIENT%%a!"=="core-client-settings" (
-        call :log -- temporarily adding notistack...
-        call :run pnpm add notistack
-      ) else if /I "!CLIENT%%a!"=="core-contenthandler_t_core" (
-        call :log -- temporarily adding notistack, and prop-types needed by main...
-        call :run pnpm add notistack
-        call :run pnpm add prop-types
-      ) else if /I "!CLIENT%%a!"=="core-client_pdf_publisher" (
-        call :log -- temporarily adding @mui/icons-material, notistack and proskomma-json-tools...
-        call :run pnpm add @mui/icons-material@6.1.5
-        call :run pnpm add notistack
-        call :run pnpm add proskomma-json-tools
-      ) else if /I "!CLIENT%%a!"=="core-contenthandler-print_specs" (
-        call :log -- temporarily adding notistack...
-        call :run pnpm add notistack
-      ) else if /I "!CLIENT%%a!"=="core-contenthandler_translation_plan" (
-        call :log -- temporarily adding @mui/icons-material and prop-types...
-        call :run pnpm add @mui/icons-material@6.1.5
-        call :run pnpm add prop-types
+        if /I "!CLIENT%%a!"=="core-client-dashboard" (
+          call :log -- temporarily adding @mui/icons-material...
+          call :run pnpm add @mui/icons-material@6.5.0
+          if errorlevel 1 call :markfail "CLIENT" "!CLIENT%%a!" "pnpm add @mui/icons-material@6.5.0"
+        ) else if /I "!CLIENT%%a!"=="core-client-i18n-editor" (
+          call :log -- temporarily adding notistack...
+          call :run pnpm add notistack
+          if errorlevel 1 call :markfail "CLIENT" "!CLIENT%%a!" "pnpm add notistack"
+        ) else if /I "!CLIENT%%a!"=="core-client-settings" (
+          call :log -- temporarily adding notistack...
+          call :run pnpm add notistack
+          if errorlevel 1 call :markfail "CLIENT" "!CLIENT%%a!" "pnpm add notistack"
+        ) else if /I "!CLIENT%%a!"=="core-contenthandler_t_core" (
+          call :log -- temporarily adding notistack, and prop-types needed by main...
+          call :run pnpm add notistack
+          if errorlevel 1 call :markfail "CLIENT" "!CLIENT%%a!" "pnpm add notistack"
+          call :run pnpm add prop-types
+          if errorlevel 1 call :markfail "CLIENT" "!CLIENT%%a!" "pnpm add prop-types"
+        ) else if /I "!CLIENT%%a!"=="core-client_pdf_publisher" (
+          call :log -- temporarily adding @mui/icons-material, notistack and proskomma-json-tools...
+          call :run pnpm add @mui/icons-material@6.1.5
+          if errorlevel 1 call :markfail "CLIENT" "!CLIENT%%a!" "pnpm add @mui/icons-material@6.1.5"
+          call :run pnpm add notistack
+          if errorlevel 1 call :markfail "CLIENT" "!CLIENT%%a!" "pnpm add notistack"
+          call :run pnpm add proskomma-json-tools
+          if errorlevel 1 call :markfail "CLIENT" "!CLIENT%%a!" "pnpm add proskomma-json-tools"
+        ) else if /I "!CLIENT%%a!"=="core-contenthandler-print_specs" (
+          call :log -- temporarily adding notistack...
+          call :run pnpm add notistack
+          if errorlevel 1 call :markfail "CLIENT" "!CLIENT%%a!" "pnpm add notistack"
+        ) else if /I "!CLIENT%%a!"=="core-contenthandler_translation_plan" (
+          call :log -- temporarily adding @mui/icons-material and prop-types...
+          call :run pnpm add @mui/icons-material@6.1.5
+          if errorlevel 1 call :markfail "CLIENT" "!CLIENT%%a!" "pnpm add @mui/icons-material@6.1.5"
+          call :run pnpm add prop-types
+          if errorlevel 1 call :markfail "CLIENT" "!CLIENT%%a!" "pnpm add prop-types"
+        )
+
+        call :log -- pnpm --config.dangerouslyAllowAllBuilds=true run build ...
+        call :run pnpm --config.dangerouslyAllowAllBuilds=true run build
+        if errorlevel 1 call :markfail "CLIENT" "!CLIENT%%a!" "pnpm --config.dangerouslyAllowAllBuilds=true run build"
+      ) else (
+        call :log -- pnpm install ...
+        call :run pnpm install
+        if errorlevel 1 call :markfail "CLIENT" "!CLIENT%%a!" "pnpm install"
+
+        call :log -- pnpm run build ...
+        call :run pnpm run build
+        if errorlevel 1 call :markfail "CLIENT" "!CLIENT%%a!" "pnpm run build"
       )
-
-      if errorlevel 1 call :markfail "CLIENT" "!CLIENT%%a!" "pnpm --config.dangerouslyAllowAllBuilds=true install --no-frozen-lockfile"
-
-      call :log -- pnpm --config.dangerouslyAllowAllBuilds=true run build ...
-      call :run pnpm --config.dangerouslyAllowAllBuilds=true run build
-      if errorlevel 1 call :markfail "CLIENT" "!CLIENT%%a!" "pnpm --config.dangerouslyAllowAllBuilds=true run build"
 
       call :log ################################ END Client %%a: !CLIENT%%a! ################################
       call :log
