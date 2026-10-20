@@ -10,6 +10,10 @@ on:
       branches:
         required: true
         type: string
+      branch_name_exception:
+        description: 'Branch name exception (optional):'
+        required: false
+        type: string
       log_level:
         required: true
         type: string
@@ -41,12 +45,17 @@ jobs:
     env:
       CI: false
       BRANCHES: ${{ inputs.branches }}
+      BRANCH_NAME_EXCEPTION: ${{ inputs.branch_name_exception }}
       LOG_LEVEL: ${{ inputs.log_level }}
 
     steps:
       # Show branches
       - name: Show BRANCHES
-        run: echo "BRANCHES = $BRANCHES"
+        run: |
+          echo "BRANCHES = $BRANCHES"
+          if [ -n "$BRANCH_NAME_EXCEPTION" ]; then
+            echo "Branch name exception is $BRANCH_NAME_EXCEPTION"
+          fi
 
       # Show log level
       - name: Show LOG LEVEL
@@ -114,7 +123,13 @@ jobs:
         working-directory: ./linux/scripts
         run: ./clone.bsh
 
+      - name: Build ${{ inputs.branches }} clients except where ${{ inputs.branch_name_exception }} exists
+        if: ${{ inputs.branch_name_exception != '' }}
+        working-directory: ./linux/scripts
+        run: ./build_clients.bsh -f "$BRANCH_NAME_EXCEPTION" "$BRANCHES"
+
       - name: Build ${{ inputs.branches }} clients
+        if: ${{ inputs.branch_name_exception == '' }}
         working-directory: ./linux/scripts
         run: ./build_clients.bsh -f "$BRANCHES"
 

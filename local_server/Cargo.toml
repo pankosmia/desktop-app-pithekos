@@ -8,7 +8,4 @@ rocket = { version = "0.5.1", features = ["json"] }
 serde_json = "1.0.132"
 tokio = "1.43.0"
 # Pin transitive dep.
-# Newer 0.3.x versions can trigger an E0119 coherence error in cookie 0.18.1
-# (see expiration.rs blanket impl). 0.3.37 is the lowest version satisfying all constraints.
-time = "=0.3.37"
 tinyvec = "=1.13.2"
