@@ -10,6 +10,10 @@ on:
       branches:
         required: true
         type: string
+      branch_name_exception:
+        description: 'Branch name exception (optional):'
+        required: false
+        type: string
       log_level:
         required: true
         type: string
@@ -41,12 +45,17 @@ jobs:
     env:
       CI: false
       BRANCHES: ${{ inputs.branches }}
+      BRANCH_NAME_EXCEPTION: ${{ inputs.branch_name_exception }}
       LOG_LEVEL: ${{ inputs.log_level }}
 
     steps:
       # Show branches
       - name: Show BRANCHES
-        run: echo "BRANCHES = $env:BRANCHES"
+        run: |
+          echo "BRANCHES = $env:BRANCHES"
+          if ($env:BRANCH_NAME_EXCEPTION) {
+            echo "Branch name exception is $env:BRANCH_NAME_EXCEPTION"
+          }
 
       # Show log level
       - name: Show LOG LEVEL
@@ -141,8 +150,15 @@ jobs:
         shell: pwsh
         run: node -p "process.arch"
 
-      # Install and build clients
+      # Install and build clients with a branch name exception
+      - name: Build ${{ inputs.branches }} clients except where ${{ inputs.branch_name_exception }} exists
+        if: ${{ inputs.branch_name_exception != '' }}
+        working-directory: .\windows\scripts
+        run: .\build_clients.bat -f "$env:BRANCH_NAME_EXCEPTION" "$env:BRANCHES"
+
+      # Install and build clients without a branch name exception
       - name: Build ${{ inputs.branches }} clients
+        if: ${{ inputs.branch_name_exception == '' }}
         working-directory: .\windows\scripts
         run: .\build_clients.bat -f "$env:BRANCHES"
 

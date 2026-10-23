@@ -33,7 +33,7 @@
 
   "_global": [
     {
-      "id": "internetConfig",
+      "id": "internetConfig", 
       "i18n": "Config Internet",
       "fields": [
         {
