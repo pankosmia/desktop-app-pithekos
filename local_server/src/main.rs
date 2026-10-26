@@ -27,3 +27,6 @@ pub async fn main() -> Result<(), rocket::Error> {
     pankosmia_web::rocket(conf).launch().await?;
     Ok(())
 }
+
+#[cfg(test)]
+mod tests;
