@@ -11,6 +11,7 @@ mkdir -p "$fixture/desktop/linux/scripts" "$fixture/desktop/local_server" \
 cp "$SCRIPT_DIR/../client_server_versions.bsh" "$fixture/desktop/linux/scripts/"
 printf 'CLIENT1=client-a\nCLIENT2=client-b\nCLIENT3=client-c\n' > "$fixture/desktop/app_config.env"
 printf 'pankosmia_web = "=0.15.0"\n' > "$fixture/desktop/local_server/Cargo.toml"
+printf 'dev=0.14.0\nqa=0.13.0\n' > "$fixture/desktop/local_server.env"
 printf '{}\n' > "$fixture/client-c/pankosmia_metadata.json"
 
 check_range() {
@@ -112,12 +113,49 @@ check_branches() {
 check_branches 'dev uses dev, qa, main per client despite local metadata' dev '0.14.0' 0 \
   'client-a +0.14.0 +- +github:dev$' \
   'client-b +0.12.0 +- +github:qa$' \
-  'client-c +0.10.0 +- +github:main$'
+  'client-c +0.10.0 +- +github:main$' \
+  'Configured server version \(local_server.env \(dev\)\): 0.14.0$'
 check_branches 'qa uses qa then main' qa '0.13.0' 0 \
   'client-a +0.13.0 +- +github:qa$' \
-  'client-c +0.10.0 +- +github:main$'
-check_branches 'explicit main ignores local metadata' main '0.10.0' 0
-check_branches 'remote-only defaults to main' -r '0.10.0' 0
+  'client-c +0.10.0 +- +github:main$' \
+  'Configured server version \(local_server.env \(qa\)\): 0.13.0$'
+check_branches 'explicit main ignores local metadata' main '0.10.0' 0 \
+  'Configured server version \(local_server/Cargo.toml\): 0.15.0$'
+check_branches 'remote-only defaults to main' -r '0.10.0' 0 \
+  'Configured server version \(local_server/Cargo.toml\): 0.15.0$'
+
+printf 'dev=0.11.0\nqa=0.12.0\n' > "$fixture/desktop/local_server.env"
+check_branches 'dev checks env version rather than compatible Cargo version' dev '0.14.0' 1 \
+  'Configured server version \(local_server.env \(dev\)\): 0.11.0$' \
+  'ERROR: Configured server version is outside the compatible range.'
+check_branches 'qa checks its own env version' qa '0.13.0' 1 \
+  'Configured server version \(local_server.env \(qa\)\): 0.12.0$' \
+  'ERROR: Configured server version is outside the compatible range.'
+
+printf 'dev=\nqa=0.13.0\n' > "$fixture/desktop/local_server.env"
+check_branches 'empty dev version is an error' dev '0.14.0' 2 \
+  'ERROR: Could not find a server version in local_server.env \(dev\).'
+printf 'dev=0.14.0\n' > "$fixture/desktop/local_server.env"
+check_branches 'missing qa value does not use dev or Cargo version' qa '0.13.0' 2 \
+  'ERROR: Could not find a server version in local_server.env \(qa\).'
+rm "$fixture/desktop/local_server.env"
+check_branches 'missing server env file is an error' dev '0.14.0' 2 \
+  'ERROR: Could not read local_server.env.'
+check_branches 'main does not require server env file' main '0.10.0' 0 \
+  'Configured server version \(local_server/Cargo.toml\): 0.15.0$'
+printf 'dev=0.14.0\nqa=0.13.0\n' > "$fixture/desktop/local_server.env"
+
+mkdir -p "$fixture/saved-branches"
+mv "$fixture/remote/client-a/dev" "$fixture/saved-branches/dev"
+mv "$fixture/remote/client-a/qa" "$fixture/saved-branches/qa"
+mv "$fixture/remote/client-b/qa" "$fixture/saved-branches/client-b-qa"
+check_branches 'all clients falling back to main still use requested dev server' dev '0.10.0' 0 \
+  'client-a +0.10.0 +- +github:main$' \
+  'client-b +0.10.0 +- +github:main$' \
+  'Configured server version \(local_server.env \(dev\)\): 0.14.0$'
+mv "$fixture/saved-branches/dev" "$fixture/remote/client-a/dev"
+mv "$fixture/saved-branches/qa" "$fixture/remote/client-a/qa"
+mv "$fixture/saved-branches/client-b-qa" "$fixture/remote/client-b/qa"
 
 rm "$fixture/remote/client-a/dev/pankosmia_metadata.json"
 check_branches 'existing dev without metadata does not fall back to qa' dev '0.12.0' 0 \
