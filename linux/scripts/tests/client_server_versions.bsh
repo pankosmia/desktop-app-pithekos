@@ -50,3 +50,83 @@ check_range 'disjoint ranges' '0.21.0 (set by client-a)' '0.15.0 (set by client-
 printf '{}\n' > "$fixture/client-a/pankosmia_metadata.json"
 printf '{}\n' > "$fixture/client-b/pankosmia_metadata.json"
 check_range 'missing bounds are unconstrained' 'none' 'none' 0
+
+mkdir -p "$fixture/bin" "$fixture/remote"
+export VERSION_TEST_REMOTE="$fixture/remote"
+cat > "$fixture/bin/git" <<'EOF'
+#!/usr/bin/env bash
+set -eu
+[ "$1" = ls-remote ] && [ "$2" = --exit-code ] && [ "$3" = --heads ] || exit 99
+repo=${4#https://github.com/pankosmia/}
+repo=${repo%.git}
+branch=${5#refs/heads/}
+if [ -f "$VERSION_TEST_REMOTE/$repo/lookup-error" ]; then
+  exit 128
+fi
+[ -d "$VERSION_TEST_REMOTE/$repo/$branch" ] && exit 0
+exit 2
+EOF
+cat > "$fixture/bin/curl" <<'EOF'
+#!/usr/bin/env bash
+set -eu
+[ "$1" = -sSL ] && [ "$2" = -o ] && [ "$4" = -w ] || exit 99
+path=${6#https://raw.githubusercontent.com/pankosmia/}
+if [ -f "$VERSION_TEST_REMOTE/$path" ]; then
+  cp "$VERSION_TEST_REMOTE/$path" "$3"
+  printf 200
+else
+  printf 404
+fi
+EOF
+chmod +x "$fixture/bin/git" "$fixture/bin/curl"
+export PATH="$fixture/bin:$PATH"
+
+for client in client-a client-b client-c; do
+  mkdir -p "$fixture/remote/$client/main"
+  printf '{"minServerVersion":"0.10.0"}\n' > "$fixture/remote/$client/main/pankosmia_metadata.json"
+done
+mkdir -p "$fixture/remote/client-a/dev" "$fixture/remote/client-a/qa" "$fixture/remote/client-b/qa"
+printf '{"minServerVersion":"0.14.0"}\n' > "$fixture/remote/client-a/dev/pankosmia_metadata.json"
+printf '{"minServerVersion":"0.13.0"}\n' > "$fixture/remote/client-a/qa/pankosmia_metadata.json"
+printf '{"minServerVersion":"0.12.0"}\n' > "$fixture/remote/client-b/qa/pankosmia_metadata.json"
+
+check_branches() {
+  local label="$1" branch="$2" expected_min="$3" expected_status="$4"
+  local output status=0 expected
+  shift 4
+  output=$(bash "$fixture/desktop/linux/scripts/client_server_versions.bsh" "$branch" 2>&1) || status=$?
+  if [ "$status" -ne "$expected_status" ] ||
+     { [ -n "$expected_min" ] && ! grep -Fq "Minimum server version: $expected_min" <<< "$output"; }; then
+    printf 'FAIL: %s (exit %s)\n%s\n' "$label" "$status" "$output" >&2
+    exit 1
+  fi
+  for expected in "$@"; do
+    if ! grep -Eq "$expected" <<< "$output"; then
+      printf 'FAIL: %s (missing %s)\n%s\n' "$label" "$expected" "$output" >&2
+      exit 1
+    fi
+  done
+  printf 'PASS: %s\n' "$label"
+}
+
+check_branches 'dev uses dev, qa, main per client despite local metadata' dev '0.14.0' 0 \
+  'client-a +0.14.0 +- +github:dev$' \
+  'client-b +0.12.0 +- +github:qa$' \
+  'client-c +0.10.0 +- +github:main$'
+check_branches 'qa uses qa then main' qa '0.13.0' 0 \
+  'client-a +0.13.0 +- +github:qa$' \
+  'client-c +0.10.0 +- +github:main$'
+check_branches 'explicit main ignores local metadata' main '0.10.0' 0
+check_branches 'remote-only defaults to main' -r '0.10.0' 0
+
+rm "$fixture/remote/client-a/dev/pankosmia_metadata.json"
+check_branches 'existing dev without metadata does not fall back to qa' dev '0.12.0' 0 \
+  'client-a +- +- +github:dev \(no pankosmia_metadata.json\)'
+
+touch "$fixture/remote/client-a/lookup-error"
+check_branches 'branch lookup errors are fatal, not fallback' dev '' 2 \
+  'ERROR: Could not check branch dev for client-a.' \
+  'client-a +\? +\? +branch lookup failed'
+rm "$fixture/remote/client-a/lookup-error"
+check_branches 'missing requested branch is an error' unknown '' 2 \
+  'ERROR: No requested or fallback branch found for client-a.'
