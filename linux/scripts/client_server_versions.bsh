@@ -9,7 +9,10 @@
 # Usage:
 #   ./client_server_versions.bsh [-r] [branch]
 #     -r      Always read pankosmia_metadata.json from GitHub, ignoring local clones
-#     branch  Branch to read from GitHub (default: main)
+#     branch  Client branch to read from GitHub (default: main)
+#             dev falls back to qa, then main; qa falls back to main.
+#             Fallback happens only when a branch does not exist.
+#   An explicit branch argument ignores local clones.
 #   By default, local clones next to this repo (as created by clone.bsh) are used,
 #   falling back to GitHub when a client has not been cloned.
 
@@ -24,15 +27,23 @@ PARENT_DIR="$(cd "$REPO_DIR/.." && pwd)"
 
 REMOTE_ONLY=""
 BRANCH="main"
+BRANCH_SPECIFIED=""
 for arg in "$@"; do
   case "$arg" in
     -r) REMOTE_ONLY="yes" ;;
     -h|--help)
-      sed -n '3,20p' "$0" | sed 's/^# \{0,1\}//'
+      sed -n '3,/^SCRIPT_DIR/{ /^#/s/^# \{0,1\}//p; }' "$0"
       exit 0
       ;;
     -*) echo "Unknown option: $arg" >&2; exit 2 ;;
-    *) BRANCH="$arg" ;;
+    *)
+      if [ -n "$BRANCH_SPECIFIED" ] || [ -z "$arg" ]; then
+        echo "Expected at most one nonempty branch argument." >&2
+        exit 2
+      fi
+      BRANCH="$arg"
+      BRANCH_SPECIFIED="yes"
+      ;;
   esac
 done
 
@@ -59,11 +70,33 @@ version_lt() {
 
 # Prints where a client's pankosmia_metadata.json will be read from
 metadata_source() {
-  if [ -z "$REMOTE_ONLY" ] && [ -f "$PARENT_DIR/$1/pankosmia_metadata.json" ]; then
+  if [ -z "$REMOTE_ONLY" ] && [ -z "$BRANCH_SPECIFIED" ] &&
+     [ -f "$PARENT_DIR/$1/pankosmia_metadata.json" ]; then
     echo "local"
-  else
-    echo "github:$BRANCH"
+    return
   fi
+
+  local candidate status
+  local branches=("$BRANCH")
+  case "$BRANCH" in
+    dev) branches+=(qa main) ;;
+    qa) branches+=(main) ;;
+  esac
+  for candidate in "${branches[@]}"; do
+    git ls-remote --exit-code --heads "https://github.com/pankosmia/$1.git" \
+      "refs/heads/$candidate" > /dev/null
+    status=$?
+    case "$status" in
+      0) echo "github:$candidate"; return ;;
+      2) continue ;;
+      *)
+        echo "ERROR: Could not check branch $candidate for $1." >&2
+        return 1
+        ;;
+    esac
+  done
+  echo "ERROR: No requested or fallback branch found for $1." >&2
+  return 1
 }
 
 # Prints the content of a client's pankosmia_metadata.json from source $2
@@ -75,7 +108,7 @@ get_metadata() {
   fi
   local tmp status
   tmp=$(mktemp)
-  status=$(curl -sSL -o "$tmp" -w '%{http_code}' "https://raw.githubusercontent.com/pankosmia/$1/$BRANCH/pankosmia_metadata.json")
+  status=$(curl -sSL -o "$tmp" -w '%{http_code}' "https://raw.githubusercontent.com/pankosmia/$1/${2#github:}/pankosmia_metadata.json")
   case "$status" in
     200) cat "$tmp"; rm -f "$tmp" ;;
     404) rm -f "$tmp"; return 3 ;;
@@ -95,7 +128,11 @@ for ((i=1;;i++)); do
   [ -z "$client" ] && break
   client=$(sed 's/ //g' <<< "$client")
 
-  SOURCE=$(metadata_source "$client")
+  if ! SOURCE=$(metadata_source "$client"); then
+    printf '%-42s %-12s %-12s %s\n' "$client" "?" "?" "branch lookup failed"
+    errors=$((errors+1))
+    continue
+  fi
   metadata=$(get_metadata "$client" "$SOURCE")
   result=$?
   if [ "$result" -eq 3 ]; then
