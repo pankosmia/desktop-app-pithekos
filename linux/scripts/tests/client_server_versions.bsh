@@ -1,0 +1,52 @@
+#!/usr/bin/env bash
+
+# Run with: bash linux/scripts/tests/client_server_versions.bsh
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+fixture=$(mktemp -d)
+trap 'rm -rf "$fixture"' EXIT
+mkdir -p "$fixture/desktop/linux/scripts" "$fixture/desktop/local_server" \
+  "$fixture/client-a" "$fixture/client-b" "$fixture/client-c"
+cp "$SCRIPT_DIR/../client_server_versions.bsh" "$fixture/desktop/linux/scripts/"
+printf 'CLIENT1=client-a\nCLIENT2=client-b\nCLIENT3=client-c\n' > "$fixture/desktop/app_config.env"
+printf 'pankosmia_web = "=0.15.0"\n' > "$fixture/desktop/local_server/Cargo.toml"
+printf '{}\n' > "$fixture/client-c/pankosmia_metadata.json"
+
+check_range() {
+  local label="$1" expected_min="$2" expected_max="$3" expected_status="$4"
+  local output status=0
+  output=$(bash "$fixture/desktop/linux/scripts/client_server_versions.bsh" 2>&1) || status=$?
+  if [ "$status" -ne "$expected_status" ] ||
+     ! grep -Fq "Minimum server version: $expected_min" <<< "$output" ||
+     ! grep -Fq "Maximum server version: $expected_max" <<< "$output"; then
+    printf 'FAIL: %s (exit %s)\n%s\n' "$label" "$status" "$output" >&2
+    exit 1
+  fi
+  if [ "$expected_status" -eq 1 ] &&
+     ! grep -Fq 'ERROR: No server version is compatible with all clients.' <<< "$output"; then
+    printf 'FAIL: %s did not report an empty intersection\n%s\n' "$label" "$output" >&2
+    exit 1
+  fi
+  printf 'PASS: %s\n' "$label"
+}
+
+printf '{"minServerVersion":"0.9.0","maxServerVersion":"0.30.0"}\n' > "$fixture/client-a/pankosmia_metadata.json"
+printf '{"minServerVersion":"0.10.0","maxServerVersion":"0.20.0"}\n' > "$fixture/client-b/pankosmia_metadata.json"
+check_range 'highest minimum, lowest maximum' '0.10.0 (set by client-b)' '0.20.0 (set by client-b)' 0
+
+mv "$fixture/client-a/pankosmia_metadata.json" "$fixture/swap.json"
+mv "$fixture/client-b/pankosmia_metadata.json" "$fixture/client-a/pankosmia_metadata.json"
+mv "$fixture/swap.json" "$fixture/client-b/pankosmia_metadata.json"
+check_range 'independent of client order' '0.10.0 (set by client-a)' '0.20.0 (set by client-a)' 0
+
+printf '{"minServerVersion":"0.15.0","maxServerVersion":"0.20.0"}\n' > "$fixture/client-a/pankosmia_metadata.json"
+printf '{"minServerVersion":"0.10.0","maxServerVersion":"0.15.0"}\n' > "$fixture/client-b/pankosmia_metadata.json"
+check_range 'inclusive shared boundary' '0.15.0 (set by client-a)' '0.15.0 (set by client-b)' 0
+
+printf '{"minServerVersion":"0.21.0"}\n' > "$fixture/client-a/pankosmia_metadata.json"
+check_range 'disjoint ranges' '0.21.0 (set by client-a)' '0.15.0 (set by client-b)' 1
+
+printf '{}\n' > "$fixture/client-a/pankosmia_metadata.json"
+printf '{}\n' > "$fixture/client-b/pankosmia_metadata.json"
+check_range 'missing bounds are unconstrained' 'none' 'none' 0

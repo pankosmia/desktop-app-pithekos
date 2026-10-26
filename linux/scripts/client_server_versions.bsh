@@ -53,6 +53,10 @@ version_le() {
   [ "$(printf '%s\n%s\n' "$1" "$2" | sort -V | head -n 1)" = "$1" ]
 }
 
+version_lt() {
+  [ "$1" != "$2" ] && version_le "$1" "$2"
+}
+
 # Prints where a client's pankosmia_metadata.json will be read from
 metadata_source() {
   if [ -z "$REMOTE_ONLY" ] && [ -f "$PARENT_DIR/$1/pankosmia_metadata.json" ]; then
@@ -108,11 +112,11 @@ for ((i=1;;i++)); do
   printf '%-42s %-12s %-12s %s\n' "$client" "${min:--}" "${max:--}" "$SOURCE"
 
   # The overall minimum is the highest minimum; the overall maximum is the lowest maximum
-  if [ -n "$min" ] && { [ -z "$overallMin" ] || ! version_le "$min" "$overallMin"; }; then
+  if [ -n "$min" ] && { [ -z "$overallMin" ] || version_lt "$overallMin" "$min"; }; then
     overallMin="$min"
     overallMinClient="$client"
   fi
-  if [ -n "$max" ] && { [ -z "$overallMax" ] || ! version_le "$overallMax" "$max"; }; then
+  if [ -n "$max" ] && { [ -z "$overallMax" ] || version_lt "$max" "$overallMax"; }; then
     overallMax="$max"
     overallMaxClient="$client"
   fi
