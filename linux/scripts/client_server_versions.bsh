@@ -15,11 +15,13 @@
 #   An explicit branch argument ignores local clones.
 #   By default, local clones next to this repo (as created by clone.bsh) are used,
 #   falling back to GitHub when a client has not been cloned.
+#   The configured server version comes from local_server.env for dev/qa,
+#   otherwise from local_server/Cargo.toml, regardless of client fallbacks.
 
 # Exit codes:
-#   0  A compatible range exists (and includes the configured server version, if found)
+#   0  A compatible range exists and includes the configured server version
 #   1  No compatible range, or the configured server version is outside the range
-#   2  Usage or fetch error
+#   2  Usage, fetch, or server configuration error
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 REPO_DIR="$(cd "$SCRIPT_DIR/../.." && pwd)"
@@ -173,15 +175,33 @@ if [ -n "$overallMin" ] && [ -n "$overallMax" ] && ! version_le "$overallMin" "$
   exit 1
 fi
 
-# Check the server version configured in local_server/Cargo.toml
-serverVersion=$(grep -o '^pankosmia_web[[:space:]]*=[[:space:]]*"[^"]*"' "$REPO_DIR/local_server/Cargo.toml" 2>/dev/null | sed 's/.*"\(.*\)"/\1/')
+case "$BRANCH" in
+  dev|qa)
+    serverSource="local_server.env ($BRANCH)"
+    if [ ! -r "$REPO_DIR/local_server.env" ]; then
+      echo "ERROR: Could not read local_server.env." >&2
+      exit 2
+    fi
+    serverVersion=$(grep "^${BRANCH}=" "$REPO_DIR/local_server.env" | cut -d'=' -f2-)
+    ;;
+  *)
+    serverSource="local_server/Cargo.toml"
+    if [ ! -r "$REPO_DIR/local_server/Cargo.toml" ]; then
+      echo "ERROR: Could not read local_server/Cargo.toml." >&2
+      exit 2
+    fi
+    serverVersion=$(grep -o '^pankosmia_web[[:space:]]*=[[:space:]]*"[^"]*"' "$REPO_DIR/local_server/Cargo.toml" | sed 's/.*"\(.*\)"/\1/')
+    ;;
+esac
 serverVersion=$(clean_version "$serverVersion")
-if [ -n "$serverVersion" ]; then
-  echo "Configured server version (local_server/Cargo.toml): $serverVersion"
-  if { [ -n "$overallMin" ] && ! version_le "$overallMin" "$serverVersion"; } || \
-     { [ -n "$overallMax" ] && ! version_le "$serverVersion" "$overallMax"; }; then
-    echo "ERROR: Configured server version is outside the compatible range." >&2
-    exit 1
-  fi
-  echo "Configured server version is compatible with all clients."
+if [ -z "$serverVersion" ]; then
+  echo "ERROR: Could not find a server version in $serverSource." >&2
+  exit 2
 fi
+echo "Configured server version ($serverSource): $serverVersion"
+if { [ -n "$overallMin" ] && ! version_le "$overallMin" "$serverVersion"; } || \
+   { [ -n "$overallMax" ] && ! version_le "$serverVersion" "$overallMax"; }; then
+  echo "ERROR: Configured server version is outside the compatible range." >&2
+  exit 1
+fi
+echo "Configured server version is compatible with all clients."
