@@ -1,0 +1,146 @@
+#!/usr/bin/env bash
+
+# Run from: pankosmia/<repo-name>/linux/scripts
+
+# Calculates the range of pankosmia_web server versions compatible with every client
+# listed in app_config.env, using minServerVersion and maxServerVersion from each
+# client's pankosmia_metadata.json.
+
+# Usage:
+#   ./client_server_versions.bsh [-r] [branch]
+#     -r      Always read pankosmia_metadata.json from GitHub, ignoring local clones
+#     branch  Branch to read from GitHub (default: main)
+#   By default, local clones next to this repo (as created by clone.bsh) are used,
+#   falling back to GitHub when a client has not been cloned.
+
+# Exit codes:
+#   0  A compatible range exists (and includes the configured server version, if found)
+#   1  No compatible range, or the configured server version is outside the range
+#   2  Usage or fetch error
+
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+REPO_DIR="$(cd "$SCRIPT_DIR/../.." && pwd)"
+PARENT_DIR="$(cd "$REPO_DIR/.." && pwd)"
+
+REMOTE_ONLY=""
+BRANCH="main"
+for arg in "$@"; do
+  case "$arg" in
+    -r) REMOTE_ONLY="yes" ;;
+    -h|--help)
+      sed -n '3,20p' "$0" | sed 's/^# \{0,1\}//'
+      exit 0
+      ;;
+    -*) echo "Unknown option: $arg" >&2; exit 2 ;;
+    *) BRANCH="$arg" ;;
+  esac
+done
+
+source "$REPO_DIR/app_config.env"
+
+# Prints the value of a top-level string key from JSON on stdin
+json_string_value() {
+  grep -o "\"$1\"[[:space:]]*:[[:space:]]*\"[^\"]*\"" | head -n 1 | sed 's/.*:[[:space:]]*"\([^"]*\)"/\1/'
+}
+
+# Removes a leading "=", "v" or spaces, e.g. "=0.20.3" -> "0.20.3"
+clean_version() {
+  sed 's/^[[:space:]=v]*//; s/[[:space:]]*$//' <<< "$1"
+}
+
+# Succeeds if version $1 <= version $2
+version_le() {
+  [ "$(printf '%s\n%s\n' "$1" "$2" | sort -V | head -n 1)" = "$1" ]
+}
+
+# Prints where a client's pankosmia_metadata.json will be read from
+metadata_source() {
+  if [ -z "$REMOTE_ONLY" ] && [ -f "$PARENT_DIR/$1/pankosmia_metadata.json" ]; then
+    echo "local"
+  else
+    echo "github:$BRANCH"
+  fi
+}
+
+# Prints the content of a client's pankosmia_metadata.json from source $2
+# Returns 3 if the file does not exist, 1 on any other error
+get_metadata() {
+  if [ "$2" = "local" ]; then
+    cat "$PARENT_DIR/$1/pankosmia_metadata.json"
+    return
+  fi
+  local tmp status
+  tmp=$(mktemp)
+  status=$(curl -sSL -o "$tmp" -w '%{http_code}' "https://raw.githubusercontent.com/pankosmia/$1/$BRANCH/pankosmia_metadata.json")
+  case "$status" in
+    200) cat "$tmp"; rm -f "$tmp" ;;
+    404) rm -f "$tmp"; return 3 ;;
+    *) rm -f "$tmp"; return 1 ;;
+  esac
+}
+
+overallMin=""
+overallMinClient=""
+overallMax=""
+overallMaxClient=""
+errors=0
+
+printf '%-42s %-12s %-12s %s\n' "CLIENT" "MIN" "MAX" "SOURCE"
+for ((i=1;;i++)); do
+  eval client='$'CLIENT$i
+  [ -z "$client" ] && break
+  client=$(sed 's/ //g' <<< "$client")
+
+  SOURCE=$(metadata_source "$client")
+  metadata=$(get_metadata "$client" "$SOURCE")
+  result=$?
+  if [ "$result" -eq 3 ]; then
+    printf '%-42s %-12s %-12s %s\n' "$client" "-" "-" "$SOURCE (no pankosmia_metadata.json)"
+    continue
+  elif [ "$result" -ne 0 ]; then
+    printf '%-42s %-12s %-12s %s\n' "$client" "?" "?" "$SOURCE (fetch failed)"
+    errors=$((errors+1))
+    continue
+  fi
+
+  min=$(clean_version "$(json_string_value minServerVersion <<< "$metadata")")
+  max=$(clean_version "$(json_string_value maxServerVersion <<< "$metadata")")
+  printf '%-42s %-12s %-12s %s\n' "$client" "${min:--}" "${max:--}" "$SOURCE"
+
+  # The overall minimum is the highest minimum; the overall maximum is the lowest maximum
+  if [ -n "$min" ] && { [ -z "$overallMin" ] || ! version_le "$min" "$overallMin"; }; then
+    overallMin="$min"
+    overallMinClient="$client"
+  fi
+  if [ -n "$max" ] && { [ -z "$overallMax" ] || ! version_le "$overallMax" "$max"; }; then
+    overallMax="$max"
+    overallMaxClient="$client"
+  fi
+done
+
+echo
+if [ "$errors" -gt 0 ]; then
+  echo "ERROR: Could not read pankosmia_metadata.json for $errors client(s)." >&2
+  exit 2
+fi
+
+echo "Minimum server version: ${overallMin:-none}${overallMinClient:+ (set by $overallMinClient)}"
+echo "Maximum server version: ${overallMax:-none}${overallMaxClient:+ (set by $overallMaxClient)}"
+
+if [ -n "$overallMin" ] && [ -n "$overallMax" ] && ! version_le "$overallMin" "$overallMax"; then
+  echo "ERROR: No server version is compatible with all clients." >&2
+  exit 1
+fi
+
+# Check the server version configured in local_server/Cargo.toml
+serverVersion=$(grep -o '^pankosmia_web[[:space:]]*=[[:space:]]*"[^"]*"' "$REPO_DIR/local_server/Cargo.toml" 2>/dev/null | sed 's/.*"\(.*\)"/\1/')
+serverVersion=$(clean_version "$serverVersion")
+if [ -n "$serverVersion" ]; then
+  echo "Configured server version (local_server/Cargo.toml): $serverVersion"
+  if { [ -n "$overallMin" ] && ! version_le "$overallMin" "$serverVersion"; } || \
+     { [ -n "$overallMax" ] && ! version_le "$serverVersion" "$overallMax"; }; then
+    echo "ERROR: Configured server version is outside the compatible range." >&2
+    exit 1
+  fi
+  echo "Configured server version is compatible with all clients."
+fi
