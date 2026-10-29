@@ -44,4 +44,4 @@ if ($installElectron) {
     Write-Host "*************************************************************************" -f cyan;
 }
 
-..\install\makeAllInstallsElectronite.ps1 -Dev "Y" -IsGHA "N" -FullInstall $installElectron
+..\install\makeAllInstallsElectronite.ps1 -Dev "Y" -IsGHA "N" -FullInstall:$installElectron

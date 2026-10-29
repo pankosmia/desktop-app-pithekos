@@ -28,11 +28,14 @@ on:
         default: ''
     outputs:
       tgz-name:
-        description: "Name of the generated TGZ file"
+        description: "Name of the generated CLI TGZ file"
         value: ${{ jobs.build.outputs.tgz-name }}
       deb-name:
         description: "Name of the generated .deb file"
         value: ${{ jobs.build.outputs.deb-name }}
+      tgz-portable-name:
+        description: "Name of the generated Portable TGZ file"
+        value: ${{ jobs.build.outputs.tgz-portable-name }}
 
 jobs:
   build:
@@ -40,6 +43,7 @@ jobs:
     outputs:
       tgz-name: ${{ steps.get-tgz-name.outputs.tgz-name }}
       deb-name: ${{ steps.get-deb-name.outputs.deb-name }}
+      tgz-portable-name: ${{ steps.get-tgz-portable-name.outputs.tgz-portable-name }}
       
     # Set process.env.CI to false to prevent treating warnings as errors
     env:
@@ -141,9 +145,9 @@ jobs:
         working-directory: ./linux/scripts
         run: ./bundle_tgz.bsh -s -g
 
-      - name: Create .deb installer (includes Electronite viewer build)
+      - name: Create .deb installer and Portable TGZ (includes Electronite viewer build)
         working-directory: ./linux/scripts
-        run: ./bundle_viewer.bsh
+        run: ./bundle_viewer.bsh -p
 
       - name: Get tgz for cli name
         id: get-tgz-name
@@ -151,7 +155,7 @@ jobs:
           echo "tgz for cli name:"
           ls -als ./releases/linux/*-cli.tgz
           cd ./releases/linux
-          TGZ_NAME=$(ls *.tgz | head -n 1)
+          TGZ_NAME=$(ls *-cli.tgz | head -n 1)
           echo "tgz-name=$TGZ_NAME" >> $GITHUB_OUTPUT
           echo "TGZ_NAME=$TGZ_NAME" >> $GITHUB_ENV
           cd ../..
@@ -167,6 +171,17 @@ jobs:
           echo "DEB_NAME=$DEB_NAME" >> $GITHUB_ENV
           cd ../..
 
+      - name: Get tgz for portable app name
+        id: get-tgz-portable-name
+        run: |
+          echo "tgz for portable app name:"
+          ls -als ./releases/linux/*-portable.tgz
+          cd ./releases/linux
+          TGZ_PORTABLE_NAME=$(ls *-portable.tgz | head -n 1)
+          echo "tgz-portable-name=$TGZ_PORTABLE_NAME" >> $GITHUB_OUTPUT
+          echo "TGZ_PORTABLE_NAME=$TGZ_PORTABLE_NAME" >> $GITHUB_ENV
+          cd ../..
+
       - name: Upload tgz for cli artifacts
         uses: actions/upload-artifact@v4
         with:
@@ -180,5 +195,13 @@ jobs:
         with:
           name: ${{ env.DEB_NAME }}
           path: ./releases/linux/${{ env.DEB_NAME }}
+          if-no-files-found: error
+          retention-days: 90
+
+      - name: Upload tgz for portable artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.TGZ_PORTABLE_NAME }}
+          path: ./releases/linux/${{ env.TGZ_PORTABLE_NAME }}
           if-no-files-found: error
           retention-days: 90
