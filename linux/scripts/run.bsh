@@ -93,4 +93,5 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 export APP_RESOURCES_DIR="$SCRIPT_DIR/lib/"
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-$SCRIPT_DIR/bin/server.bin
+# $SCRIPT_DIR/bin/server.bin --log-path /home/mark/foo.log
+$SCRIPT_DIR/bin/server.bin --log-path ./foo.log.txt
