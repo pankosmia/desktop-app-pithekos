@@ -430,6 +430,10 @@ try {
             Write-Host "Portable package created successfully: $portableZipPath"
         }
 
+        # Remove the CLI find_free_port.bat script that is not applicable to the EXE where that is handled by Electron.
+        $findPortScriptToDel = Join-Path $payloadPath "find_free_port.bat"
+        Remove-Item -Path $findPortScriptToDel -Force -ErrorAction SilentlyContinue
+
         # Delete existing exe files from releases directory, only if path exists
         Get-ChildItem -Path $outputPath -Filter "*.exe" -ErrorAction SilentlyContinue |
             Remove-Item -Force
