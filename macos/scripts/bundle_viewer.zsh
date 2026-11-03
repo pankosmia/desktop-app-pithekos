@@ -6,14 +6,26 @@
 # with the optional arguments of: ./bundle_viewer.zsh -s
 # to pre-specify that the server is off.
 
+#   -p indicates Portable App zip build
+
 set -e
 set -u
 
 echo
 
+# get arguments
+askIfOff=yes
+portable=false
+
+for arg in "$@"; do
+    case "$arg" in
+        -s) askIfOff=no ;;
+        -p) portable=true ;;
+    esac
+done
+
 # Do not ask if the server is off if the -s $1 positional argument is provided
-askIfOff="${1:-yes}" # -s means "no"
-if ! [[ $askIfOff =~ ^(-s) ]]; then
+if [ $askIfOff = yes ]; then
   while true; do
     read "choice?Is the server off? [Y/n]: "
     case $choice in
@@ -58,4 +70,8 @@ echo "Please wait patiently for the download process to complete..."
 echo "********************************************************************"
 echo
 
-../install/makeAllInstallsElectronite.sh -f
+args=(-f)
+if [ "$portable" = true ]; then
+    args+=(-p)
+fi
+../install/makeAllInstallsElectronite.sh "${args[@]}"

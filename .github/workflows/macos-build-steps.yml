@@ -39,16 +39,23 @@ on:
         type: string
     outputs:
       zip-name:
-        description: "Name of the generated ZIP file"
+        description: "Name of the generated CLI ZIP file"
         value: ${{ jobs.build.outputs.zip-name }}
+      zip-portable-name:
+        description: "Name of the generated CLI ZIP file"
+        value: ${{ jobs.build.outputs.zip-portable-name }}
+      pkg-name:
+        description: "Name of the installer package (ARM or Intel, depending on runner)"
+        value: ${{ jobs.build.outputs.pkg-name-arm || jobs.build.outputs.pkg-name-intel }}
 
 jobs:
   build:
     runs-on: ${{ inputs.runner }}
     outputs:
       zip-name: ${{ steps.get-zip-name.outputs.zip-name }}
-      pkg-name-arm: ${{ steps.get-installer-names.outputs.pkg-name-arm }}
-      pkg-name-intel: ${{ steps.get-installer-names.outputs.pkg-name-intel }}
+      pkg-name-arm: ${{ steps.get-electronite-names.outputs.pkg-name-arm }}
+      pkg-name-intel: ${{ steps.get-electronite-names.outputs.pkg-name-intel }}
+      zip-portable-name: ${{ steps.get-zip-portable-name.outputs.zip-portable-name }}
 
     # Set process.env.CI to false to prevent treating warnings as errors
     env:
@@ -225,10 +232,10 @@ jobs:
           if-no-files-found: error
           retention-days: 90
 
-      # build electronite installs (-f = full install)
+      # build electronite installs (-f = full install; -p = include portable)
       - name: Run makeAllInstallsElectronite.sh
         working-directory: ./macos/install
-        run: ./makeAllInstallsElectronite.sh -f
+        run: ./makeAllInstallsElectronite.sh -f -p
 
       - name: Get Electronite Installer names
         id: get-electronite-names
@@ -268,11 +275,30 @@ jobs:
           if-no-files-found: error
           retention-days: 90
 
+      - name: Get zip portable names
+        id: get-zip-portable-name
+        run: |
+          echo "Zip portable name:"
+          ls -als ./releases/macos/*-portable.zip
+          cd ./releases/macos
+          ZIP_PORTABLE_NAME=$(ls *-portable.zip | head -n 1)
+          echo "zip-portable-name=$ZIP_PORTABLE_NAME" >> $GITHUB_OUTPUT
+          echo "ZIP_PORTABLE_NAME=$ZIP_PORTABLE_NAME" >> $GITHUB_ENV
+          cd ../..
+
       - name: Upload electronite x64 artifacts
         if: env.ELECTRONITE_PKG_NAME_INTEL != ''
         uses: actions/upload-artifact@v4
         with:
           name: ${{ env.ELECTRONITE_PKG_NAME_INTEL }}
           path: ./releases/macos/${{ env.ELECTRONITE_PKG_NAME_INTEL }}
+          if-no-files-found: error
+          retention-days: 90
+
+      - name: Upload zip portable artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.ZIP_PORTABLE_NAME }}
+          path: ./releases/macos/${{ env.ZIP_PORTABLE_NAME }}
           if-no-files-found: error
           retention-days: 90
