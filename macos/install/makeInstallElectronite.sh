@@ -24,7 +24,8 @@
 #   $1 : Architecture type (Required)
 #        Accepted values: arm64, x64
 #   $2 : -d indicates a development run (for building viewer only)
-#   $3 : -f indicates full install including Electronite copy/download setup
+#   -f indicates full install including Electronite copy/download setup
+#   -p indicates Portable App zip build
 #
 # Returns:
 #   0 : Success
@@ -63,10 +64,12 @@ fi
 arch="$1"
 devRun="${2:-no}" # This is a development viewer run if $1 is -d
 fullInstall=false
+portable=false
 
 for arg in "$@"; do
     case "$arg" in
         -f) fullInstall=true ;;
+        -p) portable=true ;;
     esac
 done
 
@@ -270,4 +273,143 @@ if [ "$devRun" != "-d" ]; then
 
   # copy to releases folder
   cp "./build/${PKG_NAME}" "../releases/macos/"
+
+  # ---------------------------------------------------------------------------
+  # Portable app packaging (.zip) -- additive; runs only when -p is set and
+  # this is not a "dev run".
+  #
+  # The .pkg has already been built and copied to releases above, so none of
+  # the portable replacements below can affect it. The finished .app is copied
+  # to a separate portable stage, and ALL portable-specific edits are performed
+  # on that staged copy only -- never on the payload the .pkg consumed.
+  # ---------------------------------------------------------------------------
+  if [ "$portable" = true ]; then
+    echo "Building portable ZIP..."
+
+    ARCH="$arch"
+
+    # At this point the CWD is the OS dir (we did `cd ..` before pkgbuild),
+    # so the built payload lives under ./$pkgDir/project/payload.
+    PAYLOAD_DIR="./$pkgDir/project/payload"
+    BUILT_APP="${PAYLOAD_DIR}/${APP_NAME}.app"
+
+    HELPERS_SOURCE="./buildResourcesPortable"
+
+    OUTPUT_PATH="../releases/macos"
+    mkdir -p "$OUTPUT_PATH"
+
+    PACKAGE_BASE_NAME="${FILE_APP_NAME}-${APP_VERSION}-macos-${arch}"
+
+    # Stage the portable app (its top-level entry is the .app bundle itself).
+    PORTABLE_STAGE="./$pkgDir/project/portable-package"
+    PORTABLE_APP_STAGE="${PORTABLE_STAGE}/${APP_NAME}.app"
+    PORTABLE_ZIP_PATH="${OUTPUT_PATH}/${PACKAGE_BASE_NAME}-portable.zip"
+
+    if [ ! -d "$BUILT_APP" ]; then
+        echo "Error: Built .app not found for portable packaging: $BUILT_APP"
+        exit 1
+    fi
+
+    rm -rf "$PORTABLE_STAGE"
+    mkdir -p "$PORTABLE_STAGE"
+
+    # Copy the finished .app bundle into the portable stage (copy only; the
+    # .pkg payload is left untouched).
+    cp -R "$BUILT_APP" "$PORTABLE_APP_STAGE"
+
+    # --- user_settings.json (staged copy only) ---
+    # Portable app uses a virtual path for repo_dir, two levels up because the
+    # working dirs live beside the .app, outside the bundle.
+    USER_SETTINGS="${PORTABLE_APP_STAGE}/Contents/lib/templates/user_settings.json"
+    if [ ! -f "$USER_SETTINGS" ]; then
+        echo "Error: Portable user_settings.json not found: $USER_SETTINGS"
+        exit 1
+    fi
+    sed -i.bak 's#"repo_dir": "%%HOMEDIR%%/pankosmia_repos",#"repo_dir": "../../pankosmia_repos",#' "$USER_SETTINGS"
+    rm -f "${USER_SETTINGS}.bak"
+
+    # --- README.txt helper at the ZIP root ---
+    README_SOURCE="${HELPERS_SOURCE}/README.txt"
+    README_DESTINATION="${PORTABLE_STAGE}/README.txt"
+    if [ ! -f "$README_SOURCE" ]; then
+        echo "Error: Portable helper file not found: $README_SOURCE"
+        exit 1
+    fi
+    cp "$README_SOURCE" "$README_DESTINATION"
+    # Replace placeholders only in the staged ZIP copy.
+    sed -i.bak "s/%%APP_NAME%%/$APP_NAME/g" "$README_DESTINATION"
+    sed -i.bak "s/%%APP_SHORT_NAME%%/$APP_SHORT_NAME/g" "$README_DESTINATION"
+    sed -i.bak "s/%%ARCH%%/$ARCH/g" "$README_DESTINATION"
+    rm -f "${README_DESTINATION}.bak"
+
+    # --- unquarantine.sh helper at the ZIP root ---
+    UNQUARANTINE_SOURCE="${HELPERS_SOURCE}/unquarantine.sh"
+    UNQUARANTINE_DESTINATION="${PORTABLE_STAGE}/unquarantine.sh"
+    if [ ! -f "$UNQUARANTINE_SOURCE" ]; then
+        echo "Error: Portable helper file not found: $UNQUARANTINE_SOURCE"
+        exit 1
+    fi
+    cp "$UNQUARANTINE_SOURCE" "$UNQUARANTINE_DESTINATION"
+    # Replace placeholders only in the staged ZIP copy.
+    sed -i.bak "s/%%APP_NAME%%/$APP_NAME/g" "$UNQUARANTINE_DESTINATION"
+    sed -i.bak "s/%%FILE_APP_NAME%%/$FILE_APP_NAME/g" "$UNQUARANTINE_DESTINATION"
+    rm -f "${UNQUARANTINE_DESTINATION}.bak"
+    
+    SERVER_FILE="${PORTABLE_APP_STAGE}/Contents/electron/core/server.js"
+    STARTUP_FILE="${PORTABLE_APP_STAGE}/Contents/electron/electronStartup.js"
+
+    # --- server.js (staged copy only) ---
+    # spawn(SERVER_EXECUTABLE_PATH, []  ->  spawn(SERVER_EXECUTABLE_PATH, ['../../pankosmia/<short>']
+    SERVER_FIND="spawn(SERVER_EXECUTABLE_PATH, ["
+    SERVER_REPLACE="spawn(SERVER_EXECUTABLE_PATH, ['../../pankosmia/$APP_SHORT_NAME'"
+    if [ ! -f "$SERVER_FILE" ]; then
+        echo "Error: server.js not found: $SERVER_FILE"
+        exit 1
+    fi
+    if grep -qF -- "$SERVER_REPLACE" "$SERVER_FILE"; then
+        echo "$SERVER_FILE was not updated by this run; replacement already present."
+        exit 1
+    fi
+    if ! grep -qF -- "$SERVER_FIND" "$SERVER_FILE"; then
+        echo "Expected original text was not found in $SERVER_FILE ; no change made."
+        exit 1
+    fi
+    sed -i.bak "s#spawn(SERVER_EXECUTABLE_PATH, \[#spawn(SERVER_EXECUTABLE_PATH, ['../../pankosmia/$APP_SHORT_NAME'#" "$SERVER_FILE"
+    rm -f "${SERVER_FILE}.bak"
+
+    # --- electronStartup.js (staged copy only) ---
+    # Insert the userData setPath line right after app.setName('<APP_NAME>');
+    # inside the START_SERVER block. Uses '../../pankosmia/AppData' (two levels
+    # up) because the working dirs live beside the .app, outside the bundle.
+    STARTUP_ANCHOR="app.setName('$APP_NAME');"
+    STARTUP_INSERT="  app.setPath('userData', path.resolve(process.cwd(), '../../pankosmia/AppData', '$APP_SHORT_NAME'));"
+    if [ ! -f "$STARTUP_FILE" ]; then
+        echo "Error: electronStartup.js not found: $STARTUP_FILE"
+        exit 1
+    fi
+    if grep -qF -- "$STARTUP_INSERT" "$STARTUP_FILE"; then
+        echo "$STARTUP_FILE was not updated by this run; setPath line already present."
+        exit 1
+    fi
+    if ! grep -qF -- "$STARTUP_ANCHOR" "$STARTUP_FILE"; then
+        echo "Expected anchor text was not found in $STARTUP_FILE ; no change made."
+        exit 1
+    fi
+
+    NL=$(printf '\n')
+    sed -i.bak "s|app.setName('$APP_NAME');|app.setName('$APP_NAME');${NL}${STARTUP_INSERT}|" "$STARTUP_FILE"
+    rm -f "$STARTUP_FILE.bak"
+
+    # Create the archive whose top-level entries are the .app bundle and README.
+    rm -f "$PORTABLE_ZIP_PATH"
+    ditto -c -k --sequesterRsrc --keepParent "$PORTABLE_STAGE/${APP_NAME}.app" "$PORTABLE_ZIP_PATH"
+    zip -j "$PORTABLE_ZIP_PATH" "$README_DESTINATION" "$UNQUARANTINE_DESTINATION"
+
+    if [ ! -f "$PORTABLE_ZIP_PATH" ]; then
+        echo "Error: Portable ZIP was not created: $PORTABLE_ZIP_PATH"
+        exit 1
+    fi
+
+    echo "Portable package created successfully: $PORTABLE_ZIP_PATH"
+  fi
 fi
