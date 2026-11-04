@@ -77,8 +77,8 @@ cp -r $FROM_DIR/linux/viewer/project/payload/app/electron/* $INSTALL_DIR/viewer/
 chmod 755 $INSTALL_DIR/viewer/
 
 # Alternate launcher showing Electron stdin, stdout, and stderr in the console, replacing placeholders with actual values
-cp $FROM_DIR/linux/buildResources/appLauncherElectron.sh $INSTALL_DIR/
-chmod +x $INSTALL_DIR/appLauncherElectron.sh
+cp $FROM_DIR/linux/buildResources/devAppLauncherElectron.sh $INSTALL_DIR/
+chmod +x $INSTALL_DIR/devAppLauncherElectron.sh
 
 # Rocket config
 cp -r $FROM_DIR/linux/viewer/project/payload/app/Rocket.toml $INSTALL_DIR/
@@ -184,8 +184,8 @@ if [ "$portable" = true ]; then
     chmod 755 "$PORTABLE_APP_STAGE/viewer/"
 
     # Alternate launcher showing Electron stdin, stdout, and stderr in the console, replacing placeholders with actual values
-    cp $FROM_DIR/linux/buildResources/appLauncherElectron.sh "$PORTABLE_APP_STAGE/"
-    chmod +x "$PORTABLE_APP_STAGE/appLauncherElectron.sh"
+    cp $FROM_DIR/linux/buildResources/devAppLauncherElectron.sh "$PORTABLE_APP_STAGE/"
+    chmod +x "$PORTABLE_APP_STAGE/devAppLauncherElectron.sh"
 
     # Rocket config
     cp -r "$PAYLOAD_SOURCE/Rocket.toml" "$PORTABLE_APP_STAGE/"

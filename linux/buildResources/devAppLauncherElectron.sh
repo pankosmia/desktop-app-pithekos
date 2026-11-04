@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+# This is an alternative production launcher for developer use. It shows Electron stdio in the terminal.
+
 echo "=================================================================="
 echo "Starting up with Electron stdin, stdout and stderr in the console:"
 echo

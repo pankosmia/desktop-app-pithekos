@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+# This is the CLI Launcher
+
 # set available port environment variable (exported as $ROCKET_PORT )
 source ./find_free_port.sh
 
