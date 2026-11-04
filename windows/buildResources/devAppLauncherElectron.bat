@@ -1,4 +1,7 @@
 @echo off
+
+REM This is an alternative production launcher for developer use. It shows Electron stdio in the terminal.
+
 setlocal
 
 echo.
