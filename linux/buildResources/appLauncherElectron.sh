@@ -1,15 +1,8 @@
 #!/usr/bin/env bash
 
-echo "========================"
+echo "=================================================================="
 echo "Starting up with Electron stdin, stdout and stderr in the console:"
 echo
-echo "To prevent server.bin from becoming a zombie process, exit the app and wait for it to shut down completely before closing this console."
-echo
-echo "Complete app exit will be confirmed in the console with \`stopServer()\` confirmation such as 'Server stopped gracefully.'"
-echo
-
-
-read -rp "Press Enter to continue..."
 
 # Setting variables
 BASE_DIR=.
@@ -20,7 +13,6 @@ export APP_RESOURCES_DIR="$APP_DIR/lib/"
 # Run everything from the app dir
 cd $APP_DIR
 
-echo
 echo "APP_RESOURCES_DIR: $APP_RESOURCES_DIR"
 echo "Running everything from: $APP_DIR"
 echo
