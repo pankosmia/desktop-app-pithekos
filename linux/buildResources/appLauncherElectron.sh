@@ -1,41 +1,34 @@
-#!/bin/sh
+#!/usr/bin/env bash
 
 echo "========================"
-echo "Starting up:"
-echo "Current directory:"
-pwd
+echo "Starting up with Electron stdin, stdout and stderr in the console:"
+echo
+echo "To prevent server.bin from becoming a zombie process, exit the app and wait for it to shut down completely before closing this console."
+echo
+echo "Complete app exit will be confirmed in the console with \`stopServer()\` confirmation such as 'Server stopped gracefully.'"
+echo
 
-# find the directory path that contains this script
-script_dir="$(dirname "$(realpath "$0")")"
-echo "Script directory: $script_dir"
 
-# ============================
-# need to find server.bin - this is needed because working directory is not set
+read -rp "Press Enter to continue..."
 
-# first look for server.bin relative to directory script is in
-   if [ -e "$script_dir/../bin/server.bin" ]; then
-    BASE="$script_dir/.."
+# Setting variables
+BASE_DIR=.
+APP_DIR=$BASE_DIR
+SETTINGS_FILE=$BASE_DIR/app_config.env
+export APP_RESOURCES_DIR="$APP_DIR/lib/"
 
-# Otherwise Check for server.bin in ./bin
-elif [ -e ./bin/server.bin ]; then
-    BASE="."
+# Run everything from the app dir
+cd $APP_DIR
 
-# Otherwise Check for server.bin in ../bin
-elif [ -e ../bin/server.bin ]; then
-    BASE=".."
+echo
+echo "APP_RESOURCES_DIR: $APP_RESOURCES_DIR"
+echo "Running everything from: $APP_DIR"
+echo
 
-# not found
-else
-    echo "Error: server.bin not found in ./bin or ../bin"
-    exit 1
-fi
+START_CMD="$APP_DIR/viewer/electron --no-sandbox $APP_DIR/viewer"
+printf 'Starting with: %s\n' "$START_CMD"
+echo
 
-echo "bin folder found at $BASE"
-
-# set available port environment variable (exported as $ROCKET_PORT )
-source ./find_free_port.sh
-
-# start electron
-cd "$BASE"
-export APP_RESOURCES_DIR=./lib/
-./electron/electron .\electron &
+# Start the client, which will start the server
+source $SETTINGS_FILE
+$START_CMD
