@@ -19,6 +19,7 @@ Name: "desktopicon"; Description: "Create a {#GetEnv('APP_NAME')} &desktop icon"
 Type: filesandordirs; Name: "{%USERPROFILE}\pankosmia\{#GetEnv('APP_SHORT_NAME')}\webfonts"
 Type: filesandordirs; Name: "{%USERPROFILE}\pankosmia\{#GetEnv('APP_SHORT_NAME')}\temp"
 Type: files; Name: "{%USERPROFILE}\pankosmia\{#GetEnv('APP_SHORT_NAME')}\i18n.json"
+Type: files; Name: "{app}\appLauncherElectron.bat"
 
 [Files]
 Source: "..\temp\project\payload\app\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs

@@ -115,14 +115,14 @@ try {
 
     New-Item -ItemType Directory -Force -Path $payloadPath | Out-Null
 
-    # Copy Rocket.toml and appLauncherElectron.bat
+    # Copy Rocket.toml and devAppLauncherElectron.bat
     $rocketConfig = "..\..\Rocket.toml"
-    $startupSrc = "..\buildResources\appLauncherElectron.bat"
+    $startupSrc = "..\buildResources\devAppLauncherElectron.bat"
     $startupDest = "$payloadPath"
     if (Test-Path $startupSrc) {
         New-Item -ItemType Directory -Force -Path $startupDest | Out-Null
         Copy-Item -Path $rocketConfig -Destination "$startupDest\Rocket.toml" -Force
-        Copy-Item -Path $startupSrc -Destination "$startupDest\appLauncherElectron.bat" -Force
+        Copy-Item -Path $startupSrc -Destination "$startupDest\devAppLauncherElectron.bat" -Force
     }
 
     # Copy electron files
