@@ -12,6 +12,4 @@ REM Using development environment server.
 set START_SERVER=false
 
 REM Starting electronite viewer, accessing the development build environment
-
-REM This bypasses viewer\appLauncherElectron.bat
 ..\viewer\project\payload\app\electron\electron.exe ..\viewer\project\payload\app\electron
