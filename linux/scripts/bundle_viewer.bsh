@@ -75,8 +75,10 @@ chmod 755 $INSTALL_DIR/bin/server.bin
 # Electron app
 cp -r $FROM_DIR/linux/viewer/project/payload/app/electron/* $INSTALL_DIR/viewer/
 chmod 755 $INSTALL_DIR/viewer/
-cp -r $FROM_DIR/linux/viewer/project/payload/app/find_free_port.sh $INSTALL_DIR/
-chmod 755 $INSTALL_DIR/find_free_port.sh
+
+# Alternate launcher showing Electron stdin, stdout, and stderr in the console, replacing placeholders with actual values
+cp $FROM_DIR/linux/buildResources/devAppLauncherElectron.sh $INSTALL_DIR/
+chmod +x $INSTALL_DIR/devAppLauncherElectron.sh
 
 # Rocket config
 cp -r $FROM_DIR/linux/viewer/project/payload/app/Rocket.toml $INSTALL_DIR/
@@ -180,8 +182,10 @@ if [ "$portable" = true ]; then
     # Electron app -> viewer/
     cp -r "$PAYLOAD_SOURCE/electron/"* "$PORTABLE_APP_STAGE/viewer/"
     chmod 755 "$PORTABLE_APP_STAGE/viewer/"
-    cp -r "$PAYLOAD_SOURCE/find_free_port.sh" "$PORTABLE_APP_STAGE/"
-    chmod 755 "$PORTABLE_APP_STAGE/find_free_port.sh"
+
+    # Alternate launcher showing Electron stdin, stdout, and stderr in the console, replacing placeholders with actual values
+    cp $FROM_DIR/linux/buildResources/devAppLauncherElectron.sh "$PORTABLE_APP_STAGE/"
+    chmod +x "$PORTABLE_APP_STAGE/devAppLauncherElectron.sh"
 
     # Rocket config
     cp -r "$PAYLOAD_SOURCE/Rocket.toml" "$PORTABLE_APP_STAGE/"
@@ -283,4 +287,3 @@ if [ "$portable" = true ]; then
 
     echo "Portable package created successfully: $PORTABLE_TGZ_PATH"
 fi
-

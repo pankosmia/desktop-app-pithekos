@@ -111,6 +111,6 @@ APP_NAME=${APP_NAME,,}
 # Replace spaces with a dash (-) in filename
 APP_NAME=${APP_NAME// /-}
 # Make executable and compress
-chmod +x $APP_NAME
+chmod +x $APP_NAME.sh
 tar cfz ../../releases/linux/$APP_NAME-$APP_VERSION-linux-$CPU_ARCH-cli.tgz .
 cd ../scripts
