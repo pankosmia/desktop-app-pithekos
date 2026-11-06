@@ -210,10 +210,11 @@ jobs:
           cd ../..
 
       - name: Upload zip cli artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: ${{ env.ZIP_NAME }}
           path: ./releases/macos/${{ env.ZIP_NAME }}
+          archive: false
           if-no-files-found: error
           retention-days: 90
 
@@ -225,10 +226,11 @@ jobs:
 
       - name: Upload README for arm64 and x64 artifact
         if: env.PKG_NAME_ARM != '' # only upload once
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: ${{ env.FILE_APP_NAME }}-macos-installer-readme-arm64-and-x64.txt
           path: ./macos/build/${{ env.FILE_APP_NAME }}-macos-installer-readme-arm64-and-x64.txt
+          archive: false
           if-no-files-found: error
           retention-days: 90
 
@@ -268,10 +270,11 @@ jobs:
 
       - name: Upload electronite arm64 artifacts
         if: env.ELECTRONITE_PKG_NAME_ARM != ''
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: ${{ env.ELECTRONITE_PKG_NAME_ARM }}
           path: ./releases/macos/${{ env.ELECTRONITE_PKG_NAME_ARM }}
+          archive: false
           if-no-files-found: error
           retention-days: 90
 
@@ -288,17 +291,19 @@ jobs:
 
       - name: Upload electronite x64 artifacts
         if: env.ELECTRONITE_PKG_NAME_INTEL != ''
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: ${{ env.ELECTRONITE_PKG_NAME_INTEL }}
           path: ./releases/macos/${{ env.ELECTRONITE_PKG_NAME_INTEL }}
+          archive: false
           if-no-files-found: error
           retention-days: 90
 
       - name: Upload zip portable artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: ${{ env.ZIP_PORTABLE_NAME }}
           path: ./releases/macos/${{ env.ZIP_PORTABLE_NAME }}
+          archive: false
           if-no-files-found: error
           retention-days: 90

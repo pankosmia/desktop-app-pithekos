@@ -188,10 +188,11 @@ jobs:
 
       # Upload zip for cli artifacts
       - name: Upload zip for cli artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: ${{ env.ZIP_NAME }}
           path: .\releases\windows\${{ env.ZIP_NAME }}
+          archive: false
           if-no-files-found: error
           retention-days: 90
 
@@ -217,10 +218,11 @@ jobs:
 
       # Upload electronite exe artifact
       - name: Upload electronite exe artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: ${{ env.ELECTRONITE_EXE_NAME }}
           path: .\releases\windows\${{ env.ELECTRONITE_EXE_NAME }}
+          archive: false
           if-no-files-found: error
           retention-days: 90
 
@@ -240,9 +242,10 @@ jobs:
 
       # Upload zip for portable artifacts
       - name: Upload zip for portable artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: ${{ env.ZIP_PORTABLE_NAME }}
           path: .\releases\windows\${{ env.ZIP_PORTABLE_NAME }}
+          archive: false
           if-no-files-found: error
           retention-days: 90
