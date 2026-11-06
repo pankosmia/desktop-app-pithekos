@@ -218,22 +218,6 @@ jobs:
           if-no-files-found: error
           retention-days: 90
 
-      - name: Setup a README named for arm64 and x64 artifact
-        if: env.PKG_NAME_ARM != '' # only setup once
-        run: |
-          echo "Setup a README named for arm64 and x64 artifact"
-          cp ./macos/build/README.txt ./macos/build/${{ env.FILE_APP_NAME }}-macos-installer-readme-arm64-and-x64.txt
-
-      - name: Upload README for arm64 and x64 artifact
-        if: env.PKG_NAME_ARM != '' # only upload once
-        uses: actions/upload-artifact@v7
-        with:
-          name: ${{ env.FILE_APP_NAME }}-macos-installer-readme-arm64-and-x64.txt
-          path: ./macos/build/${{ env.FILE_APP_NAME }}-macos-installer-readme-arm64-and-x64.txt
-          archive: false
-          if-no-files-found: error
-          retention-days: 90
-
       # build electronite installs (-f = full install; -p = include portable)
       - name: Run makeAllInstallsElectronite.sh
         working-directory: ./macos/install
@@ -244,28 +228,28 @@ jobs:
         run: |
           echo "Arm64 install:"
           # check if built
-          if [ -n "$(ls ./releases/macos/*-arm64.pkg 2>/dev/null)" ]; then
+          if [ -n "$(ls ./releases/macos/*-arm64.zip 2>/dev/null)" ]; then
             cd ./releases/macos
             echo "Found arm64 release:"
-            ls -als *.pkg
-            ELECTRONITE_PKG_NAME_ARM=$(ls *-arm64.pkg | head -n 1)
+            ls -als *.zip
+            ELECTRONITE_PKG_NAME_ARM=$(ls *-arm64.zip | head -n 1)
             echo "ELECTRONITE_PKG_NAME_ARM=$ELECTRONITE_PKG_NAME_ARM" >> $GITHUB_ENV
             cd ../..
           else
-            echo "No arm64 .pkg files found in ./releases/macos"
+            echo "No arm64 zipped pkg files found in ./releases/macos"
           fi
           
           echo "x64 install:"
           # check if built
-          if [ -n "$(ls ./releases/macos/*-x64.pkg 2>/dev/null)" ]; then
+          if [ -n "$(ls ./releases/macos/*-x64.zip 2>/dev/null)" ]; then
             cd ./releases/macos
             echo "Found x64 release:"
-            ls -als *.pkg
-            ELECTRONITE_PKG_NAME_INTEL=$(ls *-x64.pkg | head -n 1)
+            ls -als *.zip
+            ELECTRONITE_PKG_NAME_INTEL=$(ls *-x64.zip | head -n 1)
             echo "ELECTRONITE_PKG_NAME_INTEL=$ELECTRONITE_PKG_NAME_INTEL" >> $GITHUB_ENV
             cd ../..
           else
-            echo "No x64 .pkg files found in ./releases/macos"
+            echo "No x64 zipped pkg files found in ./releases/macos"
           fi
 
       - name: Upload electronite arm64 artifacts

@@ -73,10 +73,14 @@ for arg in "$@"; do
     esac
 done
 
+PKG_BASE_NAME="${FILE_APP_NAME}-${APP_VERSION}-macos-${arch}"
+PKG_NAME="${PKG_BASE_NAME}.pkg"
+PKG_ZIP_NAME="${PKG_BASE_NAME}.zip"
+
 # Needed for local bundles. Not required in GHA but does no harm.
-if [ "$devRun" != "-d" ]; then
-  PKG_NAME="${FILE_APP_NAME}-${APP_VERSION}-macos-${arch}.pkg"
-  rm -f "../releases/macos/${FILE_APP_NAME}-*-macos-${arch}.pkg"
+if [ "$devRun" != "-d" ]; then  
+  rm -f "../../releases/macos/${PKG_NAME}"
+  rm -f "../../releases/macos/${PKG_ZIP_NAME}"
 fi
 
 cd ../build || exit 1
@@ -272,8 +276,29 @@ if [ "$devRun" != "-d" ]; then
     --install-location /Applications \
     "./build/${PKG_NAME}"
 
+  # unquarantine.sh
+  UNQUARANTINE_SRC="./buildResources/unquarantine.sh"
+  UNQUARANTINE_DEST="./build/unquarantine.sh"
+  cp "$UNQUARANTINE_SRC" "$UNQUARANTINE_DEST"
+  sed -i.bak "s/\%%FILE_APP_NAME%%/$FILE_APP_NAME/g" "$UNQUARANTINE_DEST"
+  sed -i.bak "s/\%%APP_VERSION%%/$APP_VERSION/g" "$UNQUARANTINE_DEST"
+  sed -i.bak "s/\%%ARCH%%/$arch/g" "$UNQUARANTINE_DEST"
+  chmod +x "$UNQUARANTINE_DEST"
+
+  # README.txt
+  # README_SRC="./buildResources/README.txt"  # build.js handles this
+  README_DEST="./build/README.txt"
+  # cp "$README_SRC" "$README_DEST"   # build.js handles this
+  # sed -i.bak "s/\%%APP_NAME%%/$APP_NAME/g" "$README_DEST"  # build.js handles this
+  # sed -i.bak "s/\%%FILE_APP_NAME%%/$FILE_APP_NAME/g" "$README_DEST"  # build.js handles this
+  # sed -i.bak "s/\%%APP_VERSION%%/$APP_VERSION/g" "$README_DEST"  # build.js handles this
+  sed -i.bak "s/\%%ARCH%%/$arch/g" "$README_DEST"
+
+
   # copy to releases folder
-  cp "./build/${PKG_NAME}" "../releases/macos/"
+  # cp "./build/${PKG_NAME}" "../releases/macos/"
+  PKGZIP_RELEASE="../releases/macos/${PKG_ZIP_NAME}"
+  zip -X -j "${PKGZIP_RELEASE}" "./build/${PKG_NAME}" "$README_DEST" "$UNQUARANTINE_DEST"
 
   # ---------------------------------------------------------------------------
   # Portable app packaging (.zip) -- additive; runs only when -p is set and
@@ -299,12 +324,10 @@ if [ "$devRun" != "-d" ]; then
     OUTPUT_PATH="../releases/macos"
     mkdir -p "$OUTPUT_PATH"
 
-    PACKAGE_BASE_NAME="${FILE_APP_NAME}-${APP_VERSION}-macos-${arch}"
-
     # Stage the portable app (its top-level entry is the .app bundle itself).
     PORTABLE_STAGE="./$pkgDir/project/portable-package"
     PORTABLE_APP_STAGE="${PORTABLE_STAGE}/${APP_NAME}.app"
-    PORTABLE_ZIP_PATH="${OUTPUT_PATH}/${PACKAGE_BASE_NAME}-portable.zip"
+    PORTABLE_ZIP_PATH="${OUTPUT_PATH}/${PKG_BASE_NAME}-portable.zip"
 
     if [ ! -d "$BUILT_APP" ]; then
         echo "Error: Built .app not found for portable packaging: $BUILT_APP"
@@ -332,10 +355,6 @@ if [ "$devRun" != "-d" ]; then
     # --- README.txt helper at the ZIP root ---
     README_SOURCE="${HELPERS_SOURCE}/README.txt"
     README_DESTINATION="${PORTABLE_STAGE}/README.txt"
-    if [ ! -f "$README_SOURCE" ]; then
-        echo "Error: Portable helper file not found: $README_SOURCE"
-        exit 1
-    fi
     cp "$README_SOURCE" "$README_DESTINATION"
     # Replace placeholders only in the staged ZIP copy.
     sed -i.bak "s/%%APP_NAME%%/$APP_NAME/g" "$README_DESTINATION"
@@ -404,7 +423,7 @@ if [ "$devRun" != "-d" ]; then
     # Create the archive whose top-level entries are the .app bundle and README.
     rm -f "$PORTABLE_ZIP_PATH"
     ditto -c -k --sequesterRsrc --keepParent "$PORTABLE_STAGE/${APP_NAME}.app" "$PORTABLE_ZIP_PATH"
-    zip -j "$PORTABLE_ZIP_PATH" "$README_DESTINATION" "$UNQUARANTINE_DESTINATION"
+    zip -X -j "$PORTABLE_ZIP_PATH" "$README_DESTINATION" "$UNQUARANTINE_DESTINATION"
 
     if [ ! -f "$PORTABLE_ZIP_PATH" ]; then
         echo "Error: Portable ZIP was not created: $PORTABLE_ZIP_PATH"
