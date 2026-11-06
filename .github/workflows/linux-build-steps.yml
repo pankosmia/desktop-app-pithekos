@@ -183,25 +183,28 @@ jobs:
           cd ../..
 
       - name: Upload tgz for cli artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: ${{ env.TGZ_NAME }}
           path: ./releases/linux/${{ env.TGZ_NAME }}
+          archive: false
           if-no-files-found: error
           retention-days: 90
 
       - name: Upload deb for cli artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: ${{ env.DEB_NAME }}
           path: ./releases/linux/${{ env.DEB_NAME }}
+          archive: false
           if-no-files-found: error
           retention-days: 90
 
       - name: Upload tgz for portable artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: ${{ env.TGZ_PORTABLE_NAME }}
           path: ./releases/linux/${{ env.TGZ_PORTABLE_NAME }}
+          archive: false
           if-no-files-found: error
           retention-days: 90
