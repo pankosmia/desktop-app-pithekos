@@ -1,5 +1,7 @@
 @echo off
 
+REM This is the CLI Launcher
+
 REM set available port environment variable (returned as %ROCKET_PORT% )
 call .\find_free_port.bat
 

@@ -113,5 +113,5 @@ APP_NAME=${APP_NAME:l}
 APP_NAME=${APP_NAME// /-}
 # Make executable and zip
 chmod +x $APP_NAME.zsh
-zip -r ../../releases/macos/$APP_NAME-$APP_VERSION-macos-$CPU_ARCH-cli.zip * -x post_install_script.sh appLauncher.sh @ &> /dev/null
+zip -r ../../releases/macos/$APP_NAME-$APP_VERSION-macos-$CPU_ARCH-cli.zip * -x post_install_script.sh @ &> /dev/null
 cd ../scripts

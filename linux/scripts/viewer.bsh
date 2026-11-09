@@ -15,6 +15,4 @@ echo "Accessing the backend server at port ${ROCKET_PORT}."
 export START_SERVER="false"
 
 # Starting electronite viewer, accessing the development build environment
-
-# This bypasses ../viewer/start-.sh (which, fyi, originates from ../buildResources/appLauncherElectron.sh)
 ../viewer/project/payload/app/electron/electron --no-sandbox ../viewer/project/payload/app/electron

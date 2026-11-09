@@ -1,5 +1,7 @@
 #!/usr/bin/env zsh
 
+# This is the CLI Launcher
+
 # set available port environment variable (exported as $ROCKET_PORT )
 SCRIPT_DIR="$(cd "$(dirname "$0")" >/dev/null 2>&1 && pwd)"
 source "$SCRIPT_DIR/find_free_port.sh"

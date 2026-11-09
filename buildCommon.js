@@ -34,10 +34,10 @@ function writeProductJson() {
 }
 
 // Per-OS configuration (cfg) from thin scripts, where "ctx" is a context object and "=> void" returns nothing:
-//   All properties are required, with null as an option where not applicable.
+//   All properties are required, with null as an option where potentially not applicable.
 // cfg = {
 //   separator,              // "/"|"\\"
-//   cliExt,                 // "zsh"|"bat"|null
+//   cliExt,                 // "zsh"|"bat"|"sh"|null
 //   findFreePort,           // "find_free_port.sh"|"find_free_port.bat"
 //   binSrcSuffix,           // ""|".exe"
 //   binDest,                // "server.bin"|"server.exe"

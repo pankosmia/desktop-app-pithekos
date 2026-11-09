@@ -12,6 +12,7 @@
 # Flag-style Arguments:
 #   -d indicates generation of a development viewer (optional)
 #   -f indicates a full install including Electronite download/copy (optional)
+#   -p indicates Portable App zip build
 #   Note - All URLs and architectures are hardcoded in the script
 #
 # Return Values:
@@ -22,11 +23,13 @@
 # get arguments
 devRun="no"
 fullInstall=false
+portable=false
 
 for arg in "$@"; do
     case "$arg" in
         -d) devRun="-d" ;; # -d is a development viewer run
         -f) fullInstall=true ;;
+        -p) portable=true ;;
     esac
 done
 
@@ -121,11 +124,15 @@ for ARCH in "x64" "arm64"; do
         echo
     fi
 
+    set -- "$ARCH" "$devRun"
     if [ "$fullInstall" = true ]; then
-        ./makeInstallElectronite.sh "$ARCH" "$devRun" -f
-    else
-        ./makeInstallElectronite.sh "$ARCH" "$devRun"
+        set -- "$@" -f
     fi
+    if [ "$portable" = true ]; then
+        set -- "$@" -p
+    fi
+
+    ./makeInstallElectronite.sh "$@"
 
     if [ "$devRun" != "-d" ]; then
         echo "Files at ../../releases/macos/"

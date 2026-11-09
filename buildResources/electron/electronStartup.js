@@ -39,9 +39,11 @@ const { registerFirefoxHandlers } = require('./features/firefox'); // Can omit f
 const { registerPdfHandlers } = require('./features/pdf');          // Can omit for a no-Puppeteer app, with node_modules also to reduce.
 const { registerFfmpegHandlers } = require('./features/ffmpeg');    // Can omit for a no-FFMPEG app, with node_modules also to reduce.
 
+// The portable app build process expects the next 3 lines to remain as is, including spaces. Change replacement commands if editing. It becomes 4 lines in the portable app.
 if (START_SERVER) {
   app.setName('${APP_NAME}');
 } else {
+// The portable app build process expects the above 3 lines to remain as is, including spaces. Change replacement commands if editing. It becomes 4 lines in the portable app.
   app.setName('${APP_NAME} (Dev)');
   app.setPath('userData', path.join(app.getPath('appData'), '${APP_NAME}-dev'));  
 }

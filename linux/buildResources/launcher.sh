@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+# This is the production launcher installed by .deb to /usr/bin/<full-app-name>
+
 # Setting variables
 BASE_DIR=/opt/{PACKAGE_NAME}
 APP_DIR=$BASE_DIR

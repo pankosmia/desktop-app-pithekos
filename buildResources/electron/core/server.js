@@ -117,7 +117,7 @@ function startServer(port) {
     return serverProcess;
   }
 
-  console.log('resourcesDir is ' + env.APP_RESOURCES_DIR);
+  // console.log('resourcesDir is ' + env.APP_RESOURCES_DIR);
   // console.log('startServer() - workingDir is ' + APP_ROOT_DIR);
   // console.log('startServer() - env is ', env);
 
@@ -126,8 +126,10 @@ function startServer(port) {
 
   env.ROCKET_PORT = String(port);
 
+  // The portable app build process expects `spawn(SERVER_EXECUTABLE_PATH, []` to remain as is. Change replacement commands if editing. The `[]` will be filled in with a path in the portable app.
   serverProcess = spawn(SERVER_EXECUTABLE_PATH, [], {
-    stdio: 'ignore',
+    stdio: 'inherit',  // For Prd Console start with devAppLauncherElectron.<bat|sh> 
+    windowsHide: true, // use with 'inherit' to keep a separate, empty server.<bin|exe> console from opening
     detached: false,
     env,
     cwd: APP_ROOT_DIR,
