@@ -23,6 +23,7 @@ pub async fn main() -> Result<(), rocket::Error> {
         "app_setup_path": app_setup_path,
         "local_setup_path": local_setup_path,
         "app_resources_path": app_resources_path,
+        "log_path":"./log.txt"
     });
     pankosmia_web::rocket(conf).launch().await?;
     Ok(())
