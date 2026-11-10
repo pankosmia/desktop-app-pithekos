@@ -6,4 +6,4 @@ cmd /c start "" "%~dp0%%APP_NAME%%\electron\electron.exe" "%~dp0%%APP_NAME%%\ele
 timeout /t 4 /nobreak >nul
 
 popd
-exit
+exit /b

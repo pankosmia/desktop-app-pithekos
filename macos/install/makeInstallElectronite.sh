@@ -105,13 +105,15 @@ mkdir -p "${APP_BASE_DIR}/Contents/MacOS"
 # Rocket config
 cp "../../Rocket.toml" "${APP_BASE_DIR}/Rocket.toml"
 
+# alternative production launcher for developer use
+STDIO_LAUNCHER="${APP_BASE_DIR}/devAppLauncherElectron.sh"
+cp "../buildResources/devAppLauncherElectron.sh" "$STDIO_LAUNCHER"
+chmod +x "$STDIO_LAUNCHER"
+
 # electron startup
 LAUNCHER_NAME="start-${FILE_APP_NAME}.sh"
 cp "../buildResources/appLauncherElectron.sh" "${APP_BASE_DIR}/Contents/MacOS/${LAUNCHER_NAME}"
 sed -i.bak "s/\${APP_NAME}/$APP_NAME/g" "${APP_BASE_DIR}/Contents/MacOS/${LAUNCHER_NAME}"
-
-# find_free_port.sh, used by electron startup
-cp "../buildResources/find_free_port.sh" "${APP_BASE_DIR}/Contents/MacOS/find_free_port.sh"
 
 #remove backup
 rm "${APP_BASE_DIR}/Contents/MacOS/${LAUNCHER_NAME}.bak"
@@ -227,7 +229,6 @@ if [ "$devRun" != "-d" ]; then
   echo "copied bin to $APP_BASE_DIR/Contents/"
   chmod 755 "${APP_BASE_DIR}/Contents/bin/server.bin"
   chmod 755 "${APP_BASE_DIR}/Contents/MacOS/${LAUNCHER_NAME}"
-  chmod 755 "${APP_BASE_DIR}/Contents/MacOS/find_free_port.sh"
 
   cp -R "./lib" "${APP_BASE_DIR}/Contents/"
   echo "copied lib to $APP_BASE_DIR/Contents/"
