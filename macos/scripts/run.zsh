@@ -8,10 +8,17 @@ set -u
 
 echo
 
-# Do not ask if the server is off if the -s argument is provided
-while [[ "$#" -gt 0 ]]
-  do case $1 in
-      -s) askIfOff="$1" # -s means "no"
+# Do not ask if the server is off if -s is provided.
+# Forward all other arguments to server.bin.
+serverArgs=()
+
+while [[ "$#" -gt 0 ]]; do
+  case "$1" in
+    -[sS])
+      askIfOff="-s" # -s means "no"
+      ;;
+    *)
+      serverArgs+=("$1")
       ;;
   esac
   shift
@@ -92,4 +99,4 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 export APP_RESOURCES_DIR="$SCRIPT_DIR/lib/"
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-$SCRIPT_DIR/bin/server.bin
+"$SCRIPT_DIR/bin/server.bin" "${serverArgs[@]}"

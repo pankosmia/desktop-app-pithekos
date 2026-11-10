@@ -1,17 +1,24 @@
 #!/usr/bin/env bash
 
 # Run from pankosmia/[this-repo's-name]/linux/scripts directory by:  ./run.bsh
-# with the optional argument of: `./run.bsh -s` to pre-specify that the server is off.
+# with the optional argument of: `./run.bsh -s` (or -S) to pre-specify that the server is off.
 
 set -e
 set -u
 
 echo
 
-# Do not ask if the server is off if the -s argument is provided
-while [[ "$#" -gt 0 ]]
-  do case $1 in
-      -s) askIfOff="$1" # -s = "no"
+# Do not ask if the server is off if -s or -S is provided.
+# Forward all other arguments to server.bin.
+serverArgs=()
+
+while [[ "$#" -gt 0 ]]; do
+  case "$1" in
+    -[sS])
+      askIfOff="-s" # -s = "no"
+      ;;
+    *)
+      serverArgs+=("$1")
       ;;
   esac
   shift
@@ -93,4 +100,4 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 export APP_RESOURCES_DIR="$SCRIPT_DIR/lib/"
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-$SCRIPT_DIR/bin/server.bin
+"$SCRIPT_DIR/bin/server.bin" "${serverArgs[@]}"
