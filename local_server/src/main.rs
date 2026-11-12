@@ -83,7 +83,9 @@ pub async fn main() -> Result<(), rocket::Error> {
     } else if env::var("APP_RESOURCES_DIR").is_ok() {
         app_resources_path = env::var("APP_RESOURCES_DIR").unwrap();
     }
-    if params.verbose {println!("   app_resources_path: '{}'", &app_resources_path);};
+    if params.verbose {
+        println!("   app_resources_path: '{}'", &app_resources_path);
+    };
 
     // Working dir is from CLI or config path JSON or hardcoded default
     let working_dir = match params.working_dir {
@@ -93,7 +95,9 @@ pub async fn main() -> Result<(), rocket::Error> {
             None => "".to_string(),
         },
     };
-    if params.verbose {println!("   working_dir: '{}'", &working_dir);};
+    if params.verbose {
+        println!("   working_dir: '{}'", &working_dir);
+    };
 
     // Log path is from CLI or config path JSON or hardcoded default
     let log_path = match params.log_path {
@@ -103,28 +107,36 @@ pub async fn main() -> Result<(), rocket::Error> {
             None => "".to_string(),
         },
     };
-    if params.verbose {println!("   log_path: '{}'", &log_path);};
+    if params.verbose {
+        println!("   log_path: '{}'", &log_path);
+    };
 
     // Webfont path is from config path JSON or derived from app resources path
     let webfont_path = match loaded_conf.clone() {
         Some(c) => c.webfont_path.clone(),
         None => format!("{}webfonts", app_resources_path),
     };
-    if params.verbose {println!("   webfont_path: '{}'", &webfont_path);};
+    if params.verbose {
+        println!("   webfont_path: '{}'", &webfont_path);
+    };
 
     // App setup path is from config path JSON or derived from app resources path
     let app_setup_path = match loaded_conf.clone() {
         Some(c) => c.app_setup_path.clone(),
         None => format!("{}setup/app_setup.json", app_resources_path),
     };
-    if params.verbose {println!("   app_setup_path: '{}'", &app_setup_path);};
+    if params.verbose {
+        println!("   app_setup_path: '{}'", &app_setup_path);
+    };
 
     // Local setup path is from config path JSON or derived from app resources path
     let local_setup_path = match loaded_conf.clone() {
         Some(c) => c.local_setup_path.clone(),
         None => format!("{}setup/local_setup.json", app_resources_path),
     };
-    if params.verbose {println!("   local_setup_path: '{}'", &local_setup_path);};
+    if params.verbose {
+        println!("   local_setup_path: '{}'", &local_setup_path);
+    };
 
     // Truncate log flag is from CLI or config path JSON or hardcoded default (true)
     let truncate_log = match params.truncate_log {
@@ -134,7 +146,9 @@ pub async fn main() -> Result<(), rocket::Error> {
             None => true,
         },
     };
-    if params.verbose {println!("   truncate_log: {}", &truncate_log);};
+    if params.verbose {
+        println!("   truncate_log: {}", &truncate_log);
+    };
 
     // Build untyped JSON of settings
     let conf = json!({
@@ -148,7 +162,9 @@ pub async fn main() -> Result<(), rocket::Error> {
     });
 
     // Launch Rocket server asynchronously using config
-    if params.verbose {println!("   Launched!\n");};
+    if params.verbose {
+        println!("   Launched!\n");
+    };
     pankosmia_web::rocket(conf).launch().await?;
 
     // Our work here (in this thread) is done
