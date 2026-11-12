@@ -3,9 +3,7 @@ REM Run from pankosmia\[this-repo's-name]\windows\scripts directory in powershel
 
 REM Do not ask if the server is off if the -s argument is provided
 REM Specify environment as an optional non-flag argument: dev, qa, or main (default: main)
-REM Specify log level as as an optional non-flag argument: critical, normal, debug, or off (default: normal)
 set "envArg="
-set "logArg="
 :loop
 IF "%~1"=="" (
   goto :continue
@@ -14,12 +12,6 @@ IF "%~1"=="-s" (
   set "askIfOff=%~1"
   shift
   goto :loop
-)
-IF not defined logArg (
-  IF "%~1"=="critical" ( set "logArg=critical" & shift & goto :loop )
-  IF "%~1"=="normal"   ( set "logArg=normal"   & shift & goto :loop )
-  IF "%~1"=="debug"    ( set "logArg=debug"     & shift & goto :loop )
-  IF "%~1"=="off"      ( set "logArg=off"       & shift & goto :loop )
 )
 IF not defined envArg (
   IF "%~1"=="dev" set "envArg=dev"
@@ -30,34 +22,6 @@ shift
 goto :loop
 
 :continue
-
-REM Normalize: anything other than critical, debug, or off is treated as normal
-if not defined logArg (
-  set "logArg=normal"
-)
-if /I not "%logArg%"=="critical" if /I not "%logArg%"=="debug" if /I not "%logArg%"=="off" (
-  set "logArg=normal"
-)
-
-REM Rewrite the log level in Rocket.toml (read at run time, so the change is left in place)
-set "rocketFile=..\..\Rocket.toml"
-
-setlocal enabledelayedexpansion
-echo.
-echo   Using log level "%logArg%"
-
-set "rocketTmp=..\..\Rocket.toml.tmp"
-(for /f "usebackq tokens=*" %%a in ("!rocketFile!") do (
-  set "line=%%a"
-  echo !line! | findstr /C:"log_level" >nul
-  if !errorlevel! equ 0 (
-    echo log_level = "%logArg%"
-  ) else (
-    echo(!line!
-  )
-)) > "!rocketTmp!"
-move /y "!rocketTmp!" "!rocketFile!" >nul
-endlocal
 
 REM Normalize: anything other than dev or qa is treated as main
 if not defined envArg (
