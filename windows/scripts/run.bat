@@ -1,14 +1,20 @@
 @echo off
 REM Run from pankosmia\[this-repo's-name]\windows\scripts directory in powershell or command by:  .\run.bat
-REM Optional argument: `.\run.bat -s` to pre-confirm the server is off, so as to not be asked.
+REM Optional argument: `.\run.bat -s` (or -S) to pre-confirm the server is off, so as to not be asked.
 
-REM Do not ask if the server is off if the -s positional argument is provided
+REM Do not ask if the server is off if -s or -S is provided.
+REM All other arguments are forwarded to server.exe.
+set "serverArgs="
+
 :loop
-IF "%~1"=="" (
-  goto :continue
-) ELSE IF "%~1"=="-s" (
-  set "askIfOff=%~1"
+IF "%~1"=="" goto :continue
+
+IF /I "%~1"=="-s" (
+  set "askIfOff=-s"
+) ELSE (
+  set "serverArgs=%serverArgs% %1"
 )
+
 shift
 goto :loop
 
@@ -80,4 +86,4 @@ if not exist ..\build (
 echo Running with local server in release mode...
 cd ..\build
 SET "APP_RESOURCES_DIR=.\lib\"
-start "" cmd /k ".\bin\server.exe"
+start "" cmd /k ".\bin\server.exe%serverArgs%"

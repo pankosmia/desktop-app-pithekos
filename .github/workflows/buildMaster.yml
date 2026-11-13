@@ -31,16 +31,6 @@ on:
           - linux
           - macos
         default: all
-      log_level:
-        description: 'Log level:'
-        required: true
-        type: choice
-        options:
-          - critical
-          - normal
-          - debug
-          - 'off'
-        default: critical
       artifact_suffix:
         description: 'Artifact name identifier (optional):'
         required: false
@@ -52,7 +42,6 @@ run-name: >-
    ${{ inputs.branch_name_exception != '' && format('- {0}', inputs.branch_name_exception) || '' }}
   - ${{ inputs.branches }}
   - ${{ inputs.os == 'all' && 'all OSes' || inputs.os }}
-  - log=${{ inputs.log_level }}
 
 jobs:
   setup:
@@ -77,7 +66,6 @@ jobs:
             echo "Branch name exception is ${{ inputs.branch_name_exception }}"
           fi
           echo "OS is ${{ inputs.os }}"
-          echo "Log level is ${{ inputs.log_level }}"
 
   build-macos-x64:
     needs: setup
@@ -87,7 +75,6 @@ jobs:
     with:
       runner: macos-15-intel
       delay_seconds: 1
-      log_level: ${{ inputs.log_level }}
       branches: ${{ inputs.branches == 'all of main' && 'main' || inputs.branches == 'all of qa' && 'qa' || 'dev' }}
       branch_name_exception: ${{ inputs.branch_name_exception }}
       timestamp:       ${{ needs.setup.outputs.timestamp }}
@@ -101,7 +88,6 @@ jobs:
     with:
       runner: macos-15
       delay_seconds: 600
-      log_level: ${{ inputs.log_level }}
       branches: ${{ inputs.branches == 'all of main' && 'main' || inputs.branches == 'all of qa' && 'qa' || 'dev' }}
       branch_name_exception: ${{ inputs.branch_name_exception }}
       timestamp:       ${{ needs.setup.outputs.timestamp }}
@@ -114,7 +100,6 @@ jobs:
     uses: ./.github/workflows/windows-build-steps.yml
     with:
       runner: windows-2025
-      log_level: ${{ inputs.log_level }}
       branches: ${{ inputs.branches == 'all of main' && 'main' || inputs.branches == 'all of qa' && 'qa' || 'dev' }}
       branch_name_exception: ${{ inputs.branch_name_exception }}
       timestamp:       ${{ needs.setup.outputs.timestamp }}
@@ -127,7 +112,6 @@ jobs:
     uses: ./.github/workflows/windows-build-steps.yml
     with:
       runner: windows-11-arm
-      log_level: ${{ inputs.log_level }}
       branches: ${{ inputs.branches == 'all of main' && 'main' || inputs.branches == 'all of qa' && 'qa' || 'dev' }}
       branch_name_exception: ${{ inputs.branch_name_exception }}
       timestamp:       ${{ needs.setup.outputs.timestamp }}
@@ -140,7 +124,6 @@ jobs:
     uses: ./.github/workflows/linux-build-steps.yml
     with:
       runner: ubuntu-22.04
-      log_level: ${{ inputs.log_level }}
       branches: ${{ inputs.branches == 'all of main' && 'main' || inputs.branches == 'all of qa' && 'qa' || 'dev' }}
       branch_name_exception: ${{ inputs.branch_name_exception }}
       timestamp:       ${{ needs.setup.outputs.timestamp }}
@@ -153,7 +136,6 @@ jobs:
     uses: ./.github/workflows/linux-build-steps.yml
     with:
       runner: ubuntu-22.04-arm
-      log_level: ${{ inputs.log_level }}
       branches: ${{ inputs.branches == 'all of main' && 'main' || inputs.branches == 'all of qa' && 'qa' || 'dev' }}
       branch_name_exception: ${{ inputs.branch_name_exception }}
       timestamp:       ${{ needs.setup.outputs.timestamp }}

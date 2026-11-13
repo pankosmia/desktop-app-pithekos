@@ -14,9 +14,6 @@ on:
         description: 'Branch name exception (optional):'
         required: false
         type: string
-      log_level:
-        required: true
-        type: string
       timestamp:
         description: 'Build-order timestamp computed once in the setup job'
         required: true
@@ -50,7 +47,6 @@ jobs:
       CI: false
       BRANCHES: ${{ inputs.branches }}
       BRANCH_NAME_EXCEPTION: ${{ inputs.branch_name_exception }}
-      LOG_LEVEL: ${{ inputs.log_level }}
 
     steps:
       # Show branches
@@ -60,10 +56,6 @@ jobs:
           if ($env:BRANCH_NAME_EXCEPTION) {
             echo "Branch name exception is $env:BRANCH_NAME_EXCEPTION"
           }
-
-      # Show log level
-      - name: Show LOG LEVEL
-        run: echo "LOG_LEVEL = $env:LOG_LEVEL"
 
       # Turn off re-runs
       - name: No re-runs please
@@ -88,16 +80,16 @@ jobs:
 
       # Checkout the repository
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v6
 
       # Specify pnpm version
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@v6
         with:
           version: 11.20.0
 
       # Specify node.js version
       - name: Use Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: '24.11.0'
           # cache: pnpm
@@ -170,7 +162,7 @@ jobs:
       # Build RELEASE server and assemble build environment without asking if the server is off
       - name: Run ${{ inputs.branches }} RELEASE server and assemble build environment without asking if the server is off
         working-directory: .\windows\scripts
-        run: .\build_server.bat -s "$env:BRANCHES" "$env:LOG_LEVEL"
+        run: .\build_server.bat -s "$env:BRANCHES"
 
       # Bundle zip without asking if the server is off and indicate GHA
       - name: Run bundle_zip.ps1 -ServerOff "Y" -IsGHA "Y"

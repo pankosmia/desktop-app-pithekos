@@ -15,9 +15,6 @@ on:
         description: 'Branch name exception (optional):'
         required: false
         type: string
-      log_level:
-        required: true
-        type: string
       timestamp:
         description: 'Build-order timestamp computed once in the setup job'
         required: true
@@ -62,7 +59,6 @@ jobs:
       CI: false
       BRANCHES: ${{ inputs.branches }}
       BRANCH_NAME_EXCEPTION: ${{ inputs.branch_name_exception }}
-      LOG_LEVEL: ${{ inputs.log_level }}
 
     steps:
       # Show branches
@@ -72,10 +68,6 @@ jobs:
           if [ -n "$BRANCH_NAME_EXCEPTION" ]; then
             echo "Branch name exception is $BRANCH_NAME_EXCEPTION"
           fi
-
-      # Show log level
-      - name: Show LOG LEVEL
-        run: echo "LOG_LEVEL = $LOG_LEVEL"
 
       # Turn off re-runs
       - name: No re-runs please
@@ -130,16 +122,16 @@ jobs:
 
       # Checkout the repository
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v6
 
       # Specify pnpm version
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@v6
         with:
           version: 11.20.0
 
       # Specify node.js version
       - name: Use Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: '24.11.0'
           # cache: pnpm
@@ -192,7 +184,7 @@ jobs:
 
       - name: Build ${{ inputs.branches }} RELEASE server and assemble build environment without asking if the server is off
         working-directory: ./macos/scripts
-        run: ./build_server.zsh -s "$BRANCHES" "$LOG_LEVEL"
+        run: ./build_server.zsh -s "$BRANCHES"
 
       - name: Bundle zip without asking if the server is off and indicate GHA
         working-directory: ./macos/scripts

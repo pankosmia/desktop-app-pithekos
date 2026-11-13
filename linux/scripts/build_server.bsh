@@ -7,17 +7,13 @@ echo
 
 # Do not ask if the server is off if the -s argument is provided
 # Specify environment as an optional non-flag argument: dev, qa, or main (default: main)
-# Specify log level as an optional non-flag argument: critical, normal, debug, or off (default: normal)
 envArg=""
-logArg=""
 while [[ "$#" -gt 0 ]]
   do case $1 in
       -s) askIfOff="$1" # -s = "no"
       ;;
       *) if [[ "$1" != -* ]]; then
-           if [ -z "$logArg" ] && { [ "$1" = "critical" ] || [ "$1" = "normal" ] || [ "$1" = "debug" ] || [ "$1" = "off" ]; }; then
-             logArg="$1"
-           elif [ -z "$envArg" ]; then
+           if [ -z "$envArg" ]; then
              envArg="$1"
            fi
          fi
@@ -25,20 +21,6 @@ while [[ "$#" -gt 0 ]]
   esac
   shift
 done
-
-# Normalize: anything other than critical, debug, or off is treated as normal
-if [ -z "$logArg" ]; then
-  logArg="normal"
-fi
-if [ "$logArg" != "critical" ] && [ "$logArg" != "debug" ] && [ "$logArg" != "off" ]; then
-  logArg="normal"
-fi
-
-# Rewrite the log level in Rocket.toml (read at run time, so the change is left in place)
-rocketFile="../../Rocket.toml"
-
-echo "  Using log level \"$logArg\""
-sed -i "s|^log_level = \"[^\"]*\"|log_level = \"$logArg\"|" "$rocketFile"
 
 # Normalize: anything other than dev or qa is treated as main
 if [ -z "$envArg" ]; then
