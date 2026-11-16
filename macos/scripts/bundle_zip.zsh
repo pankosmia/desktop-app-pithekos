@@ -107,11 +107,16 @@ echo "   *                                *"
 echo "   **********************************"
 echo
 cd ../build
+sed -i.bak "s/\%%ARCH%%/$CPU_ARCH/g" "README.txt"
 # Use lower case app name in filename
 APP_NAME=${APP_NAME:l}
 # Replace spaces with a dash (-) in filename
 APP_NAME=${APP_NAME// /-}
 # Make executable and zip
 chmod +x $APP_NAME.zsh
-zip -r ../../releases/macos/$APP_NAME-$APP_VERSION-macos-$CPU_ARCH-cli.zip * -x post_install_script.sh @ &> /dev/null
+UNQ="../buildResources/unquarantine.sh"
+chmod +x $UNQ
+echo $UNQ
+zip -r ../../releases/macos/$APP_NAME-$APP_VERSION-macos-$CPU_ARCH-cli.zip * -x post_install_script.sh README.txt.bak @ &> /dev/null
+zip -j ../../releases/macos/$APP_NAME-$APP_VERSION-macos-$CPU_ARCH-cli.zip $UNQ
 cd ../scripts

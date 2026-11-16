@@ -18,7 +18,7 @@ echo "Launching %%APP_NAME%% in another window..."
 # Start Electron as a background process.
 setsid nohup "$APP_DIR/viewer/electron" \
   --no-sandbox "$APP_DIR/viewer" \
-  </dev/null >"$APP_DIR/electron.log" 2>&1 &
+  </dev/null >/dev/null 2>&1 &
 
 # Keep this window open long enough for the echo to be read.
 sleep 4

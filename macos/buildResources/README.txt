@@ -1,14 +1,17 @@
-#%%APP_NAME%% %%APP_VERSION%% MacOS %%ARCH%%
+%%APP_NAME%% %%APP_VERSION%% MacOS %%ARCH%%
 
-If this was downloaded over the Internet directly onto a MacOS machine, then it will need to be unquarantined before it can be installed.
+If this was downloaded over the Internet directly onto a MacOS machine, then it will need to be unquarantined.
 
-If that is not the case, then double-click %%FILE_APP_NAME%%-%%APP_VERSION%%-macos-%%ARCH%%.pkg to start the installer.
+If that is not the case, then double-click %%FILE_APP_NAME%%-%%APP_VERSION%%-macos-%%ARCH%%.pkg to start the installer, or run `./%%FILE_APP_NAME%%.zsh` if using the CLI version.
 
 Otherwise:
- * Run `./unquarantine.sh` from a terminal and then double-click %%FILE_APP_NAME%%-%%APP_VERSION%%-macos-%%ARCH%%.pkg to start the installer.
- * Alternatively, double-click %%FILE_APP_NAME%%-%%APP_VERSION%%-macos-%%ARCH%%.pkg and...
-    * If the installer starts then it is not quarantined.
-    * More likely you will get a message saying "Not Opened".
+ * Run `./unquarantine.sh` from a terminal and then follow the paragraph above.
+    * It will return a new prompt if successful.
+    * If `No such xattr: com.apple.quarantine` is returned, then it is not quarantined.
+    * The unquarantine script can be deleted once the portrable app has been run successfully.
+ * Alternatively:
+    * If all starts as expected then it is not quarantined.
+    * If you get "Not Opened" then the alternative to `./unquarantined` is:
       * Click either "Done" or "Cancel", and avoid clicking on Move to Trash.
       * Then Go to Apple menu > System Settings (Preferences) >  Privacy and Security, and at the bottom where it shows the file that was blocked, click "Open (Allow) Anyway" .
         * In Golden Gate that brings up a confirmation dialog where "Open Anyway" will need to be selected, followed by a password prompt.
